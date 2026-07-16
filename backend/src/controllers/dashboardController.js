@@ -1,0 +1,212 @@
+import Student from '../models/Student.js';
+import Outing from '../models/Outing.js';
+import Leave from '../models/Leave.js';
+
+// Helper to get date ranges
+const getTodayRange = () => {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  return { start, end };
+};
+
+// @desc    Get metrics and chart data for Admin
+// @route   GET /api/dashboard/admin
+// @access  Private (Admin)
+export const getAdminDashboard = async (req, res) => {
+  try {
+    const { start: todayStart, end: todayEnd } = getTodayRange();
+
+    const totalStudents = await Student.countDocuments();
+    const studentsOutside = await Student.countDocuments({ status: 'Outside' });
+    const studentsOnLeave = await Student.countDocuments({ status: 'Leave' });
+    const studentsInside = await Student.countDocuments({ status: 'Inside' });
+
+    // Outings created/approved today
+    const todayOutings = await Outing.countDocuments({
+      createdAt: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    // Outings completed (returned) today
+    const todayReturns = await Outing.countDocuments({
+      status: 'Returned',
+      actual_return_time: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    const pendingLeaves = await Leave.countDocuments({ status: 'Pending' });
+
+    // Analytics: Branch distribution
+    const branchStatsAggregate = await Student.aggregate([
+      {
+        $group: {
+          _id: '$branch',
+          studentCount: { $sum: 1 },
+        },
+      },
+      { $project: { branch: '$_id', studentCount: 1, _id: 0 } },
+    ]);
+
+    // Analytics: Year distribution
+    const yearStatsAggregate = await Student.aggregate([
+      {
+        $group: {
+          _id: '$year',
+          studentCount: { $sum: 1 },
+        },
+      },
+      { $project: { year: '$_id', studentCount: 1, _id: 0 } },
+    ]);
+
+    // Analytics: Monthly outing trend (last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0,0,0,0);
+
+    const monthlyOutingsAggregate = await Outing.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sixMonthsAgo },
+          status: { $ne: 'Cancelled' },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
+    ]);
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthlyOutings = monthlyOutingsAggregate.map((item) => {
+      return {
+        month: `${months[item._id.month - 1]} ${item._id.year.toString().slice(-2)}`,
+        outings: item.count,
+      };
+    });
+
+    res.json({
+      metrics: {
+        totalStudents,
+        studentsOutside,
+        studentsOnLeave,
+        studentsInside,
+        todayOutings,
+        todayReturns,
+        pendingLeaves,
+      },
+      charts: {
+        branchStats: branchStatsAggregate,
+        yearStats: yearStatsAggregate,
+        monthlyOutings: monthlyOutings.length > 0 ? monthlyOutings : [{ month: 'No Data', outings: 0 }],
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get dashboard metrics for Caretaker
+// @route   GET /api/dashboard/caretaker
+// @access  Private (Caretaker, Admin)
+export const getCaretakerDashboard = async (req, res) => {
+  try {
+    const { start: todayStart, end: todayEnd } = getTodayRange();
+
+    const todayOutingsCount = await Outing.countDocuments({
+      createdAt: { $gte: todayStart, $lte: todayEnd },
+      status: { $ne: 'Cancelled' },
+    });
+
+    const studentsOutsideCount = await Student.countDocuments({ status: 'Outside' });
+
+    const returnedStudentsCount = await Outing.countDocuments({
+      status: 'Returned',
+      actual_return_time: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    const pendingLeavesCount = await Leave.countDocuments({ status: 'Pending' });
+
+    // Fetch active/pending actions
+    const activeOutingsList = await Outing.find({
+      status: { $in: ['Approved', 'Exited'] },
+    })
+      .populate('student')
+      .sort({ updatedAt: -1 })
+      .limit(10);
+
+    const pendingLeavesList = await Leave.find({ status: 'Pending' })
+      .populate('student')
+      .sort({ applied_date: 1 })
+      .limit(5);
+
+    res.json({
+      metrics: {
+        todayOutingsCount,
+        studentsOutsideCount,
+        returnedStudentsCount,
+        pendingLeavesCount,
+      },
+      activeOutingsList,
+      pendingLeavesList,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get dashboard metrics for Student
+// @route   GET /api/dashboard/student
+// @access  Private (Student)
+export const getStudentDashboard = async (req, res) => {
+  try {
+    const student = await Student.findById(req.user.studentProfile);
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    // Find any active outing approval
+    const activeOuting = await Outing.findOne({
+      student: student._id,
+      status: { $in: ['Approved', 'Exited'] },
+    }).populate('approved_by', 'username');
+
+    // Find any pending leave approval
+    const activeLeave = await Leave.findOne({
+      student: student._id,
+      status: { $in: ['Pending', 'Approved'] },
+      end_date: { $gte: new Date() },
+    });
+
+    // Recent Outings & Leaves
+    const recentOutings = await Outing.find({ student: student._id })
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    const recentLeaves = await Leave.find({ student: student._id })
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.json({
+      student,
+      metrics: {
+        remainingOutings: student.remaining_outings,
+        usedOutings: student.used_outings,
+        status: student.status,
+      },
+      activeOuting,
+      activeLeave,
+      recentOutings,
+      recentLeaves,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
