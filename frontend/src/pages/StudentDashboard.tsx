@@ -22,11 +22,10 @@ export const StudentDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   // Modals state
-  const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
-  const [leaveForm, setLeaveForm] = useState({
-    reason: '',
-    start_date: '',
-    end_date: '',
+  const [isApplyOutingOpen, setIsApplyOutingOpen] = useState(false);
+  const [outingForm, setOutingForm] = useState({
+    purpose: '',
+    destination: '',
     attachment_url: '',
   });
 
@@ -54,7 +53,7 @@ export const StudentDashboard: React.FC = () => {
     fetchStudentDashboard();
   }, []);
 
-  // Handle file base64 encoding for medical certificates
+  // Handle file base64 encoding for medical certificates / permission letters
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -67,57 +66,46 @@ export const StudentDashboard: React.FC = () => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
-      setLeaveForm({ ...leaveForm, attachment_url: reader.result as string });
+      setOutingForm({ ...outingForm, attachment_url: reader.result as string });
     };
     reader.onerror = () => {
       setFormError('Error reading attachment file');
     };
   };
 
-  // Submit Leave Application
-  const handleApplyLeaveSubmit = async (e: React.FormEvent) => {
+  // Submit Outing Application
+  const handleApplyOutingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
     setFormSuccess('');
     
-    // Date validations
-    const start = new Date(leaveForm.start_date);
-    const end = new Date(leaveForm.end_date);
-    const today = new Date();
-    today.setHours(0,0,0,0);
-
-    if (start < today) {
-      setFormError('Start date cannot be in the past');
-      return;
-    }
-
-    if (end <= start) {
-      setFormError('End date must be after start date');
+    if (!outingForm.purpose.trim() || !outingForm.destination.trim()) {
+      setFormError('Purpose and destination are required.');
       return;
     }
 
     setSubmitting(true);
     try {
-      await API.post('/leaves/apply', leaveForm);
-      setFormSuccess('Leave application submitted successfully!');
+      await API.post('/outings/apply', outingForm);
+      setFormSuccess('Outing request submitted successfully! Awaiting caretaker approval.');
       
       // Reload stats
       fetchStudentDashboard();
 
       setTimeout(() => {
-        setIsApplyLeaveOpen(false);
-        setLeaveForm({ reason: '', start_date: '', end_date: '', attachment_url: '' });
-      }, 1500);
+        setIsApplyOutingOpen(false);
+        setOutingForm({ purpose: '', destination: '', attachment_url: '' });
+      }, 2000);
     } catch (err: any) {
-      setFormError(err.response?.data?.message || 'Failed to submit leave request');
+      setFormError(err.response?.data?.message || 'Failed to submit outing request');
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Cancel Outing approval before checkout
+  // Cancel Outing pass before exit
   const handleCancelOuting = async (outingId: string) => {
-    if (!window.confirm('Are you sure you want to cancel this approved outing pass?')) {
+    if (!window.confirm('Are you sure you want to cancel this outing pass request?')) {
       return;
     }
     try {
@@ -211,16 +199,16 @@ export const StudentDashboard: React.FC = () => {
                       onClick={() => {
                         setFormError('');
                         setFormSuccess('');
-                        setIsApplyLeaveOpen(true);
+                        setIsApplyOutingOpen(true);
                       }}
                       className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 text-xs font-bold shadow-md shadow-indigo-500/10 active:scale-95 transition-all duration-200 cursor-pointer w-full sm:w-auto"
                     >
                       <Plus className="h-4 w-4" />
-                      <span>Apply for Overnight Leave</span>
+                      <span>Apply for Outing</span>
                     </button>
                   ) : (
                     <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/10">
-                      Cannot apply for leaves while checked out.
+                      Cannot apply for outings while checked out.
                     </span>
                   )}
                 </div>
@@ -241,6 +229,8 @@ export const StudentDashboard: React.FC = () => {
                         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${
                           data.activeOuting.status === 'Approved'
                             ? 'bg-emerald-500/10 text-emerald-500'
+                            : data.activeOuting.status === 'Pending'
+                            ? 'bg-amber-500/10 text-amber-500 animate-pulse'
                             : 'bg-rose-500/10 text-rose-500 animate-pulse'
                         }`}>
                           {data.activeOuting.status} Outing
@@ -253,23 +243,35 @@ export const StudentDashboard: React.FC = () => {
                         </span>
                       </div>
 
-                      {/* Simulated QR Code Pass */}
-                      <div className="relative flex h-28 w-28 items-center justify-center rounded-2xl bg-white border border-slate-200 dark:border-slate-800 p-2 shadow-inner group">
-                        <QrCode className="h-full w-full text-slate-900 group-hover:scale-105 transition-all duration-300" />
-                        <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none" />
-                        
-                        {/* QR scan scanning lines animation */}
-                        {data.activeOuting.status === 'Exited' && (
-                          <div className="absolute top-0 inset-x-0 h-0.5 bg-rose-500 animate-bounce" />
-                        )}
-                      </div>
+                      {/* Simulated QR Code Pass or Awaiting Approval */}
+                      {data.activeOuting.status === 'Pending' ? (
+                        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 gap-2 mt-2">
+                          <Clock className="h-10 w-10 text-amber-500 animate-pulse" />
+                          <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/10">
+                            Awaiting Caretaker Approval
+                          </p>
+                          <span className="text-[9px] text-slate-400 max-w-[150px] leading-relaxed">
+                            Caretaker approval date & time will be logged automatically.
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="relative flex h-28 w-28 items-center justify-center rounded-2xl bg-white border border-slate-200 dark:border-slate-800 p-2 shadow-inner group">
+                          <QrCode className="h-full w-full text-slate-900 group-hover:scale-105 transition-all duration-300" />
+                          <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl pointer-events-none" />
+                          
+                          {/* QR scan scanning lines animation */}
+                          {data.activeOuting.status === 'Exited' && (
+                            <div className="absolute top-0 inset-x-0 h-0.5 bg-rose-500 animate-bounce" />
+                          )}
+                        </div>
+                      )}
 
                       <div className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
                         {data.activeOuting.outing_id}
                       </div>
 
-                      {/* Cancel Outing approval if not checked out */}
-                      {data.activeOuting.status === 'Approved' && (
+                      {/* Cancel Outing pass request if not checked out */}
+                      {(data.activeOuting.status === 'Approved' || data.activeOuting.status === 'Pending') && (
                         <button
                           onClick={() => handleCancelOuting(data.activeOuting._id)}
                           className="text-[10px] font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/5 px-3 py-1.5 rounded-lg border border-transparent hover:border-rose-500/20 active:scale-95 transition-all cursor-pointer"
@@ -435,13 +437,13 @@ export const StudentDashboard: React.FC = () => {
         )
       )}
 
-      {/* MODAL: APPLY FOR LEAVE REQUEST */}
+      {/* MODAL: APPLY FOR OUTING REQUEST */}
       <Modal
-        isOpen={isApplyLeaveOpen}
-        onClose={() => setIsApplyLeaveOpen(false)}
-        title="Apply for Overnight Leave"
+        isOpen={isApplyOutingOpen}
+        onClose={() => setIsApplyOutingOpen(false)}
+        title="Apply for Same-Day Outing"
       >
-        <form onSubmit={handleApplyLeaveSubmit} className="space-y-4">
+        <form onSubmit={handleApplyOutingSubmit} className="space-y-4">
           {formError && (
             <div className="flex items-center gap-2 rounded-xl bg-rose-500/10 border border-rose-500/20 p-4 text-xs text-rose-500">
               <AlertCircle className="h-4 w-4" />
@@ -456,55 +458,41 @@ export const StudentDashboard: React.FC = () => {
           )}
 
           <div className="space-y-3">
-            {/* Reason for Leave */}
+            {/* Purpose of Outing */}
             <div className="flex flex-col gap-1">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Reason for Leave (Be descriptive)
+                Purpose of Outing (e.g. Movie, Buy books, Clinic visit)
               </label>
               <input
                 type="text"
                 required
-                value={leaveForm.reason}
-                onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-800 dark:text-white"
-                placeholder="e.g. Traveling home for Diwali festival, Medical emergency"
+                value={outingForm.purpose}
+                onChange={(e) => setOutingForm({ ...outingForm, purpose: e.target.value })}
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition-all"
+                placeholder="e.g. Going for a movie with friends, buying study books"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {/* Start Date */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Leave Start Date
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={leaveForm.start_date}
-                  onChange={(e) => setLeaveForm({ ...leaveForm, start_date: e.target.value })}
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-800 dark:text-white"
-                />
-              </div>
-
-              {/* End Date */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Leave End Date
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={leaveForm.end_date}
-                  onChange={(e) => setLeaveForm({ ...leaveForm, end_date: e.target.value })}
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-800 dark:text-white"
-                />
-              </div>
+            {/* Destination */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Destination
+              </label>
+              <input
+                type="text"
+                required
+                value={outingForm.destination}
+                onChange={(e) => setOutingForm({ ...outingForm, destination: e.target.value })}
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition-all"
+                placeholder="e.g. City Central Mall, Sector 15 Market"
+              />
             </div>
 
             {/* Document Attachment */}
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Attach Medical/Warden Proof (Max 2MB, PDF/Image)
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <span>Attach Permission Letter / Written Proof (Optional)</span>
+                <span className="text-[9px] text-slate-400 normal-case font-normal">(PDF/Image, under 2MB)</span>
               </label>
               <input
                 type="file"
@@ -518,7 +506,7 @@ export const StudentDashboard: React.FC = () => {
           <div className="mt-6 flex justify-end gap-3 border-t border-slate-200/50 pt-4">
             <button
               type="button"
-              onClick={() => setIsApplyLeaveOpen(false)}
+              onClick={() => setIsApplyOutingOpen(false)}
               className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 cursor-pointer"
             >
               Cancel
@@ -529,7 +517,7 @@ export const StudentDashboard: React.FC = () => {
               className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 text-xs font-bold shadow-md cursor-pointer flex items-center justify-center gap-1.5"
             >
               <Send className="h-3.5 w-3.5" />
-              <span>{submitting ? 'Applying...' : 'Apply for Leave'}</span>
+              <span>{submitting ? 'Applying...' : 'Apply for Outing'}</span>
             </button>
           </div>
         </form>

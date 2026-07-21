@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { useDarkMode } from './hooks/useDarkMode';
-
+import { AcademicYearProvider } from './contexts/AcademicYearContext';
 // Pages
 import { Login } from './pages/Login';
+import Signup from './pages/Signup';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { CaretakerDashboard } from './pages/CaretakerDashboard';
 import { StudentDashboard } from './pages/StudentDashboard';
@@ -37,7 +38,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ user, allowedRoles, chi
 function App() {
   const [user, setUser] = useState<any>(null);
   const [bootstrapping, setBootstrapping] = useState(true);
-  const { theme, toggleTheme, isDark } = useDarkMode();
+  const { toggleTheme, isDark } = useDarkMode();
 
   // Retrieve user session on startup
   useEffect(() => {
@@ -72,130 +73,130 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Layout user={user} onLogout={handleLogout} isDark={isDark} onToggleTheme={toggleTheme}>
-        <Routes>
-          {/* Public Login Route */}
-          <Route 
-            path="/login" 
-            element={user ? <Navigate to="/" replace /> : <Login onLoginSuccess={handleLoginSuccess} />} 
-          />
+    <AcademicYearProvider>
+      <BrowserRouter>
+        <Layout user={user} onLogout={handleLogout} isDark={isDark} onToggleTheme={toggleTheme}>
+          <Routes>
+            {/* Public Login Route */}
+            <Route 
+              path="/login" 
+              element={user ? <Navigate to="/" replace /> : <Login onLoginSuccess={handleLoginSuccess} />} 
+            />
 
-          {/* Root Redirect path */}
-          <Route
-            path="/"
-            element={
-              user ? (
-                user.role === 'admin' ? (
-                  <Navigate to="/admin" replace />
-                ) : user.role === 'caretaker' ? (
-                  <Navigate to="/caretaker" replace />
-                ) : user.role === 'security' ? (
-                  <Navigate to="/security" replace />
+            {/* Public Signup Route */}
+            <Route 
+              path="/signup" 
+              element={user ? <Navigate to="/" replace /> : <Signup />} 
+            />
+
+            {/* Root Redirect path */}
+            <Route
+              path="/"
+              element={
+                user ? (
+                  user.role === 'admin' ? (
+                    <Navigate to="/admin" replace />
+                  ) : user.role === 'caretaker' ? (
+                    <Navigate to="/caretaker" replace />
+                  ) : user.role === 'security' ? (
+                    <Navigate to="/security" replace />
+                  ) : (
+                    <Navigate to="/student" replace />
+                  )
                 ) : (
-                  <Navigate to="/student" replace />
+                  <Navigate to="/login" replace />
                 )
-              ) : (
-                <Navigate to="/login" replace />
-              )
-            }
-          />
+              }
+            />
 
-          {/* Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute user={user} allowedRoles={['admin']}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/students"
-            element={
-              <ProtectedRoute user={user} allowedRoles={['admin']}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
+            {/* Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute user={user} allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/students"
+              element={
+                <ProtectedRoute user={user} allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Caretaker Routes */}
-          <Route
-            path="/caretaker"
-            element={
-              <ProtectedRoute user={user} allowedRoles={['caretaker', 'admin']}>
-                <CaretakerDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/caretaker/actions"
-            element={
-              <ProtectedRoute user={user} allowedRoles={['caretaker', 'admin']}>
-                <CaretakerDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/caretaker/leaves"
-            element={
-              <ProtectedRoute user={user} allowedRoles={['caretaker', 'admin']}>
-                <CaretakerDashboard />
-              </ProtectedRoute>
-            }
-          />
+            {/* Caretaker Routes */}
+            <Route
+              path="/caretaker"
+              element={
+                <ProtectedRoute user={user} allowedRoles={['caretaker', 'admin']}>
+                  <CaretakerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/caretaker/:view"
+              element={
+                <ProtectedRoute user={user} allowedRoles={['caretaker', 'admin']}>
+                  <CaretakerDashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Security Routes */}
-          <Route
-            path="/security"
-            element={
-              <ProtectedRoute user={user} allowedRoles={['security', 'caretaker', 'admin']}>
-                <SecurityDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/security/active"
-            element={
-              <ProtectedRoute user={user} allowedRoles={['security', 'caretaker', 'admin']}>
-                <SecurityDashboard />
-              </ProtectedRoute>
-            }
-          />
+            {/* Security Routes */}
+            <Route
+              path="/security"
+              element={
+                <ProtectedRoute user={user} allowedRoles={['security', 'caretaker', 'admin']}>
+                  <SecurityDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/security/active"
+              element={
+                <ProtectedRoute user={user} allowedRoles={['security', 'caretaker', 'admin']}>
+                  <SecurityDashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Student Routes */}
-          <Route
-            path="/student"
-            element={
-              <ProtectedRoute user={user} allowedRoles={['student']}>
-                <StudentDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/student/history"
-            element={
-              <ProtectedRoute user={user} allowedRoles={['student']}>
-                <StudentDashboard />
-              </ProtectedRoute>
-            }
-          />
+            {/* Student Routes */}
+            <Route
+              path="/student"
+              element={
+                <ProtectedRoute user={user} allowedRoles={['student']}>
+                  <StudentDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/history"
+              element={
+                <ProtectedRoute user={user} allowedRoles={['student']}>
+                  <StudentDashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* General Report Routes */}
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute user={user} allowedRoles={['admin', 'caretaker']}>
-                <ReportsPage />
-              </ProtectedRoute>
-            }
-          />
+            {/* General Report Routes */}
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute user={user} allowedRoles={['admin', 'caretaker']}>
+                  <ReportsPage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* 404 Fallback redirects */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Layout>
-    </BrowserRouter>
+            {/* 404 Fallback redirects */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Layout>
+      </BrowserRouter>
+    </AcademicYearProvider>
   );
 }
 

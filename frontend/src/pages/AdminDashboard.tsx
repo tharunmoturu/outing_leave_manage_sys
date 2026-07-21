@@ -15,7 +15,8 @@ import {
   RefreshCw,
   Search,
   Filter,
-  UserPlus
+  UserPlus,
+  History
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -27,6 +28,11 @@ export const AdminDashboard: React.FC = () => {
   // Student list state
   const [students, setStudents] = useState<any[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
+
+  // Login Logs state
+  const [isLogsOpen, setIsLogsOpen] = useState(false);
+  const [loginLogs, setLoginLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
   
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,6 +75,19 @@ export const AdminDashboard: React.FC = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Fetch login activity logs
+  const fetchLoginLogs = async () => {
+    setLoadingLogs(true);
+    try {
+      const { data } = await API.get('/auth/logs');
+      setLoginLogs(data);
+    } catch (err) {
+      console.error('Failed to load login logs', err);
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
 
   // Fetch metrics & analytics charts
   const fetchDashboardStats = async () => {
@@ -285,13 +304,25 @@ export const AdminDashboard: React.FC = () => {
             System overview, statistics, and student rosters controls.
           </p>
         </div>
-        <button
-          onClick={fetchDashboardStats}
-          className="flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm transition-all active:scale-95 duration-200 cursor-pointer"
-        >
-          <RefreshCw className="h-4 w-4" />
-          <span>Refresh Data</span>
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setIsLogsOpen(true);
+              fetchLoginLogs();
+            }}
+            className="flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm transition-all active:scale-95 duration-200 cursor-pointer"
+          >
+            <History className="h-4 w-4" />
+            <span>Login Logs</span>
+          </button>
+          <button
+            onClick={fetchDashboardStats}
+            className="flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm transition-all active:scale-95 duration-200 cursor-pointer"
+          >
+            <RefreshCw className="h-4 w-4" />
+            <span>Refresh Data</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Summary Cards */}
@@ -933,6 +964,96 @@ export const AdminDashboard: React.FC = () => {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* MODAL: LOGIN ACTIVITY LOGS */}
+      <Modal
+        isOpen={isLogsOpen}
+        onClose={() => setIsLogsOpen(false)}
+        title="Login Activity History"
+      >
+        <div className="space-y-4 max-w-4xl w-full">
+          <div className="flex justify-between items-center">
+            <p className="text-xs text-slate-400">
+              Showing the latest 100 login attempts recorded in the database.
+            </p>
+            <button
+              type="button"
+              onClick={fetchLoginLogs}
+              className="flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-500 cursor-pointer border-none bg-transparent"
+            >
+              <RefreshCw className="h-3 w-3 animate-spin-slow" />
+              Refresh Logs
+            </button>
+          </div>
+
+          <div className="max-h-[50vh] overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+            {loadingLogs ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-3 text-slate-400">
+                <RefreshCw className="h-6 w-6 animate-spin text-indigo-500" />
+                <span className="text-xs font-semibold">Loading login logs...</span>
+              </div>
+            ) : loginLogs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                <History className="h-8 w-8 text-slate-300 dark:text-slate-700 mb-2" />
+                <span className="text-xs font-semibold">No login history found.</span>
+              </div>
+            ) : (
+              <table className="w-full border-collapse text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0 border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold GMR-header uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  <tr>
+                    <th className="p-3">Username</th>
+                    <th className="p-3">Role</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">IP Address</th>
+                    <th className="p-3">Device / Client</th>
+                    <th className="p-3 text-right">Time</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                  {loginLogs.map((log: any) => (
+                    <tr key={log._id} className="hover:bg-slate-500/5 transition-colors">
+                      <td className="p-3 font-semibold text-slate-800 dark:text-slate-200">
+                        {log.username}
+                      </td>
+                      <td className="p-3 text-slate-500">
+                        <span className="capitalize">{log.role || 'Unknown'}</span>
+                      </td>
+                      <td className="p-3">
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${
+                          log.status === 'success'
+                            ? 'bg-emerald-500/10 text-emerald-500'
+                            : 'bg-rose-500/10 text-rose-500'
+                        }`}>
+                          {log.status}
+                        </span>
+                      </td>
+                      <td className="p-3 text-slate-500 font-mono text-[10px]">
+                        {log.ipAddress || 'unknown'}
+                      </td>
+                      <td className="p-3 text-slate-400 text-[10px] max-w-[200px] truncate" title={log.userAgent}>
+                        {log.userAgent || 'unknown'}
+                      </td>
+                      <td className="p-3 text-right text-slate-400 text-[10px]">
+                        {new Date(log.createdAt).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setIsLogsOpen(false)}
+              className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

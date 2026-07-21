@@ -1,170 +1,209 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import Modal from '../components/Modal';
 import {
   Search,
-  Users,
-  CheckCircle,
-  XCircle,
-  Plus,
-  ArrowRight,
-  Clock,
-  MapPin,
-  Calendar,
   AlertCircle,
   FileText,
   User,
   Activity,
-  UserCheck
+  Inbox,
+  RefreshCw,
+  FileSpreadsheet
 } from 'lucide-react';
+import { useAcademicYear } from '../contexts/AcademicYearContext';
 
 export const CaretakerDashboard: React.FC = () => {
-  // Statistics/Dashboard metrics state
+  const { view } = useParams<{ view?: string }>();
+  const navigate = useNavigate();
+  const activeView = view || 'dashboard';
+  const { selectedYear } = useAcademicYear();
+
+  /* ── Dashboard / queue state ─────────────────────────────────────── */
   const [metrics, setMetrics] = useState<any>(null);
   const [activeOutings, setActiveOutings] = useState<any[]>([]);
   const [pendingLeaves, setPendingLeaves] = useState<any[]>([]);
+  const [pendingOutings, setPendingOutings] = useState<any[]>([]);
   const [loadingDashboard, setLoadingDashboard] = useState(true);
 
-  // Search autocomplete state
+  /* ── Student search state ────────────────────────────────────────── */
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-
-  // Selected student state
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [studentOutings, setStudentOutings] = useState<any[]>([]);
   const [studentLeaves, setStudentLeaves] = useState<any[]>([]);
   const [loadingStudent, setLoadingStudent] = useState(false);
+  const [searchError, setSearchError] = useState('');
 
-  // Modals state
-  const [isGrantOutingOpen, setIsGrantOutingOpen] = useState(false);
-  const [isLeaveActionOpen, setIsLeaveActionOpen] = useState(false);
-  const [selectedLeave, setSelectedLeave] = useState<any>(null);
-  const [leaveActionType, setLeaveActionType] = useState<'approve' | 'reject'>('approve');
-
-  // Form Fields
+  /* ── Grant Outing form state ────────────────────────────────────── */
+  const [grantSearchQuery, setGrantSearchQuery] = useState('');
+  const [grantSuggestions, setGrantSuggestions] = useState<any[]>([]);
+  const [showGrantSuggestions, setShowGrantSuggestions] = useState(false);
+  const [grantSelectedStudent, setGrantSelectedStudent] = useState<any>(null);
   const [outingForm, setOutingForm] = useState({
-    purpose: 'Personal Errands',
+    purpose: '',
     destination: '',
     out_time: '',
     expected_return: '',
     remarks: '',
   });
 
+  /* ── Leave action modal state ────────────────────────────────────── */
+  const [isLeaveActionOpen, setIsLeaveActionOpen] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState<any>(null);
+  const [leaveActionType, setLeaveActionType] = useState<'approve' | 'reject'>('approve');
   const [leaveRemarks, setLeaveRemarks] = useState('');
 
+  /* ── Pending Outing action modal state ───────────────────────────── */
+  const [isOutingActionOpen, setIsOutingActionOpen] = useState(false);
+  const [selectedPendingOuting, setSelectedPendingOuting] = useState<any>(null);
+  const [outingActionType, setOutingActionType] = useState<'approve' | 'reject'>('approve');
+  const [outingRemarks, setOutingRemarks] = useState('');
+
+  /* ── Shared form state ───────────────────────────────────────────── */
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch Caretaker Dashboard summary data
-  const fetchDashboardData = async () => {
+  /* ── History log states ──────────────────────────────────────────── */
+  const [outingHistory, setOutingHistory] = useState<any[]>([]);
+  const [leaveHistory, setLeaveHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  /* ── Reports state ───────────────────────────────────────────────── */
+  const [reportType, setReportType] = useState<'outings' | 'leaves'>('outings');
+  const [reportStatus, setReportStatus] = useState('');
+  const [reportBranch, setReportBranch] = useState('');
+  const [reportYear, setReportYear] = useState('');
+  const [reportStartDate, setReportStartDate] = useState('');
+  const [reportEndDate, setReportEndDate] = useState('');
+  const [previewData, setPreviewData] = useState<any[]>([]);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+
+  /* ── Settings state ──────────────────────────────────────────────── */
+  const [settingsForm, setSettingsForm] = useState({
+    curfewTime: '21:00',
+    maxMonthlyOutings: '6',
+    autoApproveEmergency: false,
+    alertWardenDelay: '30'
+  });
+
+  /* ══════════════════════════════════════════════════════════════════
+     DATA FETCHING
+  ══════════════════════════════════════════════════════════════════ */
+
+  const fetchDashboardData = useCallback(async () => {
     setLoadingDashboard(true);
     try {
-      const { data } = await API.get('/dashboard/caretaker');
+      const yearQuery = selectedYear !== 'All' ? `?year=${selectedYear}` : '';
+      const { data } = await API.get(`/dashboard/caretaker${yearQuery}`);
       setMetrics(data.metrics);
-      setActiveOutings(data.activeOutingsList);
-      setPendingLeaves(data.pendingLeavesList);
+      setActiveOutings(data.activeOutingsList ?? []);
+      setPendingLeaves(data.pendingLeavesList ?? []);
+      setPendingOutings(data.pendingOutingsList ?? []);
     } catch (err) {
-      console.error('Failed to fetch caretaker statistics', err);
+      console.error('Failed to fetch caretaker dashboard', err);
     } finally {
       setLoadingDashboard(false);
     }
-  };
+  }, [selectedYear]);
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
-  // Handle Autocomplete fetch
+  // Autocomplete Suggestions for Search View
   useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (searchQuery.trim().length < 2) {
-        setSuggestions([]);
-        return;
-      }
+    if (searchQuery.trim().length < 1) {
+      setSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
       try {
-        const { data } = await API.get(`/students/suggestions?q=${searchQuery}`);
+        const yearQuery = selectedYear !== 'All' ? `&year=${selectedYear}` : '';
+        const { data } = await API.get(`/students/suggestions?q=${encodeURIComponent(searchQuery)}${yearQuery}`);
         setSuggestions(data);
+        setShowSuggestions(true);
       } catch (err) {
         console.error(err);
       }
-    };
-
-    const delayDebounce = setTimeout(() => {
-      fetchSuggestions();
     }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedYear]);
 
-    return () => clearTimeout(delayDebounce);
-  }, [searchQuery]);
+  // Autocomplete Suggestions for Grant View
+  useEffect(() => {
+    if (grantSearchQuery.trim().length < 1) {
+      setGrantSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const yearQuery = selectedYear !== 'All' ? `&year=${selectedYear}` : '';
+        const { data } = await API.get(`/students/suggestions?q=${encodeURIComponent(grantSearchQuery)}${yearQuery}`);
+        setGrantSuggestions(data);
+        setShowGrantSuggestions(true);
+      } catch (err) {
+        console.error(err);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [grantSearchQuery, selectedYear]);
 
-  // Load single student profile
-  const handleSelectStudent = async (studentId: string) => {
+  /* ── Load a student's full profile ──────────────────────────────── */
+  const handleSelectStudent = async (mongoId: string) => {
     setLoadingStudent(true);
+    setSearchError('');
     setSearchQuery('');
     setSuggestions([]);
     setShowSuggestions(false);
+    setSelectedStudent(null);
     try {
-      const { data } = await API.get(`/students/${studentId}`);
+      const { data } = await API.get(`/students/${mongoId}`);
       setSelectedStudent(data.student);
-      setStudentOutings(data.outings);
-      setStudentLeaves(data.leaves);
-    } catch (err) {
-      console.error('Failed to load student profile', err);
+      setStudentOutings(data.outings ?? []);
+      setStudentLeaves(data.leaves ?? []);
+    } catch (err: any) {
+      setSearchError(err.response?.data?.message || 'Student not found');
     } finally {
       setLoadingStudent(false);
     }
   };
 
-  // Open Grant Outing Modal Setup
-  const openGrantOutingModal = () => {
-    if (!selectedStudent) return;
+  /* ── Grant Outing pass ───────────────────────────────────────────── */
+  const selectStudentForGrant = (student: any) => {
+    setGrantSelectedStudent(student);
+    setGrantSearchQuery('');
+    setGrantSuggestions([]);
+    setShowGrantSuggestions(false);
     
-    // Set default out time to now, expected return to now + 4 hours
     const now = new Date();
-    const returnTime = new Date(now.getTime() + 4 * 60 * 60 * 1000);
-    
-    // ISO format for datetime-local input: YYYY-MM-DDTHH:MM
-    const formatDateTimeLocal = (date: Date) => {
-      const pad = (num: number) => num.toString().padStart(2, '0');
-      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    const returnTime = new Date();
+    returnTime.setHours(21, 0, 0, 0); // Default curfew 9 PM
+    const fmt = (d: Date) => {
+      const p = (n: number) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
     };
-
-    setOutingForm({
-      purpose: 'Personal Errands',
-      destination: '',
-      out_time: formatDateTimeLocal(now),
-      expected_return: formatDateTimeLocal(returnTime),
-      remarks: '',
-    });
+    setOutingForm({ purpose: '', destination: '', out_time: fmt(now), expected_return: fmt(returnTime), remarks: '' });
     setFormError('');
     setFormSuccess('');
-    setIsGrantOutingOpen(true);
   };
 
-  // Submit Outing Grant
   const handleGrantOutingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!grantSelectedStudent) return;
     setFormError('');
     setFormSuccess('');
     setSubmitting(true);
-
     try {
-      await API.post('/outings/grant', {
-        student_id: selectedStudent.student_id,
-        ...outingForm,
-      });
-
-      setFormSuccess('Outing granted and registered successfully!');
-      
-      // Refresh current student profile
-      handleSelectStudent(selectedStudent._id);
-      
-      // Refresh statistics queue
+      await API.post('/outings/grant', { student_id: grantSelectedStudent.student_id, ...outingForm });
+      setFormSuccess('Outing granted successfully!');
       fetchDashboardData();
-
       setTimeout(() => {
-        setIsGrantOutingOpen(false);
+        setGrantSelectedStudent(null);
+        setFormSuccess('');
       }, 1500);
     } catch (err: any) {
       setFormError(err.response?.data?.message || 'Failed to grant outing');
@@ -173,7 +212,41 @@ export const CaretakerDashboard: React.FC = () => {
     }
   };
 
-  // Open Leave remarks action modal
+  /* ── Pending Outing approve/reject ───────────────────────────────── */
+  const openOutingActionModal = (outing: any, type: 'approve' | 'reject') => {
+    setSelectedPendingOuting(outing);
+    setOutingActionType(type);
+    setOutingRemarks('');
+    setFormError('');
+    setFormSuccess('');
+    setIsOutingActionOpen(true);
+  };
+
+  const handleOutingActionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    setFormSuccess('');
+    setSubmitting(true);
+    try {
+      await API.post(`/outings/${selectedPendingOuting._id}/${outingActionType}`, { remarks: outingRemarks });
+      setFormSuccess(outingActionType === 'approve' ? 'Outing approved!' : 'Outing request rejected.');
+      fetchDashboardData();
+      if (selectedStudent && selectedPendingOuting.student &&
+          selectedStudent._id === (selectedPendingOuting.student._id ?? selectedPendingOuting.student)) {
+        handleSelectStudent(selectedStudent._id);
+      }
+      setTimeout(() => {
+        setIsOutingActionOpen(false);
+        setSelectedPendingOuting(null);
+      }, 1500);
+    } catch (err: any) {
+      setFormError(err.response?.data?.message || `Failed to ${outingActionType} outing`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  /* ── Leave Request approve/reject ────────────────────────────────── */
   const openLeaveActionModal = (leave: any, type: 'approve' | 'reject') => {
     setSelectedLeave(leave);
     setLeaveActionType(type);
@@ -183,27 +256,19 @@ export const CaretakerDashboard: React.FC = () => {
     setIsLeaveActionOpen(true);
   };
 
-  // Submit Leave Action
   const handleLeaveActionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
     setFormSuccess('');
     setSubmitting(true);
-
     try {
-      const endpoint = `/leaves/${selectedLeave._id}/${leaveActionType}`;
-      await API.post(endpoint, { remarks: leaveRemarks });
-
-      setFormSuccess(`Leave successfully ${leaveActionType}d!`);
-      
-      // If the currently selected student is this leave's student, refresh profile
-      if (selectedStudent && selectedStudent._id === selectedLeave.student._id) {
+      await API.post(`/leaves/${selectedLeave._id}/${leaveActionType}`, { remarks: leaveRemarks });
+      setFormSuccess(`Leave ${leaveActionType === 'approve' ? 'approved' : 'rejected'} successfully!`);
+      fetchDashboardData();
+      if (selectedStudent && selectedLeave.student &&
+          selectedStudent._id === (selectedLeave.student._id ?? selectedLeave.student)) {
         handleSelectStudent(selectedStudent._id);
       }
-
-      // Refresh statistics queues
-      fetchDashboardData();
-
       setTimeout(() => {
         setIsLeaveActionOpen(false);
         setSelectedLeave(null);
@@ -215,665 +280,1067 @@ export const CaretakerDashboard: React.FC = () => {
     }
   };
 
-  // Gate checkin return click (inside Checked Out list)
-  const handleMarkReturn = async (outingId: string) => {
-    if (!window.confirm('Mark this student as RETURNED? (This will transition status to Inside)')) {
-      return;
-    }
-    try {
-      await API.post(`/outings/${outingId}/return`);
-      
-      // Reload stats and student profiles
-      fetchDashboardData();
-      if (selectedStudent) {
-        handleSelectStudent(selectedStudent._id);
-      }
-      alert('Student checked back in successfully');
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Check-in operation failed');
-    }
-  };
-
-  // Gate checkout exit click
+  /* ── Gate Actions ────────────────────────────────────────────────── */
   const handleMarkExit = async (outingId: string) => {
-    if (!window.confirm('Mark this student as EXITED? (This will transition status to Outside)')) {
-      return;
-    }
+    if (!window.confirm('Mark this student as EXITED from hostel?')) return;
     try {
       await API.post(`/outings/${outingId}/exit`);
-      
-      // Reload stats and student profiles
       fetchDashboardData();
-      if (selectedStudent) {
-        handleSelectStudent(selectedStudent._id);
-      }
-      alert('Student checked out successfully');
+      if (selectedStudent) handleSelectStudent(selectedStudent._id);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Check-out operation failed');
+      alert(err.response?.data?.message || 'Exit operation failed');
     }
   };
 
-  // Cancel outing approval before exit
-  const handleCancelOuting = async (outingId: string) => {
-    if (!window.confirm('Cancel this approved pass and refund the outings quota?')) {
-      return;
+  const handleMarkReturn = async (outingId: string) => {
+    if (!window.confirm('Mark this student as RETURNED to hostel?')) return;
+    try {
+      await API.post(`/outings/${outingId}/return`);
+      fetchDashboardData();
+      if (selectedStudent) handleSelectStudent(selectedStudent._id);
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Return operation failed');
     }
+  };
+
+  const handleCancelOuting = async (outingId: string) => {
+    if (!window.confirm('Cancel this approved pass?')) return;
     try {
       await API.post(`/outings/${outingId}/cancel`);
       fetchDashboardData();
-      if (selectedStudent) {
-        handleSelectStudent(selectedStudent._id);
-      }
-      alert('Outing cancelled successfully');
+      if (selectedStudent) handleSelectStudent(selectedStudent._id);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to cancel outing');
+      alert(err.response?.data?.message || 'Cancel operation failed');
     }
   };
 
+  /* ── History loader ──────────────────────────────────────────────── */
+  const loadHistory = useCallback(async () => {
+    setLoadingHistory(true);
+    try {
+      const yearQuery = selectedYear !== 'All' ? `?year=${selectedYear}` : '';
+      if (activeView === 'outing-history') {
+        const { data } = await API.get(`/outings/history${yearQuery}`);
+        setOutingHistory(data);
+      } else if (activeView === 'leave-history') {
+        const { data } = await API.get(`/leaves/history${yearQuery}`);
+        setLeaveHistory(data);
+      }
+    } catch (err) {
+      console.error('Failed to load history logs', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [activeView, selectedYear]);
+
+  useEffect(() => {
+    if (activeView === 'outing-history' || activeView === 'leave-history') {
+      loadHistory();
+    }
+  }, [activeView, loadHistory]);
+
+  /* ── Reports loader ──────────────────────────────────────────────── */
+  const handleLoadPreview = async () => {
+    setLoadingPreview(true);
+    try {
+      const endpoint = reportType === 'outings' ? '/outings/history' : '/leaves/history';
+      const params: any = {};
+      if (reportStatus) params.status = reportStatus;
+      if (reportBranch) params.branch = reportBranch;
+      if (selectedYear !== 'All') params.year = selectedYear;
+      else if (reportYear) params.year = reportYear;
+      if (reportStartDate) params.start_date = reportStartDate;
+      if (reportEndDate) params.end_date = reportEndDate;
+
+      const { data } = await API.get(endpoint, { params });
+      setPreviewData(data);
+    } catch (err) {
+      console.error('Failed to load report preview list', err);
+      setPreviewData([]);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeView === 'reports') {
+      handleLoadPreview();
+    }
+  }, [activeView, reportType, reportStatus, reportBranch, reportYear, reportStartDate, reportEndDate, selectedYear]);
+
+  const handleDownload = async (format: 'pdf' | 'excel') => {
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const endpoint = reportType === 'outings' ? '/reports/outings' : '/reports/leaves';
+    const query = new URLSearchParams();
+    query.append('format', format);
+    if (reportStatus) query.append('status', reportStatus);
+    if (reportBranch) query.append('branch', reportBranch);
+    if (selectedYear !== 'All') query.append('year', selectedYear);
+    else if (reportYear) query.append('year', reportYear);
+    if (reportStartDate) query.append('start_date', reportStartDate);
+    if (reportEndDate) query.append('end_date', reportEndDate);
+
+    const downloadUrl = `${baseUrl}${endpoint}?${query.toString()}`;
+    try {
+      const token = JSON.parse(localStorage.getItem('userInfo') || '{}').token;
+      const response = await fetch(downloadUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) throw new Error('File download failed');
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `${reportType}_report_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      alert('Error downloading report file.');
+    }
+  };
+
+  /* ── Settings handler ────────────────────────────────────────────── */
+  const handleSaveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormSuccess('Settings saved successfully!');
+    setTimeout(() => setFormSuccess(''), 2000);
+  };
+
+  /* ══════════════════════════════════════════════════════════════════
+     RENDER HELPERS & STYLES
+  ══════════════════════════════════════════════════════════════════ */
+
+  const getStatusBadge = (status: string) => {
+    const classes: Record<string, string> = {
+      Inside: 'bg-[#16A34A]/10 text-[#16A34A] border-[#16A34A]/20',
+      Outside: 'bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/20',
+      Leave: 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20',
+      Pending: 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20',
+      Approved: 'bg-[#16A34A]/10 text-[#16A34A] border-[#16A34A]/20',
+      Rejected: 'bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/20',
+      Returned: 'bg-[#4F46E5]/10 text-[#4F46E5] border-[#4F46E5]/20',
+      Exited: 'bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/20',
+    };
+    return (
+      <span className={`inline-flex items-center rounded border px-2.5 py-0.5 text-[13px] font-semibold uppercase ${classes[status] ?? 'bg-gray-100 text-gray-800'}`}>
+        {status}
+      </span>
+    );
+  };
+
+  const fmtDate = (d?: string | Date) => d ? new Date(d).toLocaleDateString() : '—';
+  const fmtDateTime = (d?: string | Date) => d ? new Date(d).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+
   return (
-    <div className="space-y-6">
-      {/* Title Header */}
-      <div>
-        <h1 className="font-heading text-2xl font-black text-slate-800 dark:text-white sm:text-3xl">
-          Caretaker Console
-        </h1>
-        <p className="text-sm text-slate-400 dark:text-slate-500">
-          Search student profiles, approve leaves, and grant daily gatepass outings.
-        </p>
+    <div className="space-y-8">
+      {/* ── Page Header ── */}
+      <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-6">
+        <div>
+          <h1 className="text-[32px] font-bold text-[#111827] capitalize">
+            {activeView.replace('-', ' ')}
+          </h1>
+          <p className="text-[16px] text-[#6B7280]">
+            Hostel caretaker administration console. Clean, fast, and structured.
+          </p>
+        </div>
+        <button
+          onClick={fetchDashboardData}
+          className="btn-secondary flex items-center gap-2"
+        >
+          <RefreshCw className={`h-5 w-5 ${loadingDashboard ? 'animate-spin' : ''}`} />
+          Refresh Data
+        </button>
       </div>
 
-      {/* Main Double Column Layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
-        {/* Left Column: Student Search & Actions (Span 7) */}
-        <div className="space-y-6 lg:col-span-7">
-          {/* Autocomplete Search Panel */}
-          <div className="glass-panel rounded-3xl p-5 border relative">
-            <h3 className="font-heading text-sm font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">
-              Search Student profile
-            </h3>
-            
+      {/* ══════════════════════════════════════════════════════════════
+          SUB-VIEW: DASHBOARD OVERVIEW
+      ══════════════════════════════════════════════════════════════ */}
+      {activeView === 'dashboard' && (
+        <div className="space-y-8 animate-fadeIn">
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[
+              { label: 'Students Outside', value: metrics?.studentsOutsideCount ?? 0, color: 'text-[#DC2626]' },
+              { label: 'Pending Outings', value: metrics?.pendingOutingsCount ?? 0, color: 'text-[#F59E0B]' },
+              { label: 'Pending Leaves', value: metrics?.pendingLeavesList?.length ?? 0, color: 'text-[#F59E0B]' },
+              { label: 'Today Returned', value: metrics?.returnedStudentsCount ?? 0, color: 'text-[#16A34A]' }
+            ].map((s) => (
+              <div key={s.label} className="admin-card p-6 flex flex-col justify-between">
+                <span className="text-[16px] font-semibold text-[#6B7280] uppercase tracking-wider">{s.label}</span>
+                <span className={`text-[32px] font-bold mt-2 ${s.color}`}>{s.value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Urgent Outing Requests Queue */}
+            <div className="admin-card p-6 space-y-4">
+              <h2 className="text-[22px] font-semibold text-[#111827] flex items-center gap-2">
+                Pending Outing Pass Requests
+              </h2>
+              <div className="divide-y divide-[#E5E7EB]">
+                {pendingOutings.length === 0 ? (
+                  <div className="py-8 text-center text-[#6B7280] text-[16px]">
+                    <Inbox className="mx-auto h-8 w-8 text-[#6B7280] mb-2" />
+                    No pending outing requests.
+                  </div>
+                ) : (
+                  pendingOutings.slice(0, 5).map((o) => (
+                    <div key={o._id} className="py-4 flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-[#111827] text-[16px]">{o.student?.name}</p>
+                        <p className="text-mono text-[14px] text-[#6B7280]">{o.student?.student_id}</p>
+                        <p className="text-[15px] text-[#111827] mt-1">{o.purpose} → {o.destination}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => openOutingActionModal(o, 'approve')}
+                          className="btn-primary py-2 px-4 text-[15px]"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => openOutingActionModal(o, 'reject')}
+                          className="btn-secondary py-2 px-4 text-[15px] text-[#DC2626] border-[#DC2626]/20 hover:bg-[#DC2626]/5"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {pendingOutings.length > 5 && (
+                <button onClick={() => navigate('/caretaker/leaves')} className="w-full text-center text-[#4F46E5] font-semibold text-[16px] hover:underline">
+                  View all pending outings & leaves
+                </button>
+              )}
+            </div>
+
+            {/* Quick Gate / Board View */}
+            <div className="admin-card p-6 space-y-4">
+              <h2 className="text-[22px] font-semibold text-[#111827]">
+                Outside Occupancy Board (Latest)
+              </h2>
+              <div className="divide-y divide-[#E5E7EB]">
+                {activeOutings.filter(o => o.status === 'Exited').length === 0 ? (
+                  <div className="py-8 text-center text-[#6B7280] text-[16px]">
+                    <Activity className="mx-auto h-8 w-8 text-[#6B7280] mb-2" />
+                    All students are inside.
+                  </div>
+                ) : (
+                  activeOutings.filter(o => o.status === 'Exited').slice(0, 5).map((o) => (
+                    <div key={o._id} className="py-4 flex justify-between items-center">
+                      <div>
+                        <p className="font-bold text-[#111827] text-[16px]">{o.student?.name}</p>
+                        <p className="text-mono text-[14px] text-[#6B7280]">{o.student?.student_id}</p>
+                        <p className="text-[15px] text-[#6B7280] mt-0.5">Left: {new Date(o.actual_exit_time).toLocaleTimeString()}</p>
+                      </div>
+                      <button
+                        onClick={() => handleMarkReturn(o._id)}
+                        className="btn-primary bg-[#16A34A] hover:bg-[#15803D]"
+                      >
+                        Mark Return
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+              {activeOutings.filter(o => o.status === 'Exited').length > 5 && (
+                <button onClick={() => navigate('/caretaker/outside')} className="w-full text-center text-[#4F46E5] font-semibold text-[16px] hover:underline">
+                  View full Outside Occupancy board
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          SUB-VIEW: STUDENT SEARCH & PROFILE
+      ══════════════════════════════════════════════════════════════ */}
+      {activeView === 'search' && (
+        <div className="space-y-6 animate-fadeIn">
+          <div className="admin-card p-6">
+            <h2 className="text-[22px] font-semibold text-[#111827] mb-4">Search Student Database</h2>
             <div className="relative">
-              <Search className="absolute top-3.5 left-4 h-5 w-5 text-slate-400" />
+              <Search className="absolute top-3.5 left-4 h-5 w-5 text-[#6B7280]" />
               <input
                 type="text"
-                placeholder="Type Student ID (e.g. S101) or Name..."
+                placeholder="Search by Student ID (e.g. N220533) or Name..."
                 value={searchQuery}
-                onFocus={() => setShowSuggestions(true)}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-3.5 pl-12 pr-4 text-sm text-slate-800 dark:text-white placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-200"
+                onChange={(e) => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
+                onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                className="w-full border border-[#E5E7EB] bg-white rounded py-3.5 pl-12 pr-4 text-[16px] text-[#111827] placeholder-[#6B7280] outline-none focus:border-[#4F46E5]"
               />
 
-              {/* Autocomplete Dropdown list */}
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 mt-2 z-50 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 shadow-xl divide-y divide-slate-100 dark:divide-slate-900">
-                  {suggestions.map((student) => (
+                <div className="absolute left-0 right-0 mt-2 z-50 border border-[#E5E7EB] bg-white p-2 shadow-lg divide-y divide-[#E5E7EB]">
+                  {suggestions.map((s) => (
                     <div
-                      key={student._id}
-                      onClick={() => handleSelectStudent(student._id)}
-                      className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-500/5 cursor-pointer transition-all"
+                      key={s._id}
+                      onMouseDown={() => handleSelectStudent(s._id)}
+                      className="flex items-center justify-between p-3 hover:bg-[#F8F9FC] cursor-pointer"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 font-bold text-xs">
-                          {student.photo ? (
-                            <img src={student.photo} alt={student.name} className="h-full w-full object-cover" />
-                          ) : (
-                            <User className="h-4 w-4" />
-                          )}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                            {student.name}
-                          </span>
-                          <span className="text-[9px] font-bold text-slate-400 uppercase">
-                            {student.student_id} · {student.branch} {student.year} Yr
-                          </span>
-                        </div>
+                      <div>
+                        <span className="text-[16px] font-bold text-[#111827] block">{s.name}</span>
+                        <span className="text-mono text-[13px] text-[#6B7280] uppercase">
+                          {s.student_id} · {s.branch} · Room {s.room}
+                        </span>
                       </div>
-                      <span className={`rounded-full px-2 py-0.5 text-[8px] font-extrabold uppercase ${
-                        student.status === 'Inside'
-                          ? 'bg-emerald-500/10 text-emerald-500'
-                          : 'bg-rose-500/10 text-rose-500'
-                      }`}>
-                        {student.status}
-                      </span>
+                      {getStatusBadge(s.status)}
                     </div>
                   ))}
                 </div>
               )}
             </div>
+            {searchError && <p className="mt-3 text-[#DC2626] font-semibold">{searchError}</p>}
           </div>
 
-          {/* Student Profile Card (Loaded on selection) */}
           {loadingStudent ? (
-            <div className="glass-panel rounded-3xl border p-12 text-center text-slate-400">
-              <Clock className="mx-auto h-8 w-8 animate-spin text-indigo-500 mb-3" />
-              <span className="text-sm font-semibold">Loading student profile...</span>
+            <div className="admin-card p-12 text-center text-[#6B7280]">
+              <RefreshCw className="mx-auto h-8 w-8 animate-spin mb-2" />
+              Loading student profile data...
             </div>
           ) : selectedStudent ? (
-            <div className="space-y-6">
-              {/* Profile Card Header */}
-              <div className="glass-panel rounded-3xl border p-6 relative overflow-hidden">
-                {/* Background colored indicator */}
-                <div className={`absolute top-0 inset-x-0 h-2 ${
-                  selectedStudent.status === 'Inside'
-                    ? 'bg-emerald-500'
-                    : selectedStudent.status === 'Outside'
-                    ? 'bg-rose-500'
-                    : 'bg-amber-500'
-                }`} />
-
-                <div className="flex flex-col sm:flex-row items-center gap-5">
-                  <div className="h-20 w-20 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 shadow-inner">
-                    {selectedStudent.photo ? (
-                      <img src={selectedStudent.photo} alt={selectedStudent.name} className="h-full w-full object-cover" />
-                    ) : (
-                      <User className="h-10 w-10 text-slate-300" />
-                    )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Profile Card */}
+              <div className="admin-card p-6 space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-16 w-16 bg-[#F8F9FC] border border-[#E5E7EB] rounded flex items-center justify-center text-[#6B7280]">
+                    <User className="h-8 w-8" />
                   </div>
-                  
-                  <div className="flex-1 text-center sm:text-left space-y-1.5">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-center sm:justify-start">
-                      <h2 className="font-heading text-lg font-black text-slate-800 dark:text-white">
-                        {selectedStudent.name}
-                      </h2>
-                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-extrabold uppercase ${
-                        selectedStudent.status === 'Inside'
-                          ? 'bg-emerald-500/10 text-emerald-500'
-                          : selectedStudent.status === 'Outside'
-                          ? 'bg-rose-500/10 text-rose-500'
-                          : 'bg-amber-500/10 text-amber-500'
-                      }`}>
-                        {selectedStudent.status}
-                      </span>
-                    </div>
-
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider space-x-2">
-                      <span>{selectedStudent.student_id}</span>
-                      <span>·</span>
-                      <span>{selectedStudent.branch} ({selectedStudent.year} Yr)</span>
-                      <span>·</span>
-                      <span>{selectedStudent.hostel} (Room {selectedStudent.room})</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mt-2 max-w-sm">
-                      <div className="bg-slate-100 dark:bg-slate-800/50 rounded-xl p-2.5 text-center">
-                        <span className="block text-[9px] font-bold text-slate-400 uppercase">Remaining Outings</span>
-                        <span className={`font-heading text-xl font-extrabold ${
-                          selectedStudent.remaining_outings === 0 ? 'text-rose-500' : 'text-slate-800 dark:text-white'
-                        }`}>
-                          {selectedStudent.remaining_outings}
-                        </span>
-                      </div>
-                      <div className="bg-slate-100 dark:bg-slate-800/50 rounded-xl p-2.5 text-center">
-                        <span className="block text-[9px] font-bold text-slate-400 uppercase">Used This Month</span>
-                        <span className="font-heading text-xl font-extrabold text-slate-800 dark:text-white">
-                          {selectedStudent.used_outings}
-                        </span>
-                      </div>
-                    </div>
+                  <div>
+                    <h3 className="text-[22px] font-bold text-[#111827]">{selectedStudent.name}</h3>
+                    <p className="text-mono text-[15px] text-[#6B7280]">{selectedStudent.student_id}</p>
                   </div>
                 </div>
 
-                {/* Primary Grant Outing Action Button */}
-                <div className="mt-6 border-t border-slate-200/50 dark:border-slate-800/50 pt-4 flex flex-col sm:flex-row gap-3 justify-between items-center">
-                  <div className="text-[10px] text-slate-400 text-center sm:text-left font-semibold">
-                    Contact: {selectedStudent.phone} | Parent: {selectedStudent.parent_phone}
+                <div className="space-y-3 border-t border-[#E5E7EB] pt-4 text-[15px]">
+                  <div className="flex justify-between">
+                    <span className="text-[#6B7280]">Hostel Room</span>
+                    <span className="font-semibold">{selectedStudent.hostel} · Room {selectedStudent.room || '—'}</span>
                   </div>
-                  
-                  {selectedStudent.status === 'Inside' ? (
-                    <button
-                      onClick={openGrantOutingModal}
-                      disabled={selectedStudent.remaining_outings <= 0}
-                      className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white px-5 py-2.5 text-xs font-bold shadow-md shadow-indigo-500/10 active:scale-95 transition-all duration-200 cursor-pointer disabled:scale-100 disabled:shadow-none"
-                    >
-                      <Plus className="h-4 w-4" />
-                      <span>{selectedStudent.remaining_outings <= 0 ? 'No outings remaining' : 'Grant Gatepass Outing'}</span>
-                    </button>
-                  ) : selectedStudent.status === 'Outside' ? (
-                    <div className="text-xs text-rose-500 font-bold">
-                      Student is checked out on active outing.
-                    </div>
-                  ) : (
-                    <div className="text-xs text-amber-500 font-bold">
-                      Student is checked out on active overnight leave.
+                  <div className="flex justify-between">
+                    <span className="text-[#6B7280]">Current Status</span>
+                    {getStatusBadge(selectedStudent.status)}
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#6B7280]">Branch & Year</span>
+                    <span className="font-semibold">{selectedStudent.branch} · {selectedStudent.year} Year</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#6B7280]">Remaining Outings</span>
+                    <span className="font-semibold text-[#16A34A]">{selectedStudent.remaining_outings}</span>
+                  </div>
+                </div>
+
+                {selectedStudent.status === 'Inside' && (
+                  <button
+                    onClick={() => {
+                      selectStudentForGrant(selectedStudent);
+                      navigate('/caretaker/grant');
+                    }}
+                    className="btn-primary w-full"
+                  >
+                    Grant Outing Pass
+                  </button>
+                )}
+              </div>
+
+              {/* Logs / Passes History */}
+              <div className="admin-card p-6 lg:col-span-2 space-y-6">
+                <h3 className="text-[18px] font-semibold text-[#111827]">Recent Outings & Leaves Log</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[15px]">
+                    <thead>
+                      <tr className="border-b border-[#E5E7EB] text-[#6B7280]">
+                        <th className="py-2">Type</th>
+                        <th className="py-2">Purpose / Location</th>
+                        <th className="py-2">Out Time / Dates</th>
+                        <th className="py-2">Status</th>
+                        <th className="py-2 text-right">Quick Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E5E7EB]">
+                      {studentOutings.slice(0, 5).map((o) => (
+                        <tr key={o._id}>
+                          <td className="py-3 font-semibold">Outing</td>
+                          <td className="py-3">
+                            <span className="block font-bold">{o.purpose}</span>
+                            <span className="text-[13px] text-[#6B7280]">{o.destination}</span>
+                          </td>
+                          <td className="py-3">{fmtDateTime(o.createdAt)}</td>
+                          <td className="py-3">{getStatusBadge(o.status)}</td>
+                          <td className="py-3 text-right">
+                            <div className="flex gap-2 justify-end">
+                              {o.status === 'Approved' && (
+                                <>
+                                  <button onClick={() => handleMarkExit(o._id)} className="btn-primary py-1 px-2.5 text-[13px] bg-[#16A34A] hover:bg-[#15803D]">Exit</button>
+                                  <button onClick={() => handleCancelOuting(o._id)} className="btn-secondary py-1 px-2.5 text-[13px] text-[#DC2626]">Cancel</button>
+                                </>
+                              )}
+                              {o.status === 'Exited' && (
+                                <button onClick={() => handleMarkReturn(o._id)} className="btn-primary py-1 px-2.5 text-[13px] bg-[#4F46E5] hover:bg-[#4338CA]">Return</button>
+                              )}
+                              {!['Approved', 'Exited'].includes(o.status) && <span className="text-[#6B7280] text-[13px]">—</span>}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {studentLeaves.slice(0, 5).map((lv) => (
+                        <tr key={lv._id}>
+                          <td className="py-3 font-semibold">Leave</td>
+                          <td className="py-3">{lv.reason}</td>
+                          <td className="py-3">{fmtDate(lv.start_date)} → {fmtDate(lv.end_date)}</td>
+                          <td className="py-3">{getStatusBadge(lv.status)}</td>
+                          <td className="py-3 text-right">—</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="admin-card p-12 text-center text-[#6B7280]">
+              Please search and select a student to load details.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          SUB-VIEW: GRANT OUTING
+      ══════════════════════════════════════════════════════════════ */}
+      {activeView === 'grant' && (
+        <div className="space-y-6 animate-fadeIn max-w-2xl mx-auto">
+          <div className="admin-card p-6">
+            <h2 className="text-[22px] font-semibold text-[#111827] mb-4">Grant Outing Pass</h2>
+            
+            {!grantSelectedStudent ? (
+              <div className="space-y-4">
+                <label className="block text-[15px] font-semibold text-[#6B7280]">Search student to grant pass</label>
+                <div className="relative">
+                  <Search className="absolute top-3.5 left-4 h-5 w-5 text-[#6B7280]" />
+                  <input
+                    type="text"
+                    placeholder="Search by ID or Name..."
+                    value={grantSearchQuery}
+                    onChange={(e) => { setGrantSearchQuery(e.target.value); setShowGrantSuggestions(true); }}
+                    className="w-full border border-[#E5E7EB] bg-white rounded py-3.5 pl-12 pr-4 text-[16px]"
+                  />
+                  {showGrantSuggestions && grantSuggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 mt-2 z-50 border border-[#E5E7EB] bg-white p-2 shadow-lg divide-y divide-[#E5E7EB]">
+                      {grantSuggestions.map((s) => (
+                        <div
+                          key={s._id}
+                          onMouseDown={() => selectStudentForGrant(s)}
+                          className="p-3 hover:bg-[#F8F9FC] cursor-pointer flex justify-between items-center"
+                        >
+                          <div>
+                            <span className="text-[16px] font-bold block">{s.name}</span>
+                            <span className="text-mono text-[13px] text-[#6B7280]">{s.student_id} · Room {s.room}</span>
+                          </div>
+                          {getStatusBadge(s.status)}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
               </div>
+            ) : (
+              <form onSubmit={handleGrantOutingSubmit} className="space-y-5">
+                <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-4">
+                  <div>
+                    <span className="text-[15px] text-[#6B7280]">Granting pass to:</span>
+                    <p className="text-[18px] font-bold text-[#111827]">{grantSelectedStudent.name}</p>
+                    <p className="text-mono text-[14px] text-[#6B7280]">{grantSelectedStudent.student_id}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setGrantSelectedStudent(null)}
+                    className="text-[15px] text-[#DC2626] font-semibold hover:underline"
+                  >
+                    Change Student
+                  </button>
+                </div>
 
-              {/* Student Outing & Leave History tabs inside profile */}
-              <div className="glass-panel rounded-3xl border overflow-hidden p-5 space-y-4">
-                <h3 className="font-heading text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  Recent Outings / Leave History
-                </h3>
-                
-                {studentOutings.length === 0 && studentLeaves.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-6">No previous logs for this student</p>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Active Outing Action Row inside history */}
-                    {studentOutings.map((outing) => {
-                      if (outing.status === 'Approved' || outing.status === 'Exited') {
-                        return (
-                          <div key={outing._id} className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                            <div className="space-y-1">
-                              <span className="inline-flex rounded-full bg-indigo-500/10 px-2 py-0.5 text-[8px] font-bold text-indigo-500 uppercase tracking-wide">
-                                Active {outing.status} Pass
-                              </span>
-                              <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{outing.purpose} to {outing.destination}</p>
-                              <span className="block text-[10px] text-slate-400">
-                                Expect return: {new Date(outing.expected_return).toLocaleString()}
-                              </span>
-                            </div>
-                            
-                            <div className="flex gap-2 w-full sm:w-auto">
-                              {outing.status === 'Approved' && (
-                                <>
-                                  <button
-                                    onClick={() => handleMarkExit(outing._id)}
-                                    className="flex-1 sm:flex-none rounded-lg bg-teal-600 hover:bg-teal-500 text-white px-3 py-1.5 text-[10px] font-bold shadow-sm active:scale-95 transition-all cursor-pointer"
-                                  >
-                                    Mark Exit
-                                  </button>
-                                  <button
-                                    onClick={() => handleCancelOuting(outing._id)}
-                                    className="flex-1 sm:flex-none rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 px-3 py-1.5 text-[10px] font-bold active:scale-95 transition-all cursor-pointer"
-                                  >
-                                    Cancel
-                                  </button>
-                                </>
-                              )}
-                              {outing.status === 'Exited' && (
-                                <button
-                                  onClick={() => handleMarkReturn(outing._id)}
-                                  className="flex-1 sm:flex-none rounded-lg bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 text-[10px] font-bold shadow-sm active:scale-95 transition-all cursor-pointer"
-                                >
-                                  Mark Return Checkin
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })}
-
-                    {/* Historical outing logs list */}
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                      <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">History Logs</h4>
-                      {studentOutings.filter(o => o.status !== 'Approved' && o.status !== 'Exited').slice(0, 4).map((outing) => (
-                        <div key={outing._id} className="py-2.5 flex justify-between items-center text-xs">
-                          <div className="space-y-0.5">
-                            <p className="font-semibold text-slate-700 dark:text-slate-300">{outing.purpose}</p>
-                            <span className="text-[10px] text-slate-400">
-                              Dest: {outing.destination} · Out: {new Date(outing.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <span className={`inline-block rounded-full px-2 py-0.5 text-[8px] font-bold uppercase ${
-                              outing.status === 'Returned'
-                                ? 'bg-emerald-500/10 text-emerald-500'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                            }`}>
-                              {outing.status}
-                            </span>
-                            {outing.actual_return_time && (
-                              <span className="block text-[9px] text-slate-400 font-medium mt-0.5">
-                                Back: {new Date(outing.actual_return_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-
-                      {studentLeaves.slice(0, 3).map((leave) => (
-                        <div key={leave._id} className="py-2.5 flex justify-between items-center text-xs">
-                          <div className="space-y-0.5">
-                            <p className="font-semibold text-slate-700 dark:text-slate-300">Leave: {leave.reason}</p>
-                            <span className="text-[10px] text-slate-400">
-                              Dates: {new Date(leave.start_date).toLocaleDateString()} to {new Date(leave.end_date).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <span className={`inline-block rounded-full px-2 py-0.5 text-[8px] font-bold uppercase ${
-                              leave.status === 'Approved'
-                                ? 'bg-emerald-500/10 text-emerald-500'
-                                : leave.status === 'Pending'
-                                ? 'bg-amber-500/10 text-amber-500'
-                                : 'bg-rose-500/10 text-rose-500'
-                            }`}>
-                              {leave.status}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                {formError && (
+                  <div className="flex items-center gap-2 p-3 bg-[#DC2626]/10 border border-[#DC2626]/20 text-[#DC2626] text-[15px]">
+                    <AlertCircle className="h-5 w-5" />
+                    <span>{formError}</span>
                   </div>
                 )}
-              </div>
+                {formSuccess && (
+                  <div className="p-3 bg-[#16A34A]/10 border border-[#16A34A]/20 text-[#16A34A] text-[15px] font-semibold">
+                    {formSuccess}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[15px] font-semibold text-[#111827]">Purpose of Outing</label>
+                    <input
+                      type="text"
+                      required
+                      value={outingForm.purpose}
+                      onChange={e => setOutingForm({ ...outingForm, purpose: e.target.value })}
+                      className="border border-[#E5E7EB] rounded p-2.5 text-[16px]"
+                      placeholder="e.g. Hospital visit, shopping"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[15px] font-semibold text-[#111827]">Destination</label>
+                    <input
+                      type="text"
+                      required
+                      value={outingForm.destination}
+                      onChange={e => setOutingForm({ ...outingForm, destination: e.target.value })}
+                      className="border border-[#E5E7EB] rounded p-2.5 text-[16px]"
+                      placeholder="e.g. Sector 12 Market"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[15px] font-semibold text-[#111827]">Out Time</label>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={outingForm.out_time}
+                      onChange={e => setOutingForm({ ...outingForm, out_time: e.target.value })}
+                      className="border border-[#E5E7EB] rounded p-2.5 text-[16px]"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[15px] font-semibold text-[#111827]">Return By</label>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={outingForm.expected_return}
+                      onChange={e => setOutingForm({ ...outingForm, expected_return: e.target.value })}
+                      className="border border-[#E5E7EB] rounded p-2.5 text-[16px]"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[15px] font-semibold text-[#111827]">Remarks (Optional)</label>
+                  <textarea
+                    value={outingForm.remarks}
+                    onChange={e => setOutingForm({ ...outingForm, remarks: e.target.value })}
+                    className="border border-[#E5E7EB] rounded p-2.5 text-[16px] h-20 resize-none"
+                    placeholder="Enter parent verification notes if any..."
+                  />
+                </div>
+
+                <div className="flex justify-end gap-4 border-t border-[#E5E7EB] pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setGrantSelectedStudent(null)}
+                    className="btn-secondary"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={submitting} className="btn-primary">
+                    {submitting ? 'Issuing...' : 'Grant & Issue Pass'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          SUB-VIEW: LEAVE REQUESTS
+      ══════════════════════════════════════════════════════════════ */}
+      {activeView === 'leaves' && (
+        <div className="admin-card p-6 animate-fadeIn">
+          <h2 className="text-[22px] font-semibold text-[#111827] mb-6">Leave Requests Queue</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-[15px]">
+              <thead>
+                <tr className="border-b border-[#E5E7EB] text-[#6B7280]">
+                  <th className="py-3">Student</th>
+                  <th className="py-3">Reason</th>
+                  <th className="py-3">Start Date</th>
+                  <th className="py-3">End Date</th>
+                  <th className="py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5E7EB]">
+                {pendingLeaves.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-[#6B7280]">
+                      No pending overnight leave requests.
+                    </td>
+                  </tr>
+                ) : (
+                  pendingLeaves.map((lv) => (
+                    <tr key={lv._id}>
+                      <td className="py-4">
+                        <span className="block font-bold text-[#111827]">{lv.student?.name}</span>
+                        <span className="text-mono text-[13px] text-[#6B7280]">{lv.student?.student_id}</span>
+                      </td>
+                      <td className="py-4 italic">"{lv.reason}"</td>
+                      <td className="py-4">{fmtDate(lv.start_date)}</td>
+                      <td className="py-4">{fmtDate(lv.end_date)}</td>
+                      <td className="py-4 text-right">
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => openLeaveActionModal(lv, 'approve')}
+                            className="btn-primary py-1.5 px-3 text-[14px]"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => openLeaveActionModal(lv, 'reject')}
+                            className="btn-secondary text-[#DC2626] border-[#DC2626]/20 py-1.5 px-3 text-[14px] hover:bg-[#DC2626]/5"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          SUB-VIEW: STUDENTS OUTSIDE
+      ══════════════════════════════════════════════════════════════ */}
+      {activeView === 'outside' && (
+        <div className="admin-card p-6 animate-fadeIn">
+          <h2 className="text-[22px] font-semibold text-[#111827] mb-6">Outside Occupancy Board</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-[15px]">
+              <thead>
+                <tr className="border-b border-[#E5E7EB] text-[#6B7280]">
+                  <th className="py-3">Student</th>
+                  <th className="py-3">Hostel Details</th>
+                  <th className="py-3">Purpose</th>
+                  <th className="py-3">Exit Time</th>
+                  <th className="py-3">Expected Return</th>
+                  <th className="py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5E7EB]">
+                {activeOutings.filter(o => o.status === 'Exited').length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-[#6B7280]">
+                      No students are currently outside the campus.
+                    </td>
+                  </tr>
+                ) : (
+                  activeOutings.filter(o => o.status === 'Exited').map((o) => (
+                    <tr key={o._id}>
+                      <td className="py-4">
+                        <span className="block font-bold text-[#111827]">{o.student?.name}</span>
+                        <span className="text-mono text-[13px] text-[#6B7280]">{o.student?.student_id}</span>
+                      </td>
+                      <td className="py-4">{o.student?.hostel} · Rm {o.student?.room}</td>
+                      <td className="py-4">{o.purpose} → {o.destination}</td>
+                      <td className="py-4">{fmtDateTime(o.actual_exit_time)}</td>
+                      <td className="py-4 font-semibold text-[#DC2626]">{fmtDateTime(o.expected_return)}</td>
+                      <td className="py-4 text-right">
+                        <button
+                          onClick={() => handleMarkReturn(o._id)}
+                          className="btn-primary bg-[#16A34A] hover:bg-[#15803D]"
+                        >
+                          Mark Returned
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          SUB-VIEWS: OUTING HISTORY / LEAVE HISTORY
+      ══════════════════════════════════════════════════════════════ */}
+      {(activeView === 'outing-history' || activeView === 'leave-history') && (
+        <div className="admin-card p-6 animate-fadeIn">
+          <h2 className="text-[22px] font-semibold text-[#111827] mb-6 capitalize">
+            {activeView.replace('-', ' ')}
+          </h2>
+          
+          {loadingHistory ? (
+            <div className="py-12 text-center text-[#6B7280]">
+              <RefreshCw className="mx-auto h-8 w-8 animate-spin mb-2" />
+              Loading history archives...
             </div>
           ) : (
-            <div className="glass-panel rounded-3xl border p-12 text-center text-slate-400">
-              <Search className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-700 mb-3 animate-pulse" />
-              <span className="text-sm font-semibold">Search and select a student ID to grant gatepass outings or view history logs</span>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[15px]">
+                <thead>
+                  <tr className="border-b border-[#E5E7EB] text-[#6B7280]">
+                    <th className="py-3">Student ID</th>
+                    <th className="py-3">Name</th>
+                    <th className="py-3">Location / Detail</th>
+                    <th className="py-3">Dates / Times</th>
+                    <th className="py-3 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E5E7EB]">
+                  {activeView === 'outing-history' ? (
+                    outingHistory.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-[#6B7280]">No history logs found.</td>
+                      </tr>
+                    ) : (
+                      outingHistory.map((o) => (
+                        <tr key={o._id}>
+                          <td className="py-4 text-mono font-semibold">{o.student?.student_id || '—'}</td>
+                          <td className="py-4 font-bold">{o.student?.name || '—'}</td>
+                          <td className="py-4">
+                            <span className="block font-semibold">{o.purpose}</span>
+                            <span className="text-[13px] text-[#6B7280]">{o.destination}</span>
+                          </td>
+                          <td className="py-4 text-[13px]">
+                            Out: {fmtDateTime(o.actual_exit_time || o.createdAt)}<br />
+                            In: {fmtDateTime(o.actual_return_time)}
+                          </td>
+                          <td className="py-4 text-right">{getStatusBadge(o.status)}</td>
+                        </tr>
+                      ))
+                    )
+                  ) : (
+                    leaveHistory.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-[#6B7280]">No history logs found.</td>
+                      </tr>
+                    ) : (
+                      leaveHistory.map((lv) => (
+                        <tr key={lv._id}>
+                          <td className="py-4 text-mono font-semibold">{lv.student?.student_id || '—'}</td>
+                          <td className="py-4 font-bold">{lv.student?.name || '—'}</td>
+                          <td className="py-4 italic">"{lv.reason}"</td>
+                          <td className="py-4">{fmtDate(lv.start_date)} → {fmtDate(lv.end_date)}</td>
+                          <td className="py-4 text-right">{getStatusBadge(lv.status)}</td>
+                        </tr>
+                      ))
+                    )
+                  )}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
+      )}
 
-        {/* Right Column: Pending Leaves & Checked Out Students (Span 5) */}
-        <div className="space-y-6 lg:col-span-5">
-          {/* Action queue: Pending Leaves */}
-          <div className="glass-panel rounded-3xl border overflow-hidden">
-            <div className="border-b border-slate-200/60 dark:border-slate-800/60 p-4 bg-slate-500/5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4.5 w-4.5 text-amber-500" />
-                <h3 className="font-heading text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Leave Approval Queue
-                </h3>
-              </div>
-              <span className="rounded-full bg-amber-500/10 text-amber-600 px-2 py-0.5 text-[10px] font-extrabold">
-                {pendingLeaves.length} Pending
-              </span>
+      {/* ══════════════════════════════════════════════════════════════
+          SUB-VIEW: REPORTS GENERATION
+      ══════════════════════════════════════════════════════════════ */}
+      {activeView === 'reports' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fadeIn">
+          {/* Filters Form */}
+          <div className="admin-card p-6 space-y-5">
+            <h3 className="text-[18px] font-semibold text-[#111827]">Report Filter Controls</h3>
+            
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[15px] text-[#6B7280]">Data Subject</label>
+              <select
+                value={reportType}
+                onChange={e => setReportType(e.target.value as 'outings' | 'leaves')}
+                className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
+              >
+                <option value="outings">Outing Passes Logs</option>
+                <option value="leaves">Leave Requests Logs</option>
+              </select>
             </div>
 
-            <div className="divide-y divide-slate-100 dark:divide-slate-800/50 p-4 max-h-[350px] overflow-y-auto space-y-3">
-              {loadingDashboard ? (
-                <p className="text-xs text-slate-400 text-center py-6">Loading leaves queue...</p>
-              ) : pendingLeaves.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-6">No pending leaves to review</p>
-              ) : (
-                pendingLeaves.map((leave) => (
-                  <div key={leave._id} className="rounded-xl border border-slate-200/50 dark:border-slate-800/50 p-3 bg-white dark:bg-slate-900 shadow-sm flex flex-col gap-2.5 transition-all hover:border-slate-300">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 overflow-hidden rounded-full bg-slate-100 flex items-center justify-center font-bold text-[9px]">
-                          {leave.student.photo ? (
-                            <img src={leave.student.photo} alt={leave.student.name} />
-                          ) : (
-                            <User className="h-3 w-3 text-slate-400" />
-                          )}
-                        </div>
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          {leave.student.name}
-                        </span>
-                      </div>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase">
-                        {leave.student.student_id}
-                      </span>
-                    </div>
-
-                    <div className="text-xs text-slate-600 dark:text-slate-400">
-                      <p className="italic">" {leave.reason} "</p>
-                      <div className="flex items-center gap-1 mt-1.5 font-bold text-slate-500 text-[10px]">
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span>
-                          {new Date(leave.start_date).toLocaleDateString()} to {new Date(leave.end_date).toLocaleDateString()}
-                        </span>
-                      </div>
-                      {leave.attachment_url && (
-                        <a
-                          href={leave.attachment_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 mt-2 text-indigo-500 font-bold text-[10px]"
-                        >
-                          <FileText className="h-3.5 w-3.5" />
-                          <span>View Medical / Proof doc</span>
-                        </a>
-                      )}
-                    </div>
-
-                    <div className="flex gap-2 mt-1">
-                      <button
-                        onClick={() => openLeaveActionModal(leave, 'approve')}
-                        className="flex-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 text-[10px] font-bold shadow-sm active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1"
-                      >
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        <span>Approve</span>
-                      </button>
-                      <button
-                        onClick={() => openLeaveActionModal(leave, 'reject')}
-                        className="flex-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 py-1.5 text-[10px] font-bold active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1 border border-rose-500/10"
-                      >
-                        <XCircle className="h-3.5 w-3.5" />
-                        <span>Reject</span>
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Checked Out Students panel */}
-          <div className="glass-panel rounded-3xl border overflow-hidden">
-            <div className="border-b border-slate-200/60 dark:border-slate-800/60 p-4 bg-slate-500/5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Activity className="h-4.5 w-4.5 text-rose-500" />
-                <h3 className="font-heading text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Checked Out Board
-                </h3>
-              </div>
-              <span className="rounded-full bg-rose-500/10 text-rose-600 px-2 py-0.5 text-[10px] font-extrabold">
-                {activeOutings.filter(o => o.status === 'Exited').length} Outside
-              </span>
-            </div>
-
-            <div className="divide-y divide-slate-100 dark:divide-slate-800/50 p-4 max-h-[350px] overflow-y-auto space-y-3">
-              {loadingDashboard ? (
-                <p className="text-xs text-slate-400 text-center py-6">Loading board...</p>
-              ) : activeOutings.filter(o => o.status === 'Exited').length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-6">No students checked out right now</p>
-              ) : (
-                activeOutings.filter(o => o.status === 'Exited').map((outing) => (
-                  <div key={outing._id} className="rounded-xl border border-slate-200/50 dark:border-slate-800/50 p-3 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-between">
-                    <div className="space-y-1">
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 capitalize">
-                        {outing.student.name}
-                      </span>
-                      <span className="block text-[9px] font-bold text-slate-400 uppercase">
-                        {outing.student.student_id} · Room {outing.student.room}
-                      </span>
-                      <span className="flex items-center gap-1 text-[9px] font-bold text-slate-500">
-                        <Clock className="h-3 w-3" />
-                        <span>Left: {new Date(outing.actual_exit_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={() => handleMarkReturn(outing._id)}
-                      className="rounded-lg bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 text-[10px] font-bold shadow-sm active:scale-95 transition-all cursor-pointer flex items-center gap-1"
-                    >
-                      <UserCheck className="h-3.5 w-3.5" />
-                      <span>Checkin</span>
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* MODAL: GRANT OUTING FORM */}
-      <Modal
-        isOpen={isGrantOutingOpen}
-        onClose={() => setIsGrantOutingOpen(false)}
-        title={selectedStudent ? `Grant Outing Pass: ${selectedStudent.name}` : 'Grant Outing Pass'}
-      >
-        <form onSubmit={handleGrantOutingSubmit} className="space-y-4">
-          {formError && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-500/10 border border-rose-500/20 p-4 text-xs text-rose-500">
-              <AlertCircle className="h-4 w-4" />
-              <span>{formError}</span>
-            </div>
-          )}
-
-          {formSuccess && (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-xs text-emerald-500 font-semibold">
-              {formSuccess}
-            </div>
-          )}
-
-          <div className="space-y-3">
-            {/* Purpose */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Purpose of Outing
-              </label>
-              <input
-                type="text"
-                required
-                value={outingForm.purpose}
-                onChange={(e) => setOutingForm({ ...outingForm, purpose: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-800 dark:text-white"
-                placeholder="e.g. Buy study books, Dental clinic visit"
-              />
-            </div>
-
-            {/* Destination */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Destination
-              </label>
-              <input
-                type="text"
-                required
-                value={outingForm.destination}
-                onChange={(e) => setOutingForm({ ...outingForm, destination: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-800 dark:text-white"
-                placeholder="e.g. City Central Market, Sector 15"
-              />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[15px] text-[#6B7280]">Status</label>
+              <select
+                value={reportStatus}
+                onChange={e => setReportStatus(e.target.value)}
+                className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
+              >
+                <option value="">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved / Exited</option>
+                <option value="Returned">Returned</option>
+                <option value="Rejected">Rejected</option>
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              {/* Out Time */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Out Date/Time
-                </label>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[15px] text-[#6B7280]">Branch</label>
                 <input
-                  type="datetime-local"
-                  required
-                  value={outingForm.out_time}
-                  onChange={(e) => setOutingForm({ ...outingForm, out_time: e.target.value })}
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-800 dark:text-white"
+                  type="text"
+                  placeholder="e.g. CSE"
+                  value={reportBranch}
+                  onChange={e => setReportBranch(e.target.value)}
+                  className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
                 />
               </div>
-
-              {/* Expected Return */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Expected Return Date/Time
-                </label>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[15px] text-[#6B7280]">Year</label>
                 <input
-                  type="datetime-local"
-                  required
-                  value={outingForm.expected_return}
-                  onChange={(e) => setOutingForm({ ...outingForm, expected_return: e.target.value })}
-                  className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-800 dark:text-white"
+                  type="text"
+                  placeholder="e.g. 3"
+                  value={reportYear}
+                  onChange={e => setReportYear(e.target.value)}
+                  className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
                 />
               </div>
             </div>
 
-            {/* Remarks */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Remarks (Optional)
-              </label>
-              <textarea
-                value={outingForm.remarks}
-                onChange={(e) => setOutingForm({ ...outingForm, remarks: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2 px-3 text-xs text-slate-800 dark:text-white h-16 resize-none"
-                placeholder="Parent details, verification remarks..."
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[15px] text-[#6B7280]">From Date</label>
+              <input
+                type="date"
+                value={reportStartDate}
+                onChange={e => setReportStartDate(e.target.value)}
+                className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
               />
             </div>
-          </div>
-
-          <div className="mt-6 flex justify-end gap-3 border-t border-slate-200/50 pt-4">
-            <button
-              type="button"
-              onClick={() => setIsGrantOutingOpen(false)}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 text-xs font-bold shadow-md cursor-pointer"
-            >
-              {submitting ? 'Granting...' : 'Approve & Grant Outing'}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* MODAL: LEAVE DECISION ACTION */}
-      <Modal
-        isOpen={isLeaveActionOpen}
-        onClose={() => setIsLeaveActionOpen(false)}
-        title={selectedLeave ? `Review Leave: ${selectedLeave.student.name}` : ''}
-      >
-        <form onSubmit={handleLeaveActionSubmit} className="space-y-4">
-          {formError && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-500/10 border border-rose-500/20 p-4 text-xs text-rose-500">
-              <AlertCircle className="h-4 w-4" />
-              <span>{formError}</span>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[15px] text-[#6B7280]">To Date</label>
+              <input
+                type="date"
+                value={reportEndDate}
+                onChange={e => setReportEndDate(e.target.value)}
+                className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
+              />
             </div>
-          )}
 
+            <div className="flex gap-3 border-t border-[#E5E7EB] pt-4">
+              <button
+                onClick={() => handleDownload('pdf')}
+                className="flex-1 btn-secondary text-[15px] flex items-center justify-center gap-1.5"
+              >
+                <FileText className="h-4 w-4" /> Download PDF
+              </button>
+              <button
+                onClick={() => handleDownload('excel')}
+                className="flex-1 btn-primary text-[15px] flex items-center justify-center gap-1.5"
+              >
+                <FileSpreadsheet className="h-4 w-4" /> Export Excel
+              </button>
+            </div>
+          </div>
+
+          {/* Table Preview */}
+          <div className="admin-card p-6 lg:col-span-2 space-y-4">
+            <h3 className="text-[18px] font-semibold text-[#111827]">Live Report Preview</h3>
+            <div className="overflow-x-auto max-h-[500px]">
+              <table className="w-full text-left text-[15px]">
+                <thead>
+                  <tr className="border-b border-[#E5E7EB] text-[#6B7280]">
+                    <th className="py-2">Student</th>
+                    <th className="py-2">Details</th>
+                    <th className="py-2 text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E5E7EB]">
+                  {loadingPreview ? (
+                    <tr>
+                      <td colSpan={3} className="py-8 text-center text-[#6B7280]">Loading preview...</td>
+                    </tr>
+                  ) : previewData.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="py-8 text-center text-[#6B7280]">No records match the current filters.</td>
+                    </tr>
+                  ) : (
+                    previewData.slice(0, 15).map((row) => (
+                      <tr key={row._id}>
+                        <td className="py-3">
+                          <span className="block font-bold text-[#111827]">{row.student?.name || '—'}</span>
+                          <span className="text-mono text-[13px] text-[#6B7280]">{row.student?.student_id || '—'}</span>
+                        </td>
+                        <td className="py-3 text-[14px]">
+                          {reportType === 'outings' ? (
+                            <span>{row.purpose} → {row.destination}</span>
+                          ) : (
+                            <span>Leave: {row.reason} ({fmtDate(row.start_date)} → {fmtDate(row.end_date)})</span>
+                          )}
+                        </td>
+                        <td className="py-3 text-right">{getStatusBadge(row.status)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          SUB-VIEW: SETTINGS
+      ══════════════════════════════════════════════════════════════ */}
+      {activeView === 'settings' && (
+        <div className="admin-card p-6 animate-fadeIn max-w-2xl mx-auto space-y-6">
+          <h2 className="text-[22px] font-semibold text-[#111827]">Hostel Administration Settings</h2>
+          
           {formSuccess && (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-xs text-emerald-500 font-semibold">
+            <div className="p-3 bg-[#16A34A]/10 border border-[#16A34A]/20 text-[#16A34A] text-[15px] font-semibold">
               {formSuccess}
             </div>
           )}
 
-          <div className="space-y-3 text-xs">
-            <div className="bg-slate-100 dark:bg-slate-800/40 rounded-xl p-3.5">
-              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Reason for Leave</span>
-              <p className="font-semibold text-slate-700 dark:text-slate-300">"{selectedLeave?.reason}"</p>
-              <div className="mt-2 text-slate-400 font-medium">
-                Dates: <span className="text-slate-600 dark:text-slate-300 font-bold">{new Date(selectedLeave?.start_date).toLocaleDateString()}</span> to <span className="text-slate-600 dark:text-slate-300 font-bold">{new Date(selectedLeave?.end_date).toLocaleDateString()}</span>
-              </div>
+          <form onSubmit={handleSaveSettings} className="space-y-5 text-[15px]">
+            <div className="flex flex-col gap-1.5">
+              <label className="font-semibold text-[#111827]">Curfew Cutoff Time (HH:MM)</label>
+              <input
+                type="time"
+                value={settingsForm.curfewTime}
+                onChange={e => setSettingsForm({ ...settingsForm, curfewTime: e.target.value })}
+                className="border border-[#E5E7EB] rounded p-2.5 text-[16px]"
+              />
+              <span className="text-[13px] text-[#6B7280]">Outing returns marked after this time will flag late status alerts.</span>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="font-semibold text-[#111827]">Max Allowed Outing Passes Per Student (Monthly)</label>
+              <input
+                type="number"
+                value={settingsForm.maxMonthlyOutings}
+                onChange={e => setSettingsForm({ ...settingsForm, maxMonthlyOutings: e.target.value })}
+                className="border border-[#E5E7EB] rounded p-2.5 text-[16px]"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="font-semibold text-[#111827]">Late Status Warden Alert Delay (Minutes)</label>
+              <input
+                type="number"
+                value={settingsForm.alertWardenDelay}
+                onChange={e => setSettingsForm({ ...settingsForm, alertWardenDelay: e.target.value })}
+                className="border border-[#E5E7EB] rounded p-2.5 text-[16px]"
+              />
+              <span className="text-[13px] text-[#6B7280]">Minutes after curfew/expected time to trigger auto sms/push alert.</span>
+            </div>
+
+            <div className="flex items-center gap-3 py-2">
+              <input
+                type="checkbox"
+                id="autoEmergency"
+                checked={settingsForm.autoApproveEmergency}
+                onChange={e => setSettingsForm({ ...settingsForm, autoApproveEmergency: e.target.checked })}
+                className="h-5 w-5 rounded border-[#E5E7EB]"
+              />
+              <label htmlFor="autoEmergency" className="font-semibold text-[#111827]">
+                Auto-approve Emergency Outing Passes (Medical tags)
+              </label>
+            </div>
+
+            <div className="border-t border-[#E5E7EB] pt-5 flex justify-end">
+              <button type="submit" className="btn-primary">
+                Save System Settings
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          MODALS: ACTIONS
+      ══════════════════════════════════════════════════════════════ */}
+      
+      {/* Pending Outing Approve/Reject Modal */}
+      <Modal
+        isOpen={isOutingActionOpen}
+        onClose={() => { setIsOutingActionOpen(false); setSelectedPendingOuting(null); }}
+        title={selectedPendingOuting ? `Approve / Reject Outing: ${selectedPendingOuting.student?.name}` : ''}
+      >
+        {selectedPendingOuting && (
+          <form onSubmit={handleOutingActionSubmit} className="space-y-4">
+            {formError && <div className="p-3 bg-[#DC2626]/10 text-[#DC2626] text-[15px]">{formError}</div>}
+            {formSuccess && <div className="p-3 bg-[#16A34A]/10 text-[#16A34A] text-[15px] font-semibold">{formSuccess}</div>}
+
+            <div className="bg-[#F8F9FC] border border-[#E5E7EB] rounded p-4 text-[15px] space-y-1">
+              <p className="font-bold text-[#111827]">{selectedPendingOuting.purpose}</p>
+              <p className="text-[#6B7280]">{selectedPendingOuting.destination}</p>
+              <p className="text-[13px] text-[#6B7280] pt-1">Applied: {fmtDateTime(selectedPendingOuting.createdAt)}</p>
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Decision Remarks
+              <label className="text-[15px] font-semibold text-[#111827]">
+                {outingActionType === 'approve' ? 'Approval Remarks (Optional)' : 'Rejection Reason (Required)'}
               </label>
+              <input
+                type="text"
+                required={outingActionType === 'reject'}
+                value={outingRemarks}
+                onChange={e => setOutingRemarks(e.target.value)}
+                className="border border-[#E5E7EB] rounded p-2.5 text-[15px]"
+                placeholder={outingActionType === 'approve' ? 'e.g. Approved' : 'e.g. Exam tomorrow'}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-[#E5E7EB] pt-4">
+              <button type="button" onClick={() => setIsOutingActionOpen(false)} className="btn-secondary">Cancel</button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className={`btn-primary ${outingActionType === 'reject' ? 'bg-[#DC2626] hover:bg-[#B91C1C]' : ''}`}
+              >
+                {submitting ? 'Processing...' : outingActionType === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* Leave Approve/Reject Modal */}
+      <Modal
+        isOpen={isLeaveActionOpen}
+        onClose={() => { setIsLeaveActionOpen(false); setSelectedLeave(null); }}
+        title={selectedLeave ? `Approve / Reject Leave: ${selectedLeave.student?.name}` : ''}
+      >
+        {selectedLeave && (
+          <form onSubmit={handleLeaveActionSubmit} className="space-y-4">
+            {formError && <div className="p-3 bg-[#DC2626]/10 text-[#DC2626] text-[15px]">{formError}</div>}
+            {formSuccess && <div className="p-3 bg-[#16A34A]/10 text-[#16A34A] text-[15px] font-semibold">{formSuccess}</div>}
+
+            <div className="bg-[#F8F9FC] border border-[#E5E7EB] rounded p-4 text-[15px] space-y-1">
+              <p className="italic text-[#111827]">"{selectedLeave.reason}"</p>
+              <p className="text-[13px] text-[#6B7280] pt-1">Dates: {fmtDate(selectedLeave.start_date)} to {fmtDate(selectedLeave.end_date)}</p>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[15px] font-semibold text-[#111827]">Decision Remarks</label>
               <input
                 type="text"
                 required
                 value={leaveRemarks}
-                onChange={(e) => setLeaveRemarks(e.target.value)}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-3 px-4 text-xs text-slate-800 dark:text-white"
-                placeholder={leaveActionType === 'approve' ? 'e.g. Approved after calling parent' : 'e.g. Rejected due to pending exams'}
+                onChange={e => setLeaveRemarks(e.target.value)}
+                className="border border-[#E5E7EB] rounded p-2.5 text-[15px]"
+                placeholder="Remarks notes for history logs..."
               />
             </div>
-          </div>
 
-          <div className="mt-6 flex justify-end gap-3 border-t border-slate-200/50 pt-4">
-            <button
-              type="button"
-              onClick={() => setIsLeaveActionOpen(false)}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className={`rounded-xl px-5 py-2 text-xs font-bold text-white shadow-md cursor-pointer ${
-                leaveActionType === 'approve' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-rose-600 hover:bg-rose-500'
-              }`}
-            >
-              {submitting ? 'Processing...' : leaveActionType === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-end gap-3 border-t border-[#E5E7EB] pt-4">
+              <button type="button" onClick={() => setIsLeaveActionOpen(false)} className="btn-secondary">Cancel</button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className={`btn-primary ${leaveActionType === 'reject' ? 'bg-[#DC2626] hover:bg-[#B91C1C]' : ''}`}
+              >
+                {submitting ? 'Processing...' : leaveActionType === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
+              </button>
+            </div>
+          </form>
+        )}
       </Modal>
     </div>
   );
 };
+
 export default CaretakerDashboard;

@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Eye
 } from 'lucide-react';
+import { useAcademicYear } from '../contexts/AcademicYearContext';
 
 export const ReportsPage: React.FC = () => {
   const [reportType, setReportType] = useState<'outings' | 'leaves'>('outings');
@@ -18,7 +19,7 @@ export const ReportsPage: React.FC = () => {
   // Filters state
   const [status, setStatus] = useState('');
   const [branch, setBranch] = useState('');
-  const [year, setYear] = useState('');
+  const { selectedYear } = useAcademicYear();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -36,7 +37,7 @@ export const ReportsPage: React.FC = () => {
       const params: any = {};
       if (status) params.status = status;
       if (branch) params.branch = branch;
-      if (year) params.year = year;
+      if (selectedYear !== 'All') params.year = selectedYear;
       if (startDate) params.start_date = startDate;
       if (endDate) params.end_date = endDate;
 
@@ -52,7 +53,7 @@ export const ReportsPage: React.FC = () => {
 
   useEffect(() => {
     handleLoadPreview();
-  }, [reportType, status, branch, year, startDate, endDate]);
+  }, [reportType, status, branch, selectedYear, startDate, endDate]);
 
   // Construct URL for report downloads
   const handleDownload = (format: 'pdf' | 'excel') => {
@@ -64,7 +65,7 @@ export const ReportsPage: React.FC = () => {
     query.append('format', format);
     if (status) query.append('status', status);
     if (branch) query.append('branch', branch);
-    if (year) query.append('year', year);
+    if (selectedYear !== 'All') query.append('year', selectedYear);
     if (startDate) query.append('start_date', startDate);
     if (endDate) query.append('end_date', endDate);
 
@@ -216,21 +217,7 @@ export const ReportsPage: React.FC = () => {
               </select>
             </div>
 
-            {/* Year Filter */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Academic Year</label>
-              <select
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-700 dark:text-slate-200 outline-none"
-              >
-                <option value="">All Years</option>
-                <option value="1st">1st Year</option>
-                <option value="2nd">2nd Year</option>
-                <option value="3rd">3rd Year</option>
-                <option value="4th">4th Year</option>
-              </select>
-            </div>
+            {/* Year Filter removed, controlled globally by Academic Year Selector */}
 
             {/* Date Range Start */}
             <div className="flex flex-col gap-1">
