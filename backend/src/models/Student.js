@@ -2,58 +2,68 @@ import mongoose from 'mongoose';
 
 const studentSchema = new mongoose.Schema(
   {
-    student_id: {
+    Id: {
       type: String,
       required: true,
       unique: true,
       trim: true,
       uppercase: true,
+      alias: 'student_id',
     },
-    name: {
+    Name: {
       type: String,
       required: true,
       trim: true,
+      alias: 'name',
     },
-    year: {
-      type: String,
-      required: true,
-      enum: ['1st', '2nd', '3rd', '4th'],
-    },
-    branch: {
+    Year: {
       type: String,
       required: true,
       trim: true,
+      alias: 'year',
+    },
+    Branch: {
+      type: String,
+      required: true,
+      trim: true,
+      alias: 'branch',
     },
     section: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
+      default: 'A',
     },
-    room: {
+    Room_No: {
       type: String,
       required: true,
       trim: true,
+      alias: 'room',
     },
     phone: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
+      default: '9876543210',
     },
     parent_phone: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
+      default: '9876543211',
     },
-    email: {
+    Mail_Id: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
+      alias: 'email',
     },
-    hostel: {
+    Hostel: {
       type: String,
       required: true,
       trim: true,
+      alias: 'hostel',
     },
     status: {
       type: String,
@@ -61,9 +71,10 @@ const studentSchema = new mongoose.Schema(
       enum: ['Inside', 'Outside', 'Leave'],
       default: 'Inside',
     },
-    photo: {
+    Photo: {
       type: String,
-      default: '', // base64 or URL
+      default: '',
+      alias: 'photo',
     },
     remaining_outings: {
       type: Number,
@@ -83,6 +94,8 @@ const studentSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 

@@ -10,8 +10,8 @@ const buildFilterQuery = async (req) => {
   let query = {};
 
   let studentFilter = {};
-  if (branch) studentFilter.branch = branch;
-  if (year) studentFilter.year = year;
+  if (branch) studentFilter.Branch = branch;
+  if (year) studentFilter.Year = year;
 
   if (branch || year) {
     const students = await Student.find(studentFilter).select('_id');

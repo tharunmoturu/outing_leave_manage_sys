@@ -41,9 +41,9 @@ export const getStudents = async (req, res) => {
     }
 
     // Filters
-    if (branch) query.branch = branch;
-    if (year) query.year = year;
-    if (hostel) query.hostel = hostel;
+    if (branch) query.Branch = branch;
+    if (year) query.Year = year;
+    if (hostel) query.Hostel = hostel;
     if (status) query.status = status;
 
     const students = await Student.find(query);
@@ -63,19 +63,26 @@ export const getStudents = async (req, res) => {
 // @route   GET /api/students/suggestions
 // @access  Private (Admin, Caretaker, Security)
 export const getStudentSuggestions = async (req, res) => {
-  const { q } = req.query;
+  const { q, year } = req.query;
 
   if (!q || q.trim() === '') {
     return res.json([]);
   }
 
   try {
-    const students = await Student.find({
+    const searchFilter = {
       $or: [
-        { student_id: { $regex: q, $options: 'i' } },
-        { name: { $regex: q, $options: 'i' } },
+        { Id: { $regex: q, $options: 'i' } },
+        { Name: { $regex: q, $options: 'i' } },
       ],
-    })
+    };
+
+    // Apply year filter if provided
+    if (year) {
+      searchFilter.Year = year;
+    }
+
+    const students = await Student.find(searchFilter)
       .select('student_id name photo branch year status remaining_outings')
       .limit(8);
 

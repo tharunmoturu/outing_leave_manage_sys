@@ -118,33 +118,57 @@ export const getAdminDashboard = async (req, res) => {
 export const getCaretakerDashboard = async (req, res) => {
   try {
     const { start: todayStart, end: todayEnd } = getTodayRange();
+    const { year } = req.query;
+
+    let studentIds = null;
+    let studentFilter = {};
+    if (year) {
+      studentFilter.Year = year;
+      const studentsInYear = await Student.find(studentFilter).select('_id');
+      studentIds = studentsInYear.map(s => s._id);
+    }
+
+    const baseOutingQuery = studentIds ? { student: { $in: studentIds } } : {};
+    const baseLeaveQuery = studentIds ? { student: { $in: studentIds } } : {};
 
     const todayOutingsCount = await Outing.countDocuments({
+      ...baseOutingQuery,
       createdAt: { $gte: todayStart, $lte: todayEnd },
       status: { $ne: 'Cancelled' },
     });
 
-    const studentsOutsideCount = await Student.countDocuments({ status: 'Outside' });
+    const studentsOutsideCount = await Student.countDocuments({ 
+      ...studentFilter, 
+      status: 'Outside' 
+    });
 
     const returnedStudentsCount = await Outing.countDocuments({
+      ...baseOutingQuery,
       status: 'Returned',
       actual_return_time: { $gte: todayStart, $lte: todayEnd },
     });
 
-    const pendingLeavesCount = await Leave.countDocuments({ status: 'Pending' });
+    const pendingLeavesCount = await Leave.countDocuments({ ...baseLeaveQuery, status: 'Pending' });
+    const pendingOutingsCount = await Outing.countDocuments({ ...baseOutingQuery, status: 'Pending' });
 
     // Fetch active/pending actions
     const activeOutingsList = await Outing.find({
+      ...baseOutingQuery,
       status: { $in: ['Approved', 'Exited'] },
     })
       .populate('student')
       .sort({ updatedAt: -1 })
       .limit(10);
 
-    const pendingLeavesList = await Leave.find({ status: 'Pending' })
+    const pendingLeavesList = await Leave.find({ ...baseLeaveQuery, status: 'Pending' })
       .populate('student')
       .sort({ applied_date: 1 })
       .limit(5);
+
+    const pendingOutingsList = await Outing.find({ ...baseOutingQuery, status: 'Pending' })
+      .populate('student')
+      .sort({ createdAt: 1 })
+      .limit(10);
 
     res.json({
       metrics: {
@@ -152,9 +176,11 @@ export const getCaretakerDashboard = async (req, res) => {
         studentsOutsideCount,
         returnedStudentsCount,
         pendingLeavesCount,
+        pendingOutingsCount,
       },
       activeOutingsList,
       pendingLeavesList,
+      pendingOutingsList,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -172,10 +198,10 @@ export const getStudentDashboard = async (req, res) => {
       return res.status(404).json({ message: 'Student profile not found' });
     }
 
-    // Find any active outing approval
+    // Find any active outing request (Pending, Approved, or Exited)
     const activeOuting = await Outing.findOne({
       student: student._id,
-      status: { $in: ['Approved', 'Exited'] },
+      status: { $in: ['Pending', 'Approved', 'Exited'] },
     }).populate('approved_by', 'username');
 
     // Find any pending leave approval

@@ -180,8 +180,8 @@ export const getLeaveHistory = async (req, res) => {
       }
 
       if (branch || year) {
-        if (branch) studentQuery.branch = branch;
-        if (year) studentQuery.year = year;
+        if (branch) studentQuery.Branch = branch;
+        if (year) studentQuery.Year = year;
         
         const matchingStudents = await Student.find(studentQuery).select('_id');
         const ids = matchingStudents.map(s => s._id);

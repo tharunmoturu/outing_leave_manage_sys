@@ -220,8 +220,8 @@ export const getOutingHistory = async (req, res) => {
       }
 
       if (branch || year) {
-        if (branch) studentQuery.branch = branch;
-        if (year) studentQuery.year = year;
+        if (branch) studentQuery.Branch = branch;
+        if (year) studentQuery.Year = year;
         
         const matchingStudents = await Student.find(studentQuery).select('_id');
         const ids = matchingStudents.map(s => s._id);
@@ -261,6 +261,162 @@ export const getOutingDetails = async (req, res) => {
       return res.status(404).json({ message: 'Outing details not found' });
     }
     res.json(outing);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Apply for an outing (Student)
+// @route   POST /api/outings/apply
+// @access  Private (Student)
+export const applyOuting = async (req, res) => {
+  const { purpose, destination, attachment_url } = req.body;
+
+  if (!purpose || !destination) {
+    return res.status(400).json({ message: 'Purpose and destination are required.' });
+  }
+
+  try {
+    let student = await Student.findById(req.user.studentProfile);
+    if (!student) {
+      return res.status(404).json({ message: 'Student profile not found. Linked account error.' });
+    }
+
+    // Apply lazy quota reset first
+    student = await checkAndResetQuota(student);
+
+    if (student.status !== 'Inside') {
+      return res.status(400).json({ message: `Cannot apply for an outing. Your status is currently '${student.status}'.` });
+    }
+
+    if (student.remaining_outings <= 0) {
+      return res.status(400).json({ message: 'No outings remaining in your monthly quota.' });
+    }
+
+    // Check for any pending or approved outing
+    const activeOuting = await Outing.findOne({
+      student: student._id,
+      status: { $in: ['Pending', 'Approved', 'Exited'] },
+    });
+
+    if (activeOuting) {
+      return res.status(400).json({
+        message: 'You already have an active pending, approved, or checked-out outing pass.',
+      });
+    }
+
+    const shortHash = Math.floor(1000 + Math.random() * 9000);
+    const outing_id = `OUT-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${shortHash}`;
+
+    const outing = await Outing.create({
+      outing_id,
+      student: student._id,
+      purpose,
+      destination,
+      status: 'Pending',
+      attachment_url: attachment_url || '',
+    });
+
+    res.status(201).json({
+      message: 'Outing request submitted successfully. Awaiting caretaker approval.',
+      outing,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Approve a pending outing (Caretaker/Admin)
+// @route   POST /api/outings/:id/approve
+// @access  Private (Caretaker, Admin)
+export const approveOuting = async (req, res) => {
+  const { remarks } = req.body;
+
+  try {
+    const outing = await Outing.findById(req.params.id).populate('student');
+    if (!outing) {
+      return res.status(404).json({ message: 'Outing record not found.' });
+    }
+
+    if (outing.status !== 'Pending') {
+      return res.status(400).json({ message: `Outing has status '${outing.status}', cannot approve.` });
+    }
+
+    let student = outing.student;
+    student = await checkAndResetQuota(student);
+
+    if (student.remaining_outings <= 0) {
+      return res.status(400).json({ message: 'Student has no outings remaining in their quota.' });
+    }
+
+    // Log approval time as out_time, set expected_return to 9:00 PM today
+    const now = new Date();
+    const expectedReturn = new Date(now);
+    expectedReturn.setHours(21, 0, 0, 0); // 9:00 PM today
+
+    outing.status = 'Approved';
+    outing.out_time = now;
+    outing.expected_return = expectedReturn;
+    outing.approved_by = req.user._id;
+    outing.approved_by_name = req.user.username;
+    outing.remarks = remarks || '';
+    await outing.save();
+
+    // Decrement quota on approval
+    student.remaining_outings -= 1;
+    student.used_outings += 1;
+    await student.save();
+
+    res.json({
+      message: 'Outing approved successfully.',
+      outing,
+      remaining_outings: student.remaining_outings,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Reject a pending outing (Caretaker/Admin)
+// @route   POST /api/outings/:id/reject
+// @access  Private (Caretaker, Admin)
+export const rejectOuting = async (req, res) => {
+  const { remarks } = req.body;
+
+  try {
+    const outing = await Outing.findById(req.params.id);
+    if (!outing) {
+      return res.status(404).json({ message: 'Outing record not found.' });
+    }
+
+    if (outing.status !== 'Pending') {
+      return res.status(400).json({ message: `Outing has status '${outing.status}', cannot reject.` });
+    }
+
+    outing.status = 'Rejected';
+    outing.approved_by = req.user._id;
+    outing.approved_by_name = req.user.username;
+    outing.remarks = remarks || 'Rejected by caretaker';
+    await outing.save();
+
+    res.json({
+      message: 'Outing rejected successfully.',
+      outing,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get pending outings (Caretaker/Admin)
+// @route   GET /api/outings/pending
+// @access  Private (Caretaker, Admin)
+export const getPendingOutings = async (req, res) => {
+  try {
+    const outings = await Outing.find({ status: 'Pending' })
+      .populate('student')
+      .sort({ createdAt: 1 });
+    res.json(outings);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

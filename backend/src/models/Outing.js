@@ -24,11 +24,13 @@ const outingSchema = new mongoose.Schema(
     },
     out_time: {
       type: Date,
-      required: true,
+      required: false,
+      default: null,
     },
     expected_return: {
       type: Date,
-      required: true,
+      required: false,
+      default: null,
     },
     actual_exit_time: {
       type: Date,
@@ -41,19 +43,25 @@ const outingSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ['Approved', 'Exited', 'Returned', 'Cancelled'],
-      default: 'Approved',
+      enum: ['Pending', 'Approved', 'Exited', 'Returned', 'Cancelled', 'Rejected'],
+      default: 'Pending',
     },
     approved_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
+      default: null,
     },
     approved_by_name: {
       type: String,
-      required: true,
+      required: false,
+      default: '',
     },
     remarks: {
+      type: String,
+      default: '',
+    },
+    attachment_url: {
       type: String,
       default: '',
     },
