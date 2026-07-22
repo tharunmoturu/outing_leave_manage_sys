@@ -151,42 +151,44 @@ export const SecurityDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Title Header */}
-      <div>
-        <h1 className="font-heading text-2xl font-black text-slate-800 dark:text-white sm:text-3xl">
-          Security Gate Panel
-        </h1>
-        <p className="text-sm text-slate-400 dark:text-slate-500">
-          Verify approved student passes, record check-out exit, and check-in return.
-        </p>
+      <div className="section-header">
+        <div>
+          <h1 className="text-title-large">
+            Security Gate Panel
+          </h1>
+          <p className="text-secondary mt-1">
+            Verify approved student passes, record check-out exit, and check-in return.
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
         {/* Left Column (Span 6): Pass Verification QR / ID lookup */}
         <div className="space-y-6 lg:col-span-6">
           {/* Quick Scanner Inputs */}
-          <div className="glass-panel rounded-3xl p-5 border space-y-4">
-            <h3 className="font-heading text-xs font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <div className="admin-card p-6 space-y-5">
+            <h3 className="text-label uppercase tracking-wider">
               Gatepass Scanner Look-Up
             </h3>
 
             {/* Scanning Barcode Search */}
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <div className="relative flex-1">
-                <QrCode className="absolute top-3.5 left-4 h-5 w-5 text-slate-400" />
+                <QrCode className="absolute top-3 left-3 text-[var(--color-text-muted)]" size={18} strokeWidth={1.75} />
                 <input
                   type="text"
                   placeholder="Scan QR or Enter Outing Code (e.g. OUT-...)"
                   value={scanCode}
                   onChange={(e) => setScanCode(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handlePassLookup(scanCode)}
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-3.5 pl-12 pr-4 text-sm text-slate-800 dark:text-white placeholder-slate-400 outline-none focus:border-indigo-500 transition-all duration-200"
+                  className="search-input"
                 />
               </div>
               <button
                 onClick={() => handlePassLookup(scanCode)}
-                className="rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3.5 text-xs font-bold shadow-md shadow-indigo-500/10 active:scale-95 transition-all duration-200 cursor-pointer"
+                className="btn-primary flex-shrink-0"
               >
                 Scan Code
               </button>
@@ -194,34 +196,34 @@ export const SecurityDashboard: React.FC = () => {
 
             {/* Alternately Search Student Name */}
             <div className="relative">
-              <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">
+              <span className="input-label mb-2 block">
                 Or Search by Student Name / ID
               </span>
               <div className="relative">
-                <Search className="absolute top-2.5 left-3.5 h-4 w-4 text-slate-400" />
+                <Search className="absolute top-3 left-3 text-[var(--color-text-muted)]" size={18} strokeWidth={1.75} />
                 <input
                   type="text"
                   placeholder="Enter Name or ID to look up pass..."
                   value={searchQuery}
                   onFocus={() => setShowSuggestions(true)}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 pl-10 pr-4 text-xs text-slate-850 dark:text-white outline-none focus:border-indigo-500"
+                  className="search-input"
                 />
 
                 {/* Suggestions List */}
                 {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 mt-2 z-50 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 shadow-xl">
+                  <div className="absolute left-0 right-0 mt-2 z-50 rounded bg-white p-2 shadow-xl border border-[var(--color-border)]">
                     {suggestions.map((student) => (
                       <div
                         key={student._id}
                         onClick={() => handleSelectStudent(student._id)}
-                        className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-500/5 cursor-pointer text-xs"
+                        className="flex items-center justify-between p-3 rounded hover:bg-gray-50 cursor-pointer"
                       >
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-700 dark:text-slate-200">{student.name}</span>
-                          <span className="text-[9px] text-slate-400 font-semibold uppercase">{student.student_id}</span>
+                          <span className="font-bold text-[var(--color-text-primary)]">{student.name}</span>
+                          <span className="text-[12px] text-[var(--color-text-secondary)] font-mono uppercase mt-0.5">{student.student_id}</span>
                         </div>
-                        <span className="text-[9px] font-extrabold text-slate-400">{student.status}</span>
+                        <span className="text-[12px] font-bold text-[var(--color-text-secondary)]">{student.status}</span>
                       </div>
                     ))}
                   </div>
@@ -232,32 +234,32 @@ export const SecurityDashboard: React.FC = () => {
 
           {/* Scanned Pass Details Box */}
           {searchingPass ? (
-            <div className="glass-panel rounded-3xl border p-12 text-center text-slate-400">
-              <RefreshCw className="mx-auto h-8 w-8 animate-spin text-indigo-500 mb-3" />
-              <span className="text-sm font-semibold">Retrieving gatepass credentials...</span>
+            <div className="admin-card p-12 text-center text-[var(--color-text-muted)]">
+              <RefreshCw className="mx-auto mb-3 animate-spin text-[var(--color-primary)]" size={32} />
+              <span className="text-[14px] font-semibold">Retrieving gatepass credentials...</span>
             </div>
           ) : scanError ? (
-            <div className="glass-panel rounded-3xl border p-6 bg-rose-500/5 border-rose-500/20 text-rose-500 flex items-start gap-3">
+            <div className="admin-card p-6 bg-red-50 border-red-200 text-red-600 flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider">Verification Alert</span>
-                <p className="text-xs">{scanError}</p>
+                <span className="text-[13px] font-bold uppercase tracking-wider">Verification Alert</span>
+                <p className="text-[14px]">{scanError}</p>
               </div>
             </div>
           ) : scannedOuting ? (
-            <div className="glass-panel rounded-3xl border p-6 relative overflow-hidden space-y-6">
+            <div className="admin-card p-6 relative overflow-hidden space-y-6">
               {/* Top border strip */}
-              <div className={`absolute top-0 inset-x-0 h-2.5 ${
+              <div className={`absolute top-0 inset-x-0 h-1.5 ${
                 scannedOuting.status === 'Approved'
-                  ? 'bg-emerald-500'
+                  ? 'bg-[var(--color-success)]'
                   : scannedOuting.status === 'Exited'
-                  ? 'bg-rose-500'
-                  : 'bg-slate-300'
+                  ? 'bg-[var(--color-danger)]'
+                  : 'bg-[var(--color-border)]'
               }`} />
 
               {/* Student header details */}
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                <div className="h-16 w-16 overflow-hidden rounded bg-gray-100 flex items-center justify-center text-gray-400">
                   {scannedOuting.student.photo ? (
                     <img src={scannedOuting.student.photo} alt={scannedOuting.student.name} className="h-full w-full object-cover" />
                   ) : (
@@ -265,41 +267,43 @@ export const SecurityDashboard: React.FC = () => {
                   )}
                 </div>
                 <div>
-                  <h3 className="font-heading text-base font-black text-slate-800 dark:text-white">
+                  <h3 className="text-title font-bold text-[var(--color-text-primary)]">
                     {scannedOuting.student.name}
                   </h3>
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                  <span className="block text-[12px] font-bold text-[var(--color-text-secondary)] uppercase">
                     ID: {scannedOuting.student.student_id} · Room: {scannedOuting.student.hostel}/{scannedOuting.student.room}
                   </span>
-                  <span className={`inline-block rounded-full px-2 py-0.5 text-[8px] font-extrabold uppercase mt-1.5 ${
-                    scannedOuting.status === 'Approved'
-                      ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/15'
-                      : scannedOuting.status === 'Exited'
-                      ? 'bg-rose-500/10 text-rose-500 border border-rose-500/15'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                  }`}>
-                    Pass Status: {scannedOuting.status}
-                  </span>
+                  <div className="mt-2">
+                    <span className={`badge ${
+                      scannedOuting.status === 'Approved'
+                        ? 'badge-approved'
+                        : scannedOuting.status === 'Exited'
+                        ? 'badge-outside'
+                        : 'badge-pending'
+                    }`}>
+                      Pass Status: {scannedOuting.status}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Pass specifics */}
-              <div className="bg-slate-100 dark:bg-slate-800/40 rounded-2xl p-4 text-xs text-slate-600 dark:text-slate-400 space-y-2">
-                <div className="flex justify-between border-b border-slate-200/50 pb-1.5 font-bold">
-                  <span>Outing Purpose:</span>
-                  <span className="text-slate-800 dark:text-slate-200">{scannedOuting.purpose}</span>
+              <div className="bg-gray-50 rounded p-4 text-[14px] text-[var(--color-text-secondary)] space-y-2 border border-gray-100">
+                <div className="flex justify-between border-b border-gray-200 pb-1.5">
+                  <span className="font-semibold">Outing Purpose:</span>
+                  <span className="text-[var(--color-text-primary)]">{scannedOuting.purpose}</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-200/50 pb-1.5 font-bold">
-                  <span>Destination:</span>
-                  <span className="text-slate-800 dark:text-slate-200">{scannedOuting.destination}</span>
+                <div className="flex justify-between border-b border-gray-200 pb-1.5">
+                  <span className="font-semibold">Destination:</span>
+                  <span className="text-[var(--color-text-primary)]">{scannedOuting.destination}</span>
                 </div>
-                <div className="flex justify-between border-b border-slate-200/50 pb-1.5 font-bold">
-                  <span>Approved By:</span>
-                  <span className="text-slate-800 dark:text-slate-200 capitalize">{scannedOuting.approved_by_name} (Warden)</span>
+                <div className="flex justify-between border-b border-gray-200 pb-1.5">
+                  <span className="font-semibold">Approved By:</span>
+                  <span className="text-[var(--color-text-primary)] capitalize">{scannedOuting.approved_by_name} (Warden)</span>
                 </div>
-                <div className="flex justify-between font-bold">
-                  <span>Expected Return:</span>
-                  <span className="text-slate-800 dark:text-slate-200">{new Date(scannedOuting.expected_return).toLocaleString()}</span>
+                <div className="flex justify-between">
+                  <span className="font-semibold">Expected Return:</span>
+                  <span className="text-[var(--color-text-primary)]">{new Date(scannedOuting.expected_return).toLocaleString()}</span>
                 </div>
               </div>
 
@@ -308,90 +312,90 @@ export const SecurityDashboard: React.FC = () => {
                 {scannedOuting.status === 'Approved' && (
                   <button
                     onClick={() => handleMarkExit(scannedOuting._id)}
-                    className="flex-1 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 text-xs font-bold shadow-md shadow-indigo-500/25 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
+                    className="btn-primary w-full flex items-center justify-center gap-2"
                   >
-                    <LogOut className="h-4.5 w-4.5" />
+                    <LogOut size={18} strokeWidth={1.75} />
                     <span>Authorize Exit Check-Out</span>
                   </button>
                 )}
                 {scannedOuting.status === 'Exited' && (
                   <button
                     onClick={() => handleMarkReturn(scannedOuting._id)}
-                    className="flex-1 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white py-3.5 text-xs font-bold shadow-md shadow-rose-500/25 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
+                    className="btn-primary w-full flex items-center justify-center gap-2 !bg-[var(--color-danger)] hover:!bg-[#B91C1C]"
                   >
-                    <LogIn className="h-4.5 w-4.5" />
+                    <LogIn size={18} strokeWidth={1.75} />
                     <span>Authorize Entry Check-In</span>
                   </button>
                 )}
                 {scannedOuting.status === 'Returned' && (
-                  <div className="flex-1 text-center font-bold text-emerald-500 border border-emerald-500/20 bg-emerald-500/5 rounded-2xl py-3 text-xs">
+                  <div className="w-full text-center font-bold text-[var(--color-success)] bg-green-50 border border-green-200 rounded p-3 text-[14px]">
                     This pass was completed and student is checked inside.
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="glass-panel rounded-3xl border p-12 text-center text-slate-400">
-              <Shield className="mx-auto h-10 w-10 text-slate-200 dark:text-slate-800 mb-3" />
-              <span className="text-sm font-semibold">Enter a pass code or scan a student barcode to process check-in/out gate events</span>
+            <div className="admin-card p-12 text-center text-[var(--color-text-muted)]">
+              <Shield className="mx-auto h-10 w-10 text-gray-300 mb-3" />
+              <span className="text-[14px] font-semibold">Enter a pass code or scan a student barcode to process check-in/out gate events</span>
             </div>
           )}
         </div>
 
         {/* Right Column (Span 6): Active Occupancy board (Students currently Outside) */}
         <div className="space-y-6 lg:col-span-6">
-          <div className="glass-panel rounded-3xl border overflow-hidden">
+          <div className="admin-card overflow-hidden">
             {/* Header toolbar */}
-            <div className="border-b border-slate-200/60 dark:border-slate-800/60 p-4 bg-slate-500/5 flex items-center justify-between">
+            <div className="border-b border-[var(--color-border)] p-4 bg-gray-50 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Activity className="h-4.5 w-4.5 text-rose-500" />
-                <h3 className="font-heading text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <Activity className="h-5 w-5 text-[var(--color-danger)]" />
+                <h3 className="text-label uppercase tracking-wider">
                   Real-Time Occupancy Board
                 </h3>
               </div>
               <button
                 onClick={fetchOccupancyBoard}
-                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg text-[var(--color-text-muted)] hover:bg-gray-100 transition-colors"
                 title="Refresh board"
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw size={16} strokeWidth={1.75} />
               </button>
             </div>
 
             {/* List */}
-            <div className="p-4 max-h-[500px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/50 space-y-3">
+            <div className="p-4 max-h-[500px] overflow-y-auto divide-y divide-gray-100 space-y-3">
               {loadingBoard ? (
-                <p className="text-xs text-slate-400 text-center py-12">Loading occupancy board...</p>
+                <p className="text-[14px] text-[var(--color-text-muted)] text-center py-12">Loading occupancy board...</p>
               ) : activeOutings.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-12">All registered students are inside the hostel.</p>
+                <p className="text-[14px] text-[var(--color-text-muted)] text-center py-12">All registered students are inside the hostel.</p>
               ) : (
                 activeOutings.map((outing) => (
                   <div
                     key={outing._id}
-                    className="rounded-2xl border border-slate-200/50 dark:border-slate-800/50 p-3.5 bg-white dark:bg-slate-900 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 hover:border-slate-300 transition-colors"
+                    className="rounded border border-[var(--color-border)] p-4 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-gray-300 transition-colors"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <span className="text-[15px] font-bold text-[var(--color-text-primary)]">
                           {outing.student.name}
                         </span>
-                        <span className={`rounded-full px-2 py-0.5 text-[7px] font-extrabold uppercase ${
+                        <span className={`badge ${
                           outing.status === 'Exited'
-                            ? 'bg-rose-500/10 text-rose-500'
-                            : 'bg-emerald-500/10 text-emerald-500'
+                            ? 'badge-outside'
+                            : 'badge-approved'
                         }`}>
                           {outing.status === 'Exited' ? 'Outside' : 'Approved'}
                         </span>
                       </div>
-                      <span className="block text-[10px] font-bold text-slate-400 uppercase">
+                      <span className="block text-[12px] font-bold text-[var(--color-text-secondary)] uppercase">
                         ID: {outing.student.student_id} · Room {outing.student.room}
                       </span>
-                      <div className="flex flex-col gap-0.5 text-[9px] text-slate-400 font-semibold">
+                      <div className="flex flex-col gap-0.5 text-[13px] text-[var(--color-text-secondary)]">
                         <span>Purpose: {outing.purpose} to {outing.destination}</span>
                         {outing.actual_exit_time ? (
-                          <span className="text-slate-500 font-bold">Left: {new Date(outing.actual_exit_time).toLocaleString()}</span>
+                          <span className="text-gray-600 font-semibold">Left: {new Date(outing.actual_exit_time).toLocaleString()}</span>
                         ) : (
-                          <span className="text-emerald-500 font-bold">Expects exit: {new Date(outing.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="text-[var(--color-success)] font-semibold">Expects exit: {new Date(outing.out_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         )}
                       </div>
                     </div>
@@ -403,9 +407,9 @@ export const SecurityDashboard: React.FC = () => {
                             setScannedOuting(outing);
                             handleMarkExit(outing._id);
                           }}
-                          className="flex-1 sm:flex-none rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 text-[10px] font-bold shadow-sm active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                          className="btn-primary flex items-center justify-center gap-1.5 py-1.5 px-3 text-[13px]"
                         >
-                          <LogOut className="h-3.5 w-3.5" />
+                          <LogOut size={16} strokeWidth={1.75} />
                           <span>Exit</span>
                         </button>
                       )}
@@ -415,9 +419,9 @@ export const SecurityDashboard: React.FC = () => {
                             setScannedOuting(outing);
                             handleMarkReturn(outing._id);
                           }}
-                          className="flex-1 sm:flex-none rounded-xl bg-rose-600 hover:bg-rose-500 text-white px-3.5 py-2 text-[10px] font-bold shadow-sm active:scale-95 transition-all cursor-pointer flex items-center gap-1"
+                          className="btn-primary flex items-center justify-center gap-1.5 py-1.5 px-3 text-[13px] !bg-[var(--color-danger)] hover:!bg-[#B91C1C]"
                         >
-                          <LogIn className="h-3.5 w-3.5" />
+                          <LogIn size={16} strokeWidth={1.75} />
                           <span>Return</span>
                         </button>
                       )}
@@ -430,8 +434,8 @@ export const SecurityDashboard: React.FC = () => {
 
           {/* Quick Mock Scannable helper card */}
           {activeOutings.length > 0 && (
-            <div className="bg-slate-500/5 rounded-3xl p-4 border border-slate-200/50 dark:border-slate-800/50">
-              <span className="block text-[10px] font-bold text-slate-400 uppercase mb-2">
+            <div className="bg-gray-50 rounded p-4 border border-[var(--color-border)]">
+              <span className="block text-[12px] font-bold text-[var(--color-text-secondary)] uppercase mb-2">
                 Quick Test Codes (Click to scan)
               </span>
               <div className="flex flex-wrap gap-2">
@@ -439,7 +443,7 @@ export const SecurityDashboard: React.FC = () => {
                   <button
                     key={o._id}
                     onClick={() => handlePassLookup(o.outing_id)}
-                    className="rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 px-2 py-1 text-[9px] font-bold text-slate-700 dark:text-slate-350 cursor-pointer font-mono"
+                    className="rounded bg-white border border-[var(--color-border)] hover:bg-gray-50 px-2 py-1 text-[12px] font-bold text-[var(--color-text-secondary)] cursor-pointer font-mono"
                   >
                     {o.student.student_id} ({o.status === 'Exited' ? 'In' : 'Out'})
                   </button>

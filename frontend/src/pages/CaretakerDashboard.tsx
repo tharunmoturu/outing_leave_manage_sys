@@ -415,18 +415,18 @@ export const CaretakerDashboard: React.FC = () => {
   ══════════════════════════════════════════════════════════════════ */
 
   const getStatusBadge = (status: string) => {
-    const classes: Record<string, string> = {
-      Inside: 'bg-[#16A34A]/10 text-[#16A34A] border-[#16A34A]/20',
-      Outside: 'bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/20',
-      Leave: 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20',
-      Pending: 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20',
-      Approved: 'bg-[#16A34A]/10 text-[#16A34A] border-[#16A34A]/20',
-      Rejected: 'bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/20',
-      Returned: 'bg-[#4F46E5]/10 text-[#4F46E5] border-[#4F46E5]/20',
-      Exited: 'bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/20',
+    const classMap: Record<string, string> = {
+      Inside: 'badge-inside',
+      Outside: 'badge-outside',
+      Leave: 'badge-pending',
+      Pending: 'badge-pending',
+      Approved: 'badge-approved',
+      Rejected: 'badge-rejected',
+      Returned: 'badge-returned',
+      Exited: 'badge-outside',
     };
     return (
-      <span className={`inline-flex items-center rounded border px-2.5 py-0.5 text-[13px] font-semibold uppercase ${classes[status] ?? 'bg-gray-100 text-gray-800'}`}>
+      <span className={`badge ${classMap[status] ?? 'badge-pending'}`}>
         {status}
       </span>
     );
@@ -438,12 +438,12 @@ export const CaretakerDashboard: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* ── Page Header ── */}
-      <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-6">
+      <div className="section-header">
         <div>
-          <h1 className="text-[32px] font-bold text-[#111827] capitalize">
+          <h1 className="text-title-large capitalize">
             {activeView.replace('-', ' ')}
           </h1>
-          <p className="text-[16px] text-[#6B7280]">
+          <p className="text-secondary mt-1">
             Hostel caretaker administration console. Clean, fast, and structured.
           </p>
         </div>
@@ -451,7 +451,7 @@ export const CaretakerDashboard: React.FC = () => {
           onClick={fetchDashboardData}
           className="btn-secondary flex items-center gap-2"
         >
-          <RefreshCw className={`h-5 w-5 ${loadingDashboard ? 'animate-spin' : ''}`} />
+          <RefreshCw size={18} strokeWidth={1.75} className={`${loadingDashboard ? 'animate-spin' : ''}`} />
           Refresh Data
         </button>
       </div>
@@ -464,14 +464,14 @@ export const CaretakerDashboard: React.FC = () => {
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
-              { label: 'Students Outside', value: metrics?.studentsOutsideCount ?? 0, color: 'text-[#DC2626]' },
-              { label: 'Pending Outings', value: metrics?.pendingOutingsCount ?? 0, color: 'text-[#F59E0B]' },
-              { label: 'Pending Leaves', value: metrics?.pendingLeavesList?.length ?? 0, color: 'text-[#F59E0B]' },
-              { label: 'Today Returned', value: metrics?.returnedStudentsCount ?? 0, color: 'text-[#16A34A]' }
+              { label: 'Students Outside', value: metrics?.studentsOutsideCount ?? 0, color: 'text-[var(--color-danger)]' },
+              { label: 'Pending Outings', value: metrics?.pendingOutingsCount ?? 0, color: 'text-[var(--color-warning)]' },
+              { label: 'Pending Leaves', value: metrics?.pendingLeavesList?.length ?? 0, color: 'text-[var(--color-warning)]' },
+              { label: 'Today Returned', value: metrics?.returnedStudentsCount ?? 0, color: 'text-[var(--color-success)]' }
             ].map((s) => (
               <div key={s.label} className="admin-card p-6 flex flex-col justify-between">
-                <span className="text-[16px] font-semibold text-[#6B7280] uppercase tracking-wider">{s.label}</span>
-                <span className={`text-[32px] font-bold mt-2 ${s.color}`}>{s.value}</span>
+                <span className="text-label uppercase tracking-wider">{s.label}</span>
+                <span className={`text-[32px] font-bold mt-2 tracking-tight ${s.color}`}>{s.value}</span>
               </div>
             ))}
           </div>
@@ -568,7 +568,7 @@ export const CaretakerDashboard: React.FC = () => {
           <div className="admin-card p-6">
             <h2 className="text-[22px] font-semibold text-[#111827] mb-4">Search Student Database</h2>
             <div className="relative">
-              <Search className="absolute top-3.5 left-4 h-5 w-5 text-[#6B7280]" />
+              <Search className="absolute top-3.5 left-4 text-[var(--color-text-muted)]" size={18} strokeWidth={1.75} />
               <input
                 type="text"
                 placeholder="Search by Student ID (e.g. N220533) or Name..."
@@ -576,7 +576,7 @@ export const CaretakerDashboard: React.FC = () => {
                 onChange={(e) => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
                 onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                className="w-full border border-[#E5E7EB] bg-white rounded py-3.5 pl-12 pr-4 text-[16px] text-[#111827] placeholder-[#6B7280] outline-none focus:border-[#4F46E5]"
+                className="search-input"
               />
 
               {showSuggestions && suggestions.length > 0 && (
@@ -656,18 +656,18 @@ export const CaretakerDashboard: React.FC = () => {
               {/* Logs / Passes History */}
               <div className="admin-card p-6 lg:col-span-2 space-y-6">
                 <h3 className="text-[18px] font-semibold text-[#111827]">Recent Outings & Leaves Log</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-[15px]">
+                <div className="table-container">
+                  <table className="table-enterprise">
                     <thead>
-                      <tr className="border-b border-[#E5E7EB] text-[#6B7280]">
-                        <th className="py-2">Type</th>
-                        <th className="py-2">Purpose / Location</th>
-                        <th className="py-2">Out Time / Dates</th>
-                        <th className="py-2">Status</th>
-                        <th className="py-2 text-right">Quick Actions</th>
+                      <tr>
+                        <th>Type</th>
+                        <th>Purpose / Location</th>
+                        <th>Out Time / Dates</th>
+                        <th>Status</th>
+                        <th className="text-right">Quick Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#E5E7EB]">
+                    <tbody>
                       {studentOutings.slice(0, 5).map((o) => (
                         <tr key={o._id}>
                           <td className="py-3 font-semibold">Outing</td>
@@ -727,13 +727,13 @@ export const CaretakerDashboard: React.FC = () => {
               <div className="space-y-4">
                 <label className="block text-[15px] font-semibold text-[#6B7280]">Search student to grant pass</label>
                 <div className="relative">
-                  <Search className="absolute top-3.5 left-4 h-5 w-5 text-[#6B7280]" />
+                  <Search className="absolute top-3 left-3 text-[var(--color-text-muted)]" size={18} strokeWidth={1.75} />
                   <input
                     type="text"
                     placeholder="Search by ID or Name..."
                     value={grantSearchQuery}
                     onChange={(e) => { setGrantSearchQuery(e.target.value); setShowGrantSuggestions(true); }}
-                    className="w-full border border-[#E5E7EB] bg-white rounded py-3.5 pl-12 pr-4 text-[16px]"
+                    className="search-input"
                   />
                   {showGrantSuggestions && grantSuggestions.length > 0 && (
                     <div className="absolute left-0 right-0 mt-2 z-50 border border-[#E5E7EB] bg-white p-2 shadow-lg divide-y divide-[#E5E7EB]">
@@ -784,56 +784,56 @@ export const CaretakerDashboard: React.FC = () => {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[15px] font-semibold text-[#111827]">Purpose of Outing</label>
+                  <div className="flex flex-col">
+                    <label className="input-label">Purpose of Outing</label>
                     <input
                       type="text"
                       required
                       value={outingForm.purpose}
                       onChange={e => setOutingForm({ ...outingForm, purpose: e.target.value })}
-                      className="border border-[#E5E7EB] rounded p-2.5 text-[16px]"
+                      className="input-field"
                       placeholder="e.g. Hospital visit, shopping"
                     />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[15px] font-semibold text-[#111827]">Destination</label>
+                  <div className="flex flex-col">
+                    <label className="input-label">Destination</label>
                     <input
                       type="text"
                       required
                       value={outingForm.destination}
                       onChange={e => setOutingForm({ ...outingForm, destination: e.target.value })}
-                      className="border border-[#E5E7EB] rounded p-2.5 text-[16px]"
+                      className="input-field"
                       placeholder="e.g. Sector 12 Market"
                     />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[15px] font-semibold text-[#111827]">Out Time</label>
+                  <div className="flex flex-col">
+                    <label className="input-label">Out Time</label>
                     <input
                       type="datetime-local"
                       required
                       value={outingForm.out_time}
                       onChange={e => setOutingForm({ ...outingForm, out_time: e.target.value })}
-                      className="border border-[#E5E7EB] rounded p-2.5 text-[16px]"
+                      className="input-field"
                     />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[15px] font-semibold text-[#111827]">Return By</label>
+                  <div className="flex flex-col">
+                    <label className="input-label">Return By</label>
                     <input
                       type="datetime-local"
                       required
                       value={outingForm.expected_return}
                       onChange={e => setOutingForm({ ...outingForm, expected_return: e.target.value })}
-                      className="border border-[#E5E7EB] rounded p-2.5 text-[16px]"
+                      className="input-field"
                     />
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[15px] font-semibold text-[#111827]">Remarks (Optional)</label>
+                <div className="flex flex-col">
+                  <label className="input-label">Remarks (Optional)</label>
                   <textarea
                     value={outingForm.remarks}
                     onChange={e => setOutingForm({ ...outingForm, remarks: e.target.value })}
-                    className="border border-[#E5E7EB] rounded p-2.5 text-[16px] h-20 resize-none"
+                    className="input-field h-20 resize-none"
                     placeholder="Enter parent verification notes if any..."
                   />
                 </div>
@@ -862,18 +862,18 @@ export const CaretakerDashboard: React.FC = () => {
       {activeView === 'leaves' && (
         <div className="admin-card p-6 animate-fadeIn">
           <h2 className="text-[22px] font-semibold text-[#111827] mb-6">Leave Requests Queue</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[15px]">
+          <div className="table-container">
+            <table className="table-enterprise">
               <thead>
-                <tr className="border-b border-[#E5E7EB] text-[#6B7280]">
-                  <th className="py-3">Student</th>
-                  <th className="py-3">Reason</th>
-                  <th className="py-3">Start Date</th>
-                  <th className="py-3">End Date</th>
-                  <th className="py-3 text-right">Actions</th>
+                <tr>
+                  <th>Student</th>
+                  <th>Reason</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E7EB]">
+              <tbody>
                 {pendingLeaves.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-[#6B7280]">
@@ -921,19 +921,19 @@ export const CaretakerDashboard: React.FC = () => {
       {activeView === 'outside' && (
         <div className="admin-card p-6 animate-fadeIn">
           <h2 className="text-[22px] font-semibold text-[#111827] mb-6">Outside Occupancy Board</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-[15px]">
+          <div className="table-container">
+            <table className="table-enterprise">
               <thead>
-                <tr className="border-b border-[#E5E7EB] text-[#6B7280]">
-                  <th className="py-3">Student</th>
-                  <th className="py-3">Hostel Details</th>
-                  <th className="py-3">Purpose</th>
-                  <th className="py-3">Exit Time</th>
-                  <th className="py-3">Expected Return</th>
-                  <th className="py-3 text-right">Actions</th>
+                <tr>
+                  <th>Student</th>
+                  <th>Hostel Details</th>
+                  <th>Purpose</th>
+                  <th>Exit Time</th>
+                  <th>Expected Return</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E5E7EB]">
+              <tbody>
                 {activeOutings.filter(o => o.status === 'Exited').length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-[#6B7280]">
@@ -983,18 +983,18 @@ export const CaretakerDashboard: React.FC = () => {
               Loading history archives...
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-[15px]">
+            <div className="table-container">
+              <table className="table-enterprise">
                 <thead>
-                  <tr className="border-b border-[#E5E7EB] text-[#6B7280]">
-                    <th className="py-3">Student ID</th>
-                    <th className="py-3">Name</th>
-                    <th className="py-3">Location / Detail</th>
-                    <th className="py-3">Dates / Times</th>
-                    <th className="py-3 text-right">Status</th>
+                  <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Location / Detail</th>
+                    <th>Dates / Times</th>
+                    <th className="text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E7EB]">
+                <tbody>
                   {activeView === 'outing-history' ? (
                     outingHistory.length === 0 ? (
                       <tr>
@@ -1051,11 +1051,11 @@ export const CaretakerDashboard: React.FC = () => {
             <h3 className="text-[18px] font-semibold text-[#111827]">Report Filter Controls</h3>
             
             <div className="flex flex-col gap-1.5">
-              <label className="text-[15px] text-[#6B7280]">Data Subject</label>
+              <label className="input-label">Data Subject</label>
               <select
                 value={reportType}
                 onChange={e => setReportType(e.target.value as 'outings' | 'leaves')}
-                className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
+                className="input-field"
               >
                 <option value="outings">Outing Passes Logs</option>
                 <option value="leaves">Leave Requests Logs</option>
@@ -1063,11 +1063,11 @@ export const CaretakerDashboard: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[15px] text-[#6B7280]">Status</label>
+              <label className="input-label">Status</label>
               <select
                 value={reportStatus}
                 onChange={e => setReportStatus(e.target.value)}
-                className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
+                className="input-field"
               >
                 <option value="">All Statuses</option>
                 <option value="Pending">Pending</option>
@@ -1079,43 +1079,43 @@ export const CaretakerDashboard: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[15px] text-[#6B7280]">Branch</label>
+                <label className="input-label">Branch</label>
                 <input
                   type="text"
                   placeholder="e.g. CSE"
                   value={reportBranch}
                   onChange={e => setReportBranch(e.target.value)}
-                  className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
+                  className="input-field"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-[15px] text-[#6B7280]">Year</label>
+                <label className="input-label">Year</label>
                 <input
                   type="text"
                   placeholder="e.g. 3"
                   value={reportYear}
                   onChange={e => setReportYear(e.target.value)}
-                  className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
+                  className="input-field"
                 />
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[15px] text-[#6B7280]">From Date</label>
+              <label className="input-label">From Date</label>
               <input
                 type="date"
                 value={reportStartDate}
                 onChange={e => setReportStartDate(e.target.value)}
-                className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
+                className="input-field"
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[15px] text-[#6B7280]">To Date</label>
+              <label className="input-label">To Date</label>
               <input
                 type="date"
                 value={reportEndDate}
                 onChange={e => setReportEndDate(e.target.value)}
-                className="border border-[#E5E7EB] bg-white rounded p-2 text-[15px]"
+                className="input-field"
               />
             </div>
 
@@ -1138,16 +1138,16 @@ export const CaretakerDashboard: React.FC = () => {
           {/* Table Preview */}
           <div className="admin-card p-6 lg:col-span-2 space-y-4">
             <h3 className="text-[18px] font-semibold text-[#111827]">Live Report Preview</h3>
-            <div className="overflow-x-auto max-h-[500px]">
-              <table className="w-full text-left text-[15px]">
+            <div className="table-container max-h-[500px] overflow-y-auto">
+              <table className="table-enterprise">
                 <thead>
-                  <tr className="border-b border-[#E5E7EB] text-[#6B7280]">
-                    <th className="py-2">Student</th>
-                    <th className="py-2">Details</th>
-                    <th className="py-2 text-right">Status</th>
+                  <tr>
+                    <th>Student</th>
+                    <th>Details</th>
+                    <th className="text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E7EB]">
+                <tbody>
                   {loadingPreview ? (
                     <tr>
                       <td colSpan={3} className="py-8 text-center text-[#6B7280]">Loading preview...</td>

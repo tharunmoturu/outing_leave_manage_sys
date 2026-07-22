@@ -51,20 +51,19 @@ export const Modal: React.FC<ModalProps> = ({
         onClick={onClose}
       />
 
-      {/* Modal Dialog Box */}
       <div
-        className={`glass-panel relative w-full ${getSizeClasses()} transform rounded-2xl border bg-white/95 dark:bg-slate-900/95 p-6 shadow-2xl transition-all duration-300 scale-100 opacity-100 flex flex-col max-h-[90vh]`}
+        className={`glass-panel relative w-full ${getSizeClasses()} transform rounded-2xl border bg-white/95 p-6 shadow-2xl transition-all duration-300 scale-100 opacity-100 flex flex-col max-h-[90vh]`}
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/60 pb-3">
-          <h3 className="font-heading text-lg font-bold text-slate-800 dark:text-white">
+        <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
+          <h3 className="font-heading text-lg font-bold text-slate-800">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors duration-200"
+            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors duration-200"
           >
             <X className="h-5 w-5" />
           </button>
