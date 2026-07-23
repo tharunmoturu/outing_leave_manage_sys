@@ -293,33 +293,33 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Title Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="section-header">
         <div>
-          <h1 className="font-heading text-2xl font-black text-slate-800 dark:text-white sm:text-3xl">
+          <h1 className="text-title-large">
             Admin Dashboard
           </h1>
-          <p className="text-sm text-slate-400 dark:text-slate-500">
+          <p className="text-secondary mt-1">
             System overview, statistics, and student rosters controls.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-4">
           <button
             onClick={() => {
               setIsLogsOpen(true);
               fetchLoginLogs();
             }}
-            className="flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm transition-all active:scale-95 duration-200 cursor-pointer"
+            className="btn-secondary"
           >
-            <History className="h-4 w-4" />
+            <History size={18} strokeWidth={1.75} />
             <span>Login Logs</span>
           </button>
           <button
             onClick={fetchDashboardStats}
-            className="flex items-center justify-center gap-2 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm transition-all active:scale-95 duration-200 cursor-pointer"
+            className="btn-secondary"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw size={18} strokeWidth={1.75} />
             <span>Refresh Data</span>
           </button>
         </div>
@@ -376,26 +376,26 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Analytics Charts Panel */}
       {!loadingStats && charts && (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Monthly Outings Chart */}
-          <div className="glass-panel rounded-3xl p-5 border flex flex-col justify-between">
-            <h3 className="font-heading text-sm font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">
+          <div className="admin-card flex flex-col justify-between">
+            <h3 className="text-label mb-6">
               Monthly Outing Trends
             </h3>
             <CustomBarChart data={charts.monthlyOutings} />
           </div>
 
           {/* Branch Distribution */}
-          <div className="glass-panel rounded-3xl p-5 border flex flex-col justify-between">
-            <h3 className="font-heading text-sm font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">
+          <div className="admin-card flex flex-col justify-between">
+            <h3 className="text-label mb-6">
               Branch distribution
             </h3>
             <CustomDonutChart data={getBranchChartData()} />
           </div>
 
           {/* Year Distribution */}
-          <div className="glass-panel rounded-3xl p-5 border flex flex-col justify-between">
-            <h3 className="font-heading text-sm font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">
+          <div className="admin-card flex flex-col justify-between">
+            <h3 className="text-label mb-6">
               Academic Year stats
             </h3>
             <CustomDonutChart data={getYearChartData()} />
@@ -404,49 +404,49 @@ export const AdminDashboard: React.FC = () => {
       )}
 
       {/* Student Roster & Management Section */}
-      <div className="glass-panel rounded-3xl border overflow-hidden">
+      <div className="admin-card-flat !p-0">
         {/* Panel Header */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-between border-b border-slate-200/60 dark:border-slate-800/60 p-5 gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-between border-b border-[var(--color-border-gray)] p-6 gap-4">
           <div className="flex items-center gap-3">
-            <Users className="h-5 w-5 text-indigo-500" />
-            <h2 className="font-heading text-base font-bold text-slate-800 dark:text-white">
+            <Users size={20} strokeWidth={1.75} className="text-[var(--color-primary)]" />
+            <h2 className="text-card-title">
               Student Directory
             </h2>
-            <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs text-slate-500 font-bold">
+            <span className="rounded-full bg-[var(--color-gray-100)] px-3 py-1 text-[12px] font-medium text-[var(--color-text-secondary)]">
               {students.length} Total
             </span>
           </div>
 
           <button
             onClick={openAddModal}
-            className="flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 text-sm font-bold shadow-md shadow-indigo-500/20 active:scale-95 transition-all duration-200 cursor-pointer"
+            className="btn-primary"
           >
-            <Plus className="h-4 w-4" />
+            <Plus size={18} strokeWidth={1.75} />
             <span>Create Student</span>
           </button>
         </div>
 
         {/* Filter Toolbar */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 p-4 gap-3 bg-slate-500/5 border-b border-slate-200/50 dark:border-slate-800/50">
+        <div className="grid grid-cols-1 sm:grid-cols-4 p-4 gap-4 bg-[var(--color-bg-main)] border-b border-[var(--color-border-gray)]">
           {/* Search bar */}
           <div className="relative">
-            <Search className="absolute top-3 left-3 h-4 w-4 text-slate-400" />
+            <Search className="absolute top-3 left-3 text-[var(--color-text-muted)]" size={18} strokeWidth={1.75} />
             <input
               type="text"
               placeholder="Search by ID or Name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2 pl-9 pr-3 text-xs text-slate-700 dark:text-slate-200 placeholder-slate-400 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-200"
+              className="search-input"
             />
           </div>
 
           {/* Branch filter */}
           <div className="relative">
-            <Filter className="absolute top-3 left-3 h-4 w-4 text-slate-400" />
+            <Filter className="absolute top-3 left-3 text-[var(--color-text-muted)]" size={18} strokeWidth={1.75} />
             <select
               value={selectedBranch}
               onChange={(e) => setSelectedBranch(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2 pl-9 pr-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-200 appearance-none"
+              className="search-input"
             >
               <option value="">All Branches</option>
               <option value="CSE">CSE</option>
@@ -459,11 +459,11 @@ export const AdminDashboard: React.FC = () => {
 
           {/* Year filter */}
           <div className="relative">
-            <Filter className="absolute top-3 left-3 h-4 w-4 text-slate-400" />
+            <Filter className="absolute top-3 left-3 text-[var(--color-text-muted)]" size={18} strokeWidth={1.75} />
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2 pl-9 pr-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-200 appearance-none"
+              className="search-input"
             >
               <option value="">All Years</option>
               <option value="1st">First Year</option>
@@ -475,11 +475,11 @@ export const AdminDashboard: React.FC = () => {
 
           {/* Status filter */}
           <div className="relative">
-            <Filter className="absolute top-3 left-3 h-4 w-4 text-slate-400" />
+            <Filter className="absolute top-3 left-3 text-[var(--color-text-muted)]" size={18} strokeWidth={1.75} />
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2 pl-9 pr-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all duration-200 appearance-none"
+              className="search-input"
             >
               <option value="">All Statuses</option>
               <option value="Inside">Inside</option>
@@ -492,45 +492,45 @@ export const AdminDashboard: React.FC = () => {
         {/* Directory Table */}
         <div className="overflow-x-auto">
           {loadingStudents ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-3 text-slate-400">
-              <RefreshCw className="h-8 w-8 animate-spin text-indigo-500" />
-              <span className="text-sm font-semibold">Loading student roster...</span>
+            <div className="empty-state">
+              <RefreshCw className="empty-state-icon animate-spin" size={48} strokeWidth={1.5} />
+              <span className="empty-state-text">Loading student roster...</span>
             </div>
           ) : students.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-2 text-slate-400">
-              <Users className="h-10 w-10 text-slate-300 dark:text-slate-700" />
-              <span className="text-sm font-semibold">No students found matching your filters</span>
+            <div className="empty-state">
+              <Users className="empty-state-icon" size={48} strokeWidth={1.5} />
+              <span className="empty-state-text">No students found matching your filters</span>
             </div>
           ) : (
-            <table className="w-full border-collapse text-left">
+            <table className="table-enterprise">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200/50 dark:border-slate-800/50 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  <th className="p-4">Student ID / Profile</th>
-                  <th className="p-4">Branch & Yr</th>
-                  <th className="p-4">Room & Hostel</th>
-                  <th className="p-4">Quotas (Rem/Used)</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 text-right">Actions</th>
+                <tr>
+                  <th>Student ID / Profile</th>
+                  <th>Branch & Yr</th>
+                  <th>Room & Hostel</th>
+                  <th>Quotas (Rem/Used)</th>
+                  <th>Status</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-xs">
+              <tbody>
                 {students.map((student) => (
-                  <tr key={student._id} className="hover:bg-slate-500/5 transition-all">
+                  <tr key={student._id}>
                     {/* ID & Name */}
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                    <td>
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-10 w-10 overflow-hidden rounded-[8px] bg-[var(--color-gray-100)] border border-[var(--color-border-gray)] items-center justify-center text-[var(--color-text-secondary)]">
                           {student.photo ? (
                             <img src={student.photo} alt={student.name} className="h-full w-full object-cover" />
                           ) : (
-                            <Users className="h-4 w-4" />
+                            <Users size={20} strokeWidth={1.75} />
                           )}
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-800 dark:text-white hover:text-indigo-600 transition-colors">
+                          <span className="td-name hover:text-[var(--color-primary)] transition-colors cursor-pointer">
                             {student.name}
                           </span>
-                          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
+                          <span className="td-id">
                             {student.student_id}
                           </span>
                         </div>
@@ -538,52 +538,52 @@ export const AdminDashboard: React.FC = () => {
                     </td>
 
                     {/* Branch & Year */}
-                    <td className="p-4">
+                    <td>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">{student.branch}</span>
-                        <span className="text-[10px] text-slate-400">{student.year} Year</span>
+                        <span className="td-name">{student.branch}</span>
+                        <span className="td-time">{student.year} Year</span>
                       </div>
                     </td>
 
                     {/* Room & Hostel */}
-                    <td className="p-4">
+                    <td>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">Room {student.room}</span>
-                        <span className="text-[10px] text-slate-400">{student.hostel}</span>
+                        <span className="td-name">Room {student.room}</span>
+                        <span className="td-time">{student.hostel}</span>
                       </div>
                     </td>
 
                     {/* Quota Indicators */}
-                    <td className="p-4">
+                    <td>
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center justify-center h-6 w-6 rounded-lg font-bold ${
+                        <span className={`inline-flex items-center justify-center h-6 w-6 rounded-[6px] font-medium text-[12px] ${
                           student.remaining_outings === 0
-                            ? 'bg-rose-500/10 text-rose-500'
-                            : 'bg-emerald-500/10 text-emerald-500'
+                            ? 'bg-[var(--color-danger-light)] text-[var(--color-danger)]'
+                            : 'bg-[var(--color-success-light)] text-[var(--color-success)]'
                         }`}>
                           {student.remaining_outings}
                         </span>
-                        <span className="text-slate-400">/</span>
-                        <span className="font-bold text-slate-500">{student.used_outings} used</span>
+                        <span className="text-[var(--color-text-muted)]">/</span>
+                        <span className="font-medium text-[var(--color-text-secondary)] text-[12px]">{student.used_outings} used</span>
                       </div>
                     </td>
 
                     {/* Occupancy Status */}
-                    <td className="p-4">
-                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
+                    <td>
+                      <span className={`badge ${
                         student.status === 'Inside'
-                          ? 'bg-emerald-500/10 text-emerald-500'
+                          ? 'badge-inside'
                           : student.status === 'Outside'
-                          ? 'bg-rose-500/10 text-rose-500'
-                          : 'bg-amber-500/10 text-amber-500'
+                          ? 'badge-outside'
+                          : 'badge-pending'
                       }`}>
                         {student.status}
                       </span>
                     </td>
 
                     {/* Actions */}
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="text-right">
+                      <div className="flex items-center justify-end gap-1">
                         {/* Quota Override */}
                         <button
                           onClick={() => {
@@ -593,10 +593,10 @@ export const AdminDashboard: React.FC = () => {
                             setFormSuccess('');
                             setIsOverrideOpen(true);
                           }}
-                          className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-500/10 rounded-xl transition-all duration-200"
+                          className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] hover:bg-[var(--color-primary-light)] rounded-[8px] transition-all"
                           title="Override Quota"
                         >
-                          <RefreshCw className="h-4 w-4" />
+                          <RefreshCw size={18} strokeWidth={1.75} />
                         </button>
 
                         {/* Account Link */}
@@ -612,28 +612,28 @@ export const AdminDashboard: React.FC = () => {
                             setFormSuccess('');
                             setIsAccountOpen(true);
                           }}
-                          className="p-2 text-slate-400 hover:text-teal-500 hover:bg-teal-500/10 rounded-xl transition-all duration-200"
+                          className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-info)] hover:bg-[var(--color-info-light)] rounded-[8px] transition-all"
                           title="Create Login Account"
                         >
-                          <Lock className="h-4 w-4" />
+                          <Lock size={18} strokeWidth={1.75} />
                         </button>
 
                         {/* Edit Button */}
                         <button
                           onClick={() => openEditModal(student)}
-                          className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-xl transition-all duration-200"
+                          className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-info)] hover:bg-[var(--color-info-light)] rounded-[8px] transition-all"
                           title="Edit Profile"
                         >
-                          <Edit2 className="h-4 w-4" />
+                          <Edit2 size={18} strokeWidth={1.75} />
                         </button>
 
                         {/* Delete Button */}
                         <button
                           onClick={() => handleDeleteStudent(student._id, student.name)}
-                          className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all duration-200"
+                          className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-light)] rounded-[8px] transition-all"
                           title="Delete Profile"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 size={18} strokeWidth={1.75} />
                         </button>
                       </div>
                     </td>
@@ -651,24 +651,24 @@ export const AdminDashboard: React.FC = () => {
         onClose={() => setIsFormOpen(false)}
         title={editingStudent ? `Edit Student: ${studentForm.name}` : 'Create Student Profile'}
       >
-        <form onSubmit={handleStudentFormSubmit} className="space-y-4">
+        <form onSubmit={handleStudentFormSubmit} className="space-y-6">
           {formError && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-500/10 border border-rose-500/20 p-4 text-xs text-rose-500">
-              <AlertCircle className="h-4 w-4" />
+            <div className="alert-error">
+              <AlertCircle size={18} strokeWidth={1.75} className="mt-0.5" />
               <span>{formError}</span>
             </div>
           )}
 
           {formSuccess && (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-xs text-emerald-500 font-semibold">
+            <div className="alert-success">
               {formSuccess}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             {/* Student ID */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Student ID / Roll No (Unique)
               </label>
               <input
@@ -677,14 +677,14 @@ export const AdminDashboard: React.FC = () => {
                 disabled={editingStudent !== null}
                 value={studentForm.student_id}
                 onChange={(e) => setStudentForm({ ...studentForm, student_id: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all outline-none"
+                className="input-field"
                 placeholder="e.g. S106"
               />
             </div>
 
             {/* Name */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Full Name
               </label>
               <input
@@ -692,20 +692,20 @@ export const AdminDashboard: React.FC = () => {
                 required
                 value={studentForm.name}
                 onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all"
+                className="input-field"
                 placeholder="e.g. John Doe"
               />
             </div>
 
             {/* Branch */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Branch / Major
               </label>
               <select
                 value={studentForm.branch}
                 onChange={(e) => setStudentForm({ ...studentForm, branch: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all"
+                className="input-field"
               >
                 <option value="CSE">CSE (Computer Science)</option>
                 <option value="ECE">ECE (Electronics)</option>
@@ -716,14 +716,14 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Year */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Academic Year
               </label>
               <select
                 value={studentForm.year}
                 onChange={(e) => setStudentForm({ ...studentForm, year: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all"
+                className="input-field"
               >
                 <option value="1st">First Year</option>
                 <option value="2nd">Second Year</option>
@@ -733,14 +733,14 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Hostel */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Hostel Hall name
               </label>
               <select
                 value={studentForm.hostel}
                 onChange={(e) => setStudentForm({ ...studentForm, hostel: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all"
+                className="input-field"
               >
                 <option value="Ramanujan Hall">Ramanujan Hall (Boys)</option>
                 <option value="Kalpana Chawla Hall">Kalpana Chawla Hall (Girls)</option>
@@ -749,8 +749,8 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Room Number */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Room Number
               </label>
               <input
@@ -758,14 +758,14 @@ export const AdminDashboard: React.FC = () => {
                 required
                 value={studentForm.room}
                 onChange={(e) => setStudentForm({ ...studentForm, room: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all"
+                className="input-field"
                 placeholder="e.g. 104"
               />
             </div>
 
             {/* Section */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Class Section
               </label>
               <input
@@ -773,14 +773,14 @@ export const AdminDashboard: React.FC = () => {
                 required
                 value={studentForm.section}
                 onChange={(e) => setStudentForm({ ...studentForm, section: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all"
+                className="input-field"
                 placeholder="e.g. A or B"
               />
             </div>
 
             {/* Email */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Email Address
               </label>
               <input
@@ -788,14 +788,14 @@ export const AdminDashboard: React.FC = () => {
                 required
                 value={studentForm.email}
                 onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all"
+                className="input-field"
                 placeholder="e.g. name@domain.com"
               />
             </div>
 
             {/* Student Phone */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Student Phone Number
               </label>
               <input
@@ -803,14 +803,14 @@ export const AdminDashboard: React.FC = () => {
                 required
                 value={studentForm.phone}
                 onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all"
+                className="input-field"
                 placeholder="10 digit number"
               />
             </div>
 
             {/* Parent Phone */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Parent Phone Number
               </label>
               <input
@@ -818,24 +818,24 @@ export const AdminDashboard: React.FC = () => {
                 required
                 value={studentForm.parent_phone}
                 onChange={(e) => setStudentForm({ ...studentForm, parent_phone: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 transition-all"
+                className="input-field"
                 placeholder="Parent emergency contact"
               />
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3 border-t border-slate-200/50 dark:border-slate-800/50 pt-4">
+          <div className="mt-8 flex justify-end gap-4 border-t border-[var(--color-border-gray)] pt-6">
             <button
               type="button"
               onClick={() => setIsFormOpen(false)}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              className="btn-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 text-xs font-bold shadow-md shadow-indigo-500/10 cursor-pointer"
+              className="btn-primary"
             >
               {submitting ? 'Submitting...' : 'Save Profile'}
             </button>
@@ -849,22 +849,22 @@ export const AdminDashboard: React.FC = () => {
         onClose={() => setIsOverrideOpen(false)}
         title={selectedStudentForOverride ? `Manual Quota Override: ${selectedStudentForOverride.name}` : ''}
       >
-        <form onSubmit={handleOverrideSubmit} className="space-y-4">
+        <form onSubmit={handleOverrideSubmit} className="space-y-6">
           {formError && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-500/10 border border-rose-500/20 p-4 text-xs text-rose-500">
-              <AlertCircle className="h-4 w-4" />
+            <div className="alert-error">
+              <AlertCircle size={18} strokeWidth={1.75} className="mt-0.5" />
               <span>{formError}</span>
             </div>
           )}
 
           {formSuccess && (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-xs text-emerald-500 font-semibold">
+            <div className="alert-success">
               {formSuccess}
             </div>
           )}
 
-          <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <div className="flex flex-col">
+            <label className="input-label">
               Set Remaining Outings Count
             </label>
             <input
@@ -873,25 +873,25 @@ export const AdminDashboard: React.FC = () => {
               required
               value={overrideQuotaVal}
               onChange={(e) => setOverrideQuotaVal(parseInt(e.target.value) || 0)}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-3 px-4 font-bold text-slate-800 dark:text-white"
+              className="input-field font-semibold text-[16px]"
             />
-            <p className="text-[10px] text-slate-400">
+            <p className="text-secondary text-[13px] mt-2">
               This manually changes the remaining outings for this student. The count will be reset to 3 at the beginning of the next calendar month.
             </p>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3 border-t border-slate-200/50 pt-4">
+          <div className="mt-8 flex justify-end gap-4 border-t border-[var(--color-border-gray)] pt-6">
             <button
               type="button"
               onClick={() => setIsOverrideOpen(false)}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 cursor-pointer"
+              className="btn-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 text-xs font-bold shadow-md cursor-pointer"
+              className="btn-primary"
             >
               {submitting ? 'Updating...' : 'Override Quota'}
             </button>
@@ -905,23 +905,23 @@ export const AdminDashboard: React.FC = () => {
         onClose={() => setIsAccountOpen(false)}
         title={selectedStudentForAccount ? `Link Login Account: ${selectedStudentForAccount.name}` : ''}
       >
-        <form onSubmit={handleAccountSubmit} className="space-y-4">
+        <form onSubmit={handleAccountSubmit} className="space-y-6">
           {formError && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-500/10 border border-rose-500/20 p-4 text-xs text-rose-500">
-              <AlertCircle className="h-4 w-4" />
+            <div className="alert-error">
+              <AlertCircle size={18} strokeWidth={1.75} className="mt-0.5" />
               <span>{formError}</span>
             </div>
           )}
 
           {formSuccess && (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-xs text-emerald-500 font-semibold">
+            <div className="alert-success">
               {formSuccess}
             </div>
           )}
 
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Student Username
               </label>
               <input
@@ -929,12 +929,12 @@ export const AdminDashboard: React.FC = () => {
                 required
                 value={accountForm.username}
                 onChange={(e) => setAccountForm({ ...accountForm, username: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-800 dark:text-white"
+                className="input-field"
               />
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="flex flex-col">
+              <label className="input-label">
                 Initial Password
               </label>
               <input
@@ -942,23 +942,23 @@ export const AdminDashboard: React.FC = () => {
                 required
                 value={accountForm.password}
                 onChange={(e) => setAccountForm({ ...accountForm, password: e.target.value })}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 px-3 text-xs text-slate-800 dark:text-white"
+                className="input-field"
               />
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end gap-3 border-t border-slate-200/50 pt-4">
+          <div className="mt-8 flex justify-end gap-4 border-t border-[var(--color-border-gray)] pt-6">
             <button
               type="button"
               onClick={() => setIsAccountOpen(false)}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 cursor-pointer"
+              className="btn-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 text-xs font-bold shadow-md cursor-pointer"
+              className="btn-primary"
             >
               {submitting ? 'Creating Link...' : 'Create Link'}
             </button>
@@ -972,69 +972,71 @@ export const AdminDashboard: React.FC = () => {
         onClose={() => setIsLogsOpen(false)}
         title="Login Activity History"
       >
-        <div className="space-y-4 max-w-4xl w-full">
+        <div className="space-y-6 max-w-4xl w-full">
           <div className="flex justify-between items-center">
-            <p className="text-xs text-slate-400">
+            <p className="text-secondary text-[13px]">
               Showing the latest 100 login attempts recorded in the database.
             </p>
             <button
               type="button"
               onClick={fetchLoginLogs}
-              className="flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-500 cursor-pointer border-none bg-transparent"
+              className="btn-ghost btn-sm"
             >
-              <RefreshCw className="h-3 w-3 animate-spin-slow" />
+              <RefreshCw size={14} strokeWidth={1.75} />
               Refresh Logs
             </button>
           </div>
 
-          <div className="max-h-[50vh] overflow-y-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+          <div className="table-container max-h-[50vh] overflow-y-auto">
             {loadingLogs ? (
-              <div className="flex flex-col items-center justify-center py-12 gap-3 text-slate-400">
-                <RefreshCw className="h-6 w-6 animate-spin text-indigo-500" />
-                <span className="text-xs font-semibold">Loading login logs...</span>
+              <div className="empty-state">
+                <RefreshCw className="empty-state-icon animate-spin" size={48} strokeWidth={1.5} />
+                <span className="empty-state-text">Loading login logs...</span>
               </div>
             ) : loginLogs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                <History className="h-8 w-8 text-slate-300 dark:text-slate-700 mb-2" />
-                <span className="text-xs font-semibold">No login history found.</span>
+              <div className="empty-state">
+                <History className="empty-state-icon" size={48} strokeWidth={1.5} />
+                <span className="empty-state-text">No login history found.</span>
               </div>
             ) : (
-              <table className="w-full border-collapse text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0 border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold GMR-header uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <table className="table-enterprise">
+                <thead>
                   <tr>
-                    <th className="p-3">Username</th>
-                    <th className="p-3">Role</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3">IP Address</th>
-                    <th className="p-3">Device / Client</th>
-                    <th className="p-3 text-right">Time</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>IP Address</th>
+                    <th>Device / Client</th>
+                    <th className="text-right">Time</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                <tbody>
                   {loginLogs.map((log: any) => (
-                    <tr key={log._id} className="hover:bg-slate-500/5 transition-colors">
-                      <td className="p-3 font-semibold text-slate-800 dark:text-slate-200">
-                        {log.username}
+                    <tr key={log._id}>
+                      <td>
+                        <span className="font-semibold text-[var(--color-text-primary)]">
+                          {log.username}
+                        </span>
                       </td>
-                      <td className="p-3 text-slate-500">
+                      <td>
                         <span className="capitalize">{log.role || 'Unknown'}</span>
                       </td>
-                      <td className="p-3">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${
+                      <td>
+                        <span className={`badge ${
                           log.status === 'success'
-                            ? 'bg-emerald-500/10 text-emerald-500'
-                            : 'bg-rose-500/10 text-rose-500'
+                            ? 'badge-approved'
+                            : 'badge-rejected'
                         }`}>
                           {log.status}
                         </span>
                       </td>
-                      <td className="p-3 text-slate-500 font-mono text-[10px]">
+                      <td className="td-id text-[12px]">
                         {log.ipAddress || 'unknown'}
                       </td>
-                      <td className="p-3 text-slate-400 text-[10px] max-w-[200px] truncate" title={log.userAgent}>
+                      <td className="max-w-[200px] truncate text-[12px]" title={log.userAgent}>
                         {log.userAgent || 'unknown'}
                       </td>
-                      <td className="p-3 text-right text-slate-400 text-[10px]">
+                      <td className="text-right td-time">
                         {new Date(log.createdAt).toLocaleString()}
                       </td>
                     </tr>
@@ -1044,11 +1046,11 @@ export const AdminDashboard: React.FC = () => {
             )}
           </div>
 
-          <div className="mt-4 flex justify-end">
+          <div className="mt-8 flex justify-end">
             <button
               type="button"
               onClick={() => setIsLogsOpen(false)}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              className="btn-secondary"
             >
               Close
             </button>
