@@ -61,7 +61,8 @@ const startServer = async () => {
   
   if (isConnected) {
     // Run Database Seeder to insert demo records if empty
-    await seedData();
+    // await seedData();
+    console.log('[Server] Automatic seeding disabled to prevent overwriting imported data.');
   } else {
     console.log('\x1b[33m[Server] Server starting with database disconnected. Ensure MongoDB is active.\x1b[0m');
   }
