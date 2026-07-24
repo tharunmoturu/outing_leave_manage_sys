@@ -15,7 +15,9 @@ import {
   PlusCircle,
   Settings,
   User,
-  Bell
+  Bell,
+  UserCog,
+  UserPlus
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -40,10 +42,11 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
     switch (user.role) {
       case 'admin':
         return [
-          { path: '/admin/operations', label: 'Outing Summary', icon: <Activity className="h-6 w-6" /> },
-          { path: '/admin/students', label: 'Student Mgmt', icon: <Users className="h-6 w-6" /> },
-          { path: '/admin/caretakers', label: 'Caretaker Mgmt', icon: <Activity className="h-6 w-6" /> },
-          { path: '/admin/onboarding', label: 'User Onboarding', icon: <PlusCircle className="h-6 w-6" /> },
+          { path: '/admin/operations', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
+          { path: '/admin/students', label: 'Students', icon: <Users className="h-6 w-6" /> },
+          { path: '/admin/caretakers', label: 'Caretakers', icon: <UserCog className="h-6 w-6" /> },
+          { path: '/admin/onboarding', label: 'Onboarding', icon: <UserPlus className="h-6 w-6" /> },
+          { path: '/admin/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
         ];
       case 'caretaker':
         return [

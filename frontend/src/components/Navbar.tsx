@@ -117,6 +117,13 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                   <div className="px-4 py-3 border-b border-[var(--color-border-gray)] text-[12px] text-[var(--color-text-secondary)]">
                     Signed in as <strong className="text-[var(--color-text-primary)] block truncate font-medium mt-0.5">{user.email}</strong>
                   </div>
+                  <a
+                    href={user.role.toLowerCase() === 'student' ? '/student/profile' : '/admin/profile'}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-[14px] font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-gray-50)] transition-colors"
+                  >
+                    <User size={16} strokeWidth={1.75} />
+                    Profile
+                  </a>
                   <button
                     onClick={onLogout}
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-[14px] font-medium text-[var(--color-danger)] hover:bg-[var(--color-danger-light)] transition-colors"

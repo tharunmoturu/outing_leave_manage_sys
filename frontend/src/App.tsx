@@ -11,7 +11,7 @@ import { AdminOperationsDashboard } from './pages/admin/AdminOperationsDashboard
 import { AdminStudentManagement } from './pages/admin/AdminStudentManagement';
 import { AdminCaretakerManagement } from './pages/admin/AdminCaretakerManagement';
 import { AdminUserOnboarding } from './pages/admin/AdminUserOnboarding';
-
+import { AdminProfile } from './pages/admin/AdminProfile';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { NormalOutingPage } from './pages/NormalOutingPage';
 import { EmergencyOutingPage } from './pages/EmergencyOutingPage';
@@ -67,6 +67,14 @@ function App() {
             <Route
               path="/admin"
               element={<Navigate to="/admin/operations" replace />}
+            />
+            <Route
+              path="/admin/profile"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'caretaker', 'security']}>
+                  <AdminProfile />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/admin/operations"
