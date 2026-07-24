@@ -10,6 +10,7 @@ import studentRoutes from './routes/studentRoutes.js';
 import outingRoutes from './routes/outingRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 dotenv.config();
 
@@ -22,10 +23,11 @@ app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // Route registrations
 app.use('/api/auth', authRoutes);
-app.use('/api/students', studentRoutes);
+app.use('/api/student', studentRoutes); // Was students
 app.use('/api/outings', outingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/users', userRoutes);
 
 // Root route
 app.get('/', (req, res) => {

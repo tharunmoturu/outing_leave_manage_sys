@@ -62,7 +62,7 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
       case 'student':
         return [
           { path: '/student', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
-          { path: '/student/profile', label: 'Profile (Future)', icon: <User className="h-6 w-6" /> },
+          { path: '/student/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
         ];
       default:
         return [];
