@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { LogOut, User, Bell, ChevronDown } from 'lucide-react';
+import { useAcademicYear } from '../contexts/AcademicYearContext';
+import { NotificationDropdown } from './dashboard/NotificationDropdown';
 import logo from '../assets/logo.png';
 
 interface NavbarProps {
@@ -53,35 +55,39 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             </div>
 
             {/* Notifications Button */}
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setShowNotifications(!showNotifications);
-                  setShowProfileMenu(false);
-                }}
-                className="relative flex h-10 w-10 items-center justify-center rounded-[8px] hover:bg-[var(--color-gray-100)] text-[var(--color-text-secondary)] transition-colors"
-                title="Notifications"
-              >
-                <Bell size={20} strokeWidth={1.75} />
-                <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[var(--color-danger)]" />
-              </button>
+            {user.role === 'student' ? (
+              <NotificationDropdown />
+            ) : (
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    setShowNotifications(!showNotifications);
+                    setShowProfileMenu(false);
+                  }}
+                  className="relative flex h-10 w-10 items-center justify-center rounded-[8px] hover:bg-[var(--color-gray-100)] text-[var(--color-text-secondary)] transition-colors"
+                  title="Notifications"
+                >
+                  <Bell size={20} strokeWidth={1.75} />
+                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[var(--color-danger)]" />
+                </button>
 
-              {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 rounded-[12px] border border-[var(--color-border-gray)] bg-white p-2 shadow-[0_4px_12px_rgba(0,0,0,0.06)] z-50">
-                  <div className="px-3 py-2 border-b border-[var(--color-border-gray)] text-[11px] font-semibold text-[var(--color-text-primary)] uppercase tracking-wider">
-                    Recent Alerts
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 rounded-[12px] border border-[var(--color-border-gray)] bg-white p-2 shadow-[0_4px_12px_rgba(0,0,0,0.06)] z-50">
+                    <div className="px-3 py-2 border-b border-[var(--color-border-gray)] text-[11px] font-semibold text-[var(--color-text-primary)] uppercase tracking-wider">
+                      Recent Alerts
+                    </div>
+                    <div className="divide-y divide-[var(--color-border-gray)] max-h-60 overflow-y-auto">
+                      {notifications.map((n) => (
+                        <div key={n.id} className="p-3 text-[13px] hover:bg-[var(--color-gray-50)] transition-colors cursor-pointer">
+                          <p className="text-[var(--color-text-primary)] font-medium">{n.text}</p>
+                          <span className="text-[11px] text-[var(--color-text-secondary)]">{n.time}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="divide-y divide-[var(--color-border-gray)] max-h-60 overflow-y-auto">
-                    {notifications.map((n) => (
-                      <div key={n.id} className="p-3 text-[13px] hover:bg-[var(--color-gray-50)] transition-colors cursor-pointer">
-                        <p className="text-[var(--color-text-primary)] font-medium">{n.text}</p>
-                        <span className="text-[11px] text-[var(--color-text-secondary)]">{n.time}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* User Profile Info Dropdown */}
             <div className="relative">

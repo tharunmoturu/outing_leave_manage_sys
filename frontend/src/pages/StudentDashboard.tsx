@@ -27,14 +27,13 @@ export const StudentDashboard: React.FC = () => {
     fetchStudentDashboard();
   }, []);
 
-  const hasActiveRequest = data?.activeOuting && ['Pending', 'Approved', 'Exited'].includes(data.activeOuting.status);
+  const activeStatus = data?.activeOuting && ['Pending', 'Approved', 'Exited'].includes(data.activeOuting.status) ? data.activeOuting.status : null;
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <StudentInfoCard 
-        student={data?.student} 
-        loading={loading} 
-        onRefresh={fetchStudentDashboard} 
+        studentData={data?.student} 
+        loadingStudent={loading} 
       />
 
       {loading ? (
@@ -49,8 +48,18 @@ export const StudentDashboard: React.FC = () => {
             {/* Monthly Outing Summary Card */}
             <div className="bg-white rounded-xl shadow-sm border border-[var(--color-border-gray)] p-8">
               <div className="flex flex-col md:flex-row items-center justify-between gap-12">
-                <MonthlyQuota quota={data.quota} />
-                <QuickActions hasActiveRequest={hasActiveRequest} />
+                <div className="flex-1 w-full space-y-4">
+                  <MonthlyQuota quota={data.quota} />
+                  
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
+                    <div>
+                      <h4 className="text-sm font-bold text-red-800 uppercase tracking-wider mb-0.5">Emergency Requests</h4>
+                      <p className="text-xs text-red-600 font-medium">This month</p>
+                    </div>
+                    <span className="text-2xl font-black text-red-950">{data.emergencyRequestsThisMonth || 0}</span>
+                  </div>
+                </div>
+                <QuickActions activeStatus={activeStatus} />
               </div>
             </div>
 
