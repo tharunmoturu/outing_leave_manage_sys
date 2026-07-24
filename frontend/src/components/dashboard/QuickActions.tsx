@@ -15,14 +15,14 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ hasActiveRequest }) 
         disabled={hasActiveRequest}
         className="w-full bg-[var(--color-primary)] text-white px-8 py-3 rounded-xl text-[15px] font-bold shadow-md hover:bg-[#6c0f22] hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
-        <span>🟢</span> Apply Normal Outing
+        <span></span> Apply Normal Outing
       </button>
       <button
         onClick={() => navigate('/student/emergency-outing')}
         disabled={hasActiveRequest}
         className="w-full bg-red-600 text-white px-8 py-3 rounded-xl text-[15px] font-bold shadow-md hover:bg-red-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
-        <span>🔴</span> Apply Emergency Outing
+        <span></span> Apply Emergency Outing
       </button>
 
       {hasActiveRequest && (

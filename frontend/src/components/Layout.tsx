@@ -6,12 +6,10 @@ import {
   Users, 
   FileSpreadsheet, 
   Search, 
-  ClipboardList, 
   Activity, 
   QrCode,
   History,
   PlusCircle,
-  FileText,
   Settings,
   User
 } from 'lucide-react';

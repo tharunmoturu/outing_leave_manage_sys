@@ -12,6 +12,7 @@ export const StudentProfile: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
     branch: '',
@@ -39,6 +40,11 @@ export const StudentProfile: React.FC = () => {
           parentPhone: profile.parentPhone || '',
           address: profile.address || ''
         });
+        
+        // If profile is not completed yet, default to edit mode
+        if (!user?.profileCompleted) {
+          setIsEditing(true);
+        }
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to fetch profile.');
       } finally {
@@ -46,7 +52,7 @@ export const StudentProfile: React.FC = () => {
       }
     };
     fetchProfile();
-  }, []);
+  }, [user]);
 
   // Effect to handle PUC branch reset
   useEffect(() => {
@@ -72,6 +78,7 @@ export const StudentProfile: React.FC = () => {
       const updatedUser = await userService.updateProfile(formData);
       updateUser(updatedUser);
       setSuccess('Profile updated successfully!');
+      setIsEditing(false);
       
       // If it's their first time completing the profile, redirect
       if (!user?.profileCompleted) {
@@ -168,21 +175,33 @@ export const StudentProfile: React.FC = () => {
         {/* Editable Section */}
         <div className="md:col-span-2">
           <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-[var(--color-border-gray)] p-6">
-            <h2 className="text-[16px] font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-6 pb-4 border-b border-[var(--color-border-gray)]">
-              Personal Information
-            </h2>
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-[var(--color-border-gray)]">
+              <h2 className="text-[16px] font-bold text-[var(--color-text-primary)] uppercase tracking-wider">
+                Personal Information
+              </h2>
+              {user?.profileCompleted && (
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="px-4 py-1.5 rounded-lg text-[13px] font-bold border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white transition-colors cursor-pointer"
+                >
+                  {isEditing ? 'Cancel' : 'Edit'}
+                </button>
+              )}
+            </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               
               <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-bold text-[var(--color-text-primary)] uppercase tracking-wide">
-                  Academic Year <span className="text-red-500">*</span>
+                  Academic Year {isEditing && <span className="text-red-500">*</span>}
                 </label>
                 <select
                   required
+                  disabled={!isEditing}
                   value={formData.year}
                   onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white"
+                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 >
                   <option value="">Select Year</option>
                   {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
@@ -190,15 +209,15 @@ export const StudentProfile: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className={`text-[13px] font-bold uppercase tracking-wide ${isPuc ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
-                  Branch {isPuc ? '(Not Applicable)' : <span className="text-red-500">*</span>}
+                <label className={`text-[13px] font-bold uppercase tracking-wide ${isPuc || !isEditing ? 'text-[var(--color-text-muted)]' : 'text-[var(--color-text-primary)]'}`}>
+                  Branch {isPuc ? '(Not Applicable)' : (isEditing && <span className="text-red-500">*</span>)}
                 </label>
                 <select
                   required={!isPuc}
-                  disabled={isPuc}
+                  disabled={!isEditing || isPuc}
                   value={formData.branch}
                   onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 >
                   <option value="">Select Branch</option>
                   {branchOptions.map(b => <option key={b} value={b}>{b}</option>)}
@@ -207,83 +226,92 @@ export const StudentProfile: React.FC = () => {
 
               <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-bold text-[var(--color-text-primary)] uppercase tracking-wide">
-                  Hostel Block <span className="text-red-500">*</span>
+                  Hostel Block {isEditing && <span className="text-red-500">*</span>}
                 </label>
-                <input
-                  type="text"
+                <select
                   required
+                  disabled={!isEditing}
                   value={formData.hostel}
                   onChange={(e) => setFormData({ ...formData, hostel: e.target.value })}
-                  placeholder="e.g. Emerald Hall"
-                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white"
-                />
+                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                >
+                  <option value="">Select Hostel Block</option>
+                  <option value="I-1">I-1</option>
+                  <option value="I-2">I-2</option>
+                </select>
               </div>
 
               <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-bold text-[var(--color-text-primary)] uppercase tracking-wide">
-                  Room Number <span className="text-red-500">*</span>
+                  Room Number {isEditing && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
                   required
+                  disabled={!isEditing}
                   value={formData.roomNo}
                   onChange={(e) => setFormData({ ...formData, roomNo: e.target.value })}
                   placeholder="e.g. 210"
-                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white"
+                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-bold text-[var(--color-text-primary)] uppercase tracking-wide">
-                  Your Phone Number <span className="text-red-500">*</span>
+                  Your Phone Number {isEditing && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="tel"
                   required
+                  disabled={!isEditing}
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="10-digit number"
-                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white"
+                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-bold text-[var(--color-text-primary)] uppercase tracking-wide">
-                  Parent Phone Number <span className="text-red-500">*</span>
+                  Parent Phone Number {isEditing && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="tel"
                   required
+                  disabled={!isEditing}
                   value={formData.parentPhone}
                   onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
                   placeholder="10-digit number"
-                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white"
+                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div className="sm:col-span-2 flex flex-col gap-2">
                 <label className="text-[13px] font-bold text-[var(--color-text-primary)] uppercase tracking-wide">
-                  Home Address <span className="text-red-500">*</span>
+                  Home Address {isEditing && <span className="text-red-500">*</span>}
                 </label>
                 <textarea
                   required
+                  disabled={!isEditing}
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   placeholder="Enter your full home address"
-                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white min-h-[100px]"
+                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white min-h-[100px] disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
 
-            <div className="mt-8 flex justify-end">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-10 py-3 rounded-xl font-bold text-white bg-[var(--color-primary)] hover:bg-[#6c0f22] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[15px]"
-              >
-                {submitting ? 'Saving Profile...' : 'Save Profile'}
-              </button>
-            </div>
+            {isEditing && (
+              <div className="mt-8 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-10 py-3 rounded-xl font-bold text-white bg-[var(--color-primary)] hover:bg-[#6c0f22] disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-[15px] cursor-pointer"
+                >
+                  {submitting ? 'Saving Profile...' : 'Save Profile'}
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>
