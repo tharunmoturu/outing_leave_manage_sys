@@ -47,10 +47,8 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
           { path: '/caretaker', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
           { path: '/caretaker/search', label: 'Student Search', icon: <Search className="h-6 w-6" /> },
           { path: '/caretaker/grant', label: 'Grant Outing', icon: <PlusCircle className="h-6 w-6" /> },
-          { path: '/caretaker/leaves', label: 'Leave Requests', icon: <ClipboardList className="h-6 w-6" /> },
           { path: '/caretaker/outside', label: 'Students Outside', icon: <Activity className="h-6 w-6" /> },
           { path: '/caretaker/outing-history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
-          { path: '/caretaker/leave-history', label: 'Leave History', icon: <FileText className="h-6 w-6" /> },
           { path: '/caretaker/reports', label: 'Reports', icon: <FileSpreadsheet className="h-6 w-6" /> },
           { path: '/caretaker/settings', label: 'Settings', icon: <Settings className="h-6 w-6" /> },
         ];
