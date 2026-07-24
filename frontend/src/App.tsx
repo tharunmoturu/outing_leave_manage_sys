@@ -7,6 +7,12 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Pages
 import { Login } from './pages/Login';
+import { AdminOperationsDashboard } from './pages/admin/AdminOperationsDashboard';
+import { AdminStudentManagement } from './pages/admin/AdminStudentManagement';
+import { AdminCaretakerManagement } from './pages/admin/AdminCaretakerManagement';
+import { AdminUserOnboarding } from './pages/admin/AdminUserOnboarding';
+
+import { StudentDashboard } from './pages/StudentDashboard';
 import { NormalOutingPage } from './pages/NormalOutingPage';
 import { EmergencyOutingPage } from './pages/EmergencyOutingPage';
 import { AdminDashboard } from './pages/AdminDashboard';
@@ -14,7 +20,7 @@ import { CaretakerDashboard } from './pages/CaretakerDashboard';
 import { PendingNormalPage } from './pages/PendingNormalPage';
 import { StudentsOutsidePage } from './pages/StudentsOutsidePage';
 import { GatePassPage } from './pages/GatePassPage';
-import { StudentDashboard } from './pages/StudentDashboard';
+
 import { StudentProfile } from './pages/StudentProfile';
 import { StudentHistoryPage } from './pages/StudentHistoryPage';
 import { CaretakerHistoryPage } from './pages/CaretakerHistoryPage';
@@ -57,13 +63,16 @@ function App() {
                 )
               }
             />
-
             {/* Admin Routes */}
             <Route
               path="/admin"
+              element={<Navigate to="/admin/operations" replace />}
+            />
+            <Route
+              path="/admin/operations"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
+                  <AdminOperationsDashboard />
                 </ProtectedRoute>
               }
             />
@@ -71,7 +80,23 @@ function App() {
               path="/admin/students"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
+                  <AdminStudentManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/caretakers"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminCaretakerManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/onboarding"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminUserOnboarding />
                 </ProtectedRoute>
               }
             />

@@ -15,17 +15,6 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // Always call hook unconditionally — Navbar is always rendered inside AcademicYearProvider
-  const { selectedYear, setSelectedYear } = useAcademicYear();
-
-  const years = [
-    { label: 'All', value: 'All' },
-    { label: 'E1', value: 'E1' },
-    { label: 'E2', value: 'E2' },
-    { label: 'E3', value: 'E3' },
-    { label: 'E4', value: 'E4' },
-  ] as const;
-
   // Mock notifications for admin/caretaker dashboard
   const notifications = [
     { id: 1, text: 'New overnight outing request from N220533', time: '5m ago' },
@@ -53,24 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
         {user && (
           <div className="flex items-center gap-6">
             
-            {/* Academic Year Selector (Caretaker & Admin) */}
-            {(user.role === 'caretaker' || user.role === 'admin') && (
-              <div className="hidden md:flex items-center bg-[var(--color-gray-100)] p-1 rounded-md border border-[var(--color-border-gray)]">
-                {years.map((y) => (
-                  <button
-                    key={y.value}
-                    onClick={() => setSelectedYear(y.value)}
-                    className={`px-3 py-1 text-[13px] font-medium rounded-sm transition-colors ${
-                      selectedYear === y.value
-                        ? 'bg-white text-[var(--color-primary)] shadow-sm'
-                        : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-                    }`}
-                  >
-                    {y.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Academic Year Selector Removed */}
 
             {/* Hostel Info */}
             <div className="hidden md:flex flex-col items-end border-r border-[var(--color-border-gray)] pr-6">
