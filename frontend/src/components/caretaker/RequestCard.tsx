@@ -8,6 +8,7 @@ export interface PendingNormalRequestItem {
   outing_id: string;
   studentId: string;
   studentName: string;
+  studentHostel?: string;
   reason: string;
   destination: string;
   leavingDate: string;
@@ -23,6 +24,7 @@ interface RequestCardProps {
   onViewDetails: (id: string) => void;
   onApproveClick: (req: PendingNormalRequestItem) => void;
   onRejectClick: (req: PendingNormalRequestItem) => void;
+  currentUserHostel?: string;
 }
 
 export const RequestCard: React.FC<RequestCardProps> = ({
@@ -30,6 +32,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({
   onViewDetails,
   onApproveClick,
   onRejectClick,
+  currentUserHostel,
 }) => {
   // Format time ago
   const formatTimeAgo = (dateStr: string) => {
@@ -100,7 +103,9 @@ export const RequestCard: React.FC<RequestCardProps> = ({
           {/* Approve Button */}
           <button
             onClick={handleApprove}
-            className="inline-flex items-center gap-1 bg-[#059669] hover:bg-[#047857] text-white font-bold text-[12px] px-3 py-1.5 rounded-md transition-colors shadow-2xs cursor-pointer"
+            disabled={currentUserHostel ? request.studentHostel !== currentUserHostel : false}
+            title={currentUserHostel && request.studentHostel !== currentUserHostel ? `Student belongs to ${request.studentHostel || 'another'} hostel` : "Approve"}
+            className="inline-flex items-center gap-1 bg-[#059669] hover:bg-[#047857] text-white font-bold text-[12px] px-3 py-1.5 rounded-md transition-colors shadow-2xs cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <CheckCircle2 size={14} />
             Approve
@@ -109,7 +114,9 @@ export const RequestCard: React.FC<RequestCardProps> = ({
           {/* Reject Button */}
           <button
             onClick={handleReject}
-            className="inline-flex items-center gap-1 bg-white border border-rose-300 text-rose-700 hover:bg-rose-50 font-bold text-[12px] px-3 py-1.5 rounded-md transition-colors cursor-pointer"
+            disabled={currentUserHostel ? request.studentHostel !== currentUserHostel : false}
+            title={currentUserHostel && request.studentHostel !== currentUserHostel ? `Student belongs to ${request.studentHostel || 'another'} hostel` : "Reject"}
+            className="inline-flex items-center gap-1 bg-white border border-rose-300 text-rose-700 hover:bg-rose-50 font-bold text-[12px] px-3 py-1.5 rounded-md transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <XCircle size={14} />
             Reject

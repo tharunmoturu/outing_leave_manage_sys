@@ -28,8 +28,9 @@ export const updateProfile = async (req, res) => {
     }
 
     if (['admin', 'caretaker', 'security'].includes(user.role.toLowerCase())) {
-      if (!name || !email || !phone) {
-        return res.status(400).json({ message: 'Please fill in all required fields (Name, Email, Phone).' });
+      const isCaretaker = user.role.toLowerCase() === 'caretaker';
+      if (!name || !email || !phone || (isCaretaker && !hostel)) {
+        return res.status(400).json({ message: isCaretaker ? 'Please fill in all required fields (Name, Email, Phone, Hostel).' : 'Please fill in all required fields (Name, Email, Phone).' });
       }
       if (email !== user.email || (studentId && studentId !== user.studentId)) {
         const userExists = await User.findOne({
@@ -43,6 +44,7 @@ export const updateProfile = async (req, res) => {
       user.name = name.trim();
       user.email = email.trim();
       user.phone = phone.trim();
+      if (isCaretaker) user.hostel = hostel.trim();
       if (studentId) user.studentId = studentId.trim();
     } else {
       if (!year || !hostel || !roomNo || !phone || !parentPhone || !address) {

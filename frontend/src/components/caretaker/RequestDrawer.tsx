@@ -8,9 +8,10 @@ interface RequestDrawerProps {
   onClose: () => void;
   onApproveClick?: (req: any) => void;
   onRejectClick?: (req: any) => void;
+  currentUserHostel?: string;
 }
 
-export const RequestDrawer: React.FC<RequestDrawerProps> = ({ outingId, isOpen, onClose, onApproveClick, onRejectClick }) => {
+export const RequestDrawer: React.FC<RequestDrawerProps> = ({ outingId, isOpen, onClose, onApproveClick, onRejectClick, currentUserHostel }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [data, setData] = useState<{
     currentRequest: {
@@ -225,7 +226,9 @@ export const RequestDrawer: React.FC<RequestDrawerProps> = ({ outingId, isOpen, 
                     });
                   }
                 }}
-                className="bg-white border border-red-200 hover:bg-red-50 text-red-700 font-bold text-[14px] px-5 py-2 rounded-lg transition-colors cursor-pointer"
+                disabled={currentUserHostel ? data.student.hostel !== currentUserHostel : false}
+                title={currentUserHostel && data.student.hostel !== currentUserHostel ? `Student belongs to ${data.student.hostel || 'another'} hostel` : "Reject"}
+                className="bg-white border border-red-200 hover:bg-red-50 text-red-700 font-bold text-[14px] px-5 py-2 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Reject
               </button>
@@ -243,7 +246,9 @@ export const RequestDrawer: React.FC<RequestDrawerProps> = ({ outingId, isOpen, 
                     });
                   }
                 }}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold text-[14px] px-5 py-2 rounded-lg transition-colors cursor-pointer"
+                disabled={currentUserHostel ? data.student.hostel !== currentUserHostel : false}
+                title={currentUserHostel && data.student.hostel !== currentUserHostel ? `Student belongs to ${data.student.hostel || 'another'} hostel` : "Approve"}
+                className="bg-green-600 hover:bg-green-700 text-white font-bold text-[14px] px-5 py-2 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Approve
               </button>

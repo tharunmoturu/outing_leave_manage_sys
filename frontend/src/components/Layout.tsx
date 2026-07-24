@@ -39,7 +39,7 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
 
   // Determine sidebar navigation links based on user role
   const getNavLinks = () => {
-    switch (user.role) {
+    switch (user.role?.toLowerCase()) {
       case 'admin':
         return [
           { path: '/admin/operations', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
@@ -51,11 +51,7 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
       case 'caretaker':
         return [
           { path: '/caretaker', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
-          { path: '/caretaker/pending-normal', label: 'Pending Requests', icon: <ClipboardList className="h-6 w-6" /> },
-          { path: '/caretaker/emergency-requests', label: 'Emergency Requests', icon: <AlertTriangle className="h-6 w-6" /> },
-          { path: '/caretaker/student-search', label: 'Student Search', icon: <Search className="h-6 w-6" /> },
-          { path: '/caretaker/students-outside', label: 'Students Outside', icon: <Activity className="h-6 w-6" /> },
-          { path: '/caretaker/history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
+          { path: '/caretaker/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
         ];
       case 'security':
         return [
