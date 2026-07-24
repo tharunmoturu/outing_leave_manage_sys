@@ -3,10 +3,10 @@ import API from '../services/api';
 import {
   QrCode,
   Search,
-  CheckCircle,
-  XCircle,
-  Clock,
-  ArrowRight,
+  
+  
+  
+  
   User,
   Shield,
   RefreshCw,

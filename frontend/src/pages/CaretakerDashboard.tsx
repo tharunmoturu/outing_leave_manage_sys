@@ -23,7 +23,6 @@ export const CaretakerDashboard: React.FC = () => {
   /* ── Dashboard / queue state ─────────────────────────────────────── */
   const [metrics, setMetrics] = useState<any>(null);
   const [activeOutings, setActiveOutings] = useState<any[]>([]);
-  const [pendingLeaves, setPendingLeaves] = useState<any[]>([]);
   const [pendingOutings, setPendingOutings] = useState<any[]>([]);
   const [loadingDashboard, setLoadingDashboard] = useState(true);
 
@@ -33,7 +32,6 @@ export const CaretakerDashboard: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [studentOutings, setStudentOutings] = useState<any[]>([]);
-  const [studentLeaves, setStudentLeaves] = useState<any[]>([]);
   const [loadingStudent, setLoadingStudent] = useState(false);
   const [searchError, setSearchError] = useState('');
 
@@ -50,11 +48,6 @@ export const CaretakerDashboard: React.FC = () => {
     remarks: '',
   });
 
-  /* ── Leave action modal state ────────────────────────────────────── */
-  const [isLeaveActionOpen, setIsLeaveActionOpen] = useState(false);
-  const [selectedLeave, setSelectedLeave] = useState<any>(null);
-  const [leaveActionType, setLeaveActionType] = useState<'approve' | 'reject'>('approve');
-  const [leaveRemarks, setLeaveRemarks] = useState('');
 
   /* ── Pending Outing action modal state ───────────────────────────── */
   const [isOutingActionOpen, setIsOutingActionOpen] = useState(false);
@@ -69,11 +62,10 @@ export const CaretakerDashboard: React.FC = () => {
 
   /* ── History log states ──────────────────────────────────────────── */
   const [outingHistory, setOutingHistory] = useState<any[]>([]);
-  const [leaveHistory, setLeaveHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   /* ── Reports state ───────────────────────────────────────────────── */
-  const [reportType, setReportType] = useState<'outings' | 'leaves'>('outings');
+  const [reportType, setReportType] = useState<'outings'>('outings');
   const [reportStatus, setReportStatus] = useState('');
   const [reportBranch, setReportBranch] = useState('');
   const [reportYear, setReportYear] = useState('');
@@ -101,7 +93,6 @@ export const CaretakerDashboard: React.FC = () => {
       const { data } = await API.get(`/dashboard/caretaker${yearQuery}`);
       setMetrics(data.metrics);
       setActiveOutings(data.activeOutingsList ?? []);
-      setPendingLeaves(data.pendingLeavesList ?? []);
       setPendingOutings(data.pendingOutingsList ?? []);
     } catch (err) {
       console.error('Failed to fetch caretaker dashboard', err);
@@ -164,7 +155,6 @@ export const CaretakerDashboard: React.FC = () => {
       const { data } = await API.get(`/students/${mongoId}`);
       setSelectedStudent(data.student);
       setStudentOutings(data.outings ?? []);
-      setStudentLeaves(data.leaves ?? []);
     } catch (err: any) {
       setSearchError(err.response?.data?.message || 'Student not found');
     } finally {
@@ -247,38 +237,7 @@ export const CaretakerDashboard: React.FC = () => {
   };
 
   /* ── Leave Request approve/reject ────────────────────────────────── */
-  const openLeaveActionModal = (leave: any, type: 'approve' | 'reject') => {
-    setSelectedLeave(leave);
-    setLeaveActionType(type);
-    setLeaveRemarks('');
-    setFormError('');
-    setFormSuccess('');
-    setIsLeaveActionOpen(true);
-  };
 
-  const handleLeaveActionSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    setFormSuccess('');
-    setSubmitting(true);
-    try {
-      await API.post(`/leaves/${selectedLeave._id}/${leaveActionType}`, { remarks: leaveRemarks });
-      setFormSuccess(`Leave ${leaveActionType === 'approve' ? 'approved' : 'rejected'} successfully!`);
-      fetchDashboardData();
-      if (selectedStudent && selectedLeave.student &&
-          selectedStudent._id === (selectedLeave.student._id ?? selectedLeave.student)) {
-        handleSelectStudent(selectedStudent._id);
-      }
-      setTimeout(() => {
-        setIsLeaveActionOpen(false);
-        setSelectedLeave(null);
-      }, 1500);
-    } catch (err: any) {
-      setFormError(err.response?.data?.message || `Failed to ${leaveActionType} leave`);
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   /* ── Gate Actions ────────────────────────────────────────────────── */
   const handleMarkExit = async (outingId: string) => {
@@ -322,9 +281,6 @@ export const CaretakerDashboard: React.FC = () => {
       if (activeView === 'outing-history') {
         const { data } = await API.get(`/outings/history${yearQuery}`);
         setOutingHistory(data);
-      } else if (activeView === 'leave-history') {
-        const { data } = await API.get(`/leaves/history${yearQuery}`);
-        setLeaveHistory(data);
       }
     } catch (err) {
       console.error('Failed to load history logs', err);
@@ -334,7 +290,7 @@ export const CaretakerDashboard: React.FC = () => {
   }, [activeView, selectedYear]);
 
   useEffect(() => {
-    if (activeView === 'outing-history' || activeView === 'leave-history') {
+    if (activeView === 'outing-history') {
       loadHistory();
     }
   }, [activeView, loadHistory]);
@@ -343,7 +299,7 @@ export const CaretakerDashboard: React.FC = () => {
   const handleLoadPreview = async () => {
     setLoadingPreview(true);
     try {
-      const endpoint = reportType === 'outings' ? '/outings/history' : '/leaves/history';
+      const endpoint = '/outings/history';
       const params: any = {};
       if (reportStatus) params.status = reportStatus;
       if (reportBranch) params.branch = reportBranch;
@@ -418,7 +374,6 @@ export const CaretakerDashboard: React.FC = () => {
     const classMap: Record<string, string> = {
       Inside: 'badge-inside',
       Outside: 'badge-outside',
-      Leave: 'badge-pending',
       Pending: 'badge-pending',
       Approved: 'badge-approved',
       Rejected: 'badge-rejected',
@@ -466,7 +421,6 @@ export const CaretakerDashboard: React.FC = () => {
             {[
               { label: 'Students Outside', value: metrics?.studentsOutsideCount ?? 0, color: 'text-[var(--color-danger)]' },
               { label: 'Pending Outings', value: metrics?.pendingOutingsCount ?? 0, color: 'text-[var(--color-warning)]' },
-              { label: 'Pending Leaves', value: metrics?.pendingLeavesList?.length ?? 0, color: 'text-[var(--color-warning)]' },
               { label: 'Today Returned', value: metrics?.returnedStudentsCount ?? 0, color: 'text-[var(--color-success)]' }
             ].map((s) => (
               <div key={s.label} className="admin-card p-6 flex flex-col justify-between">
@@ -515,8 +469,8 @@ export const CaretakerDashboard: React.FC = () => {
                 )}
               </div>
               {pendingOutings.length > 5 && (
-                <button onClick={() => navigate('/caretaker/leaves')} className="w-full text-center text-[#4F46E5] font-semibold text-[16px] hover:underline">
-                  View all pending outings & leaves
+                <button onClick={() => navigate('/caretaker/dashboard')} className="w-full text-center text-[#4F46E5] font-semibold text-[16px] hover:underline">
+                  View all pending outings
                 </button>
               )}
             </div>
@@ -655,7 +609,7 @@ export const CaretakerDashboard: React.FC = () => {
 
               {/* Logs / Passes History */}
               <div className="admin-card p-6 lg:col-span-2 space-y-6">
-                <h3 className="text-[18px] font-semibold text-[#111827]">Recent Outings & Leaves Log</h3>
+                <h3 className="text-[18px] font-semibold text-[#111827]">Recent Outings Log</h3>
                 <div className="table-container">
                   <table className="table-enterprise">
                     <thead>
@@ -693,15 +647,7 @@ export const CaretakerDashboard: React.FC = () => {
                           </td>
                         </tr>
                       ))}
-                      {studentLeaves.slice(0, 5).map((lv) => (
-                        <tr key={lv._id}>
-                          <td className="py-3 font-semibold">Leave</td>
-                          <td className="py-3">{lv.reason}</td>
-                          <td className="py-3">{fmtDate(lv.start_date)} → {fmtDate(lv.end_date)}</td>
-                          <td className="py-3">{getStatusBadge(lv.status)}</td>
-                          <td className="py-3 text-right">—</td>
-                        </tr>
-                      ))}
+
                     </tbody>
                   </table>
                 </div>
@@ -856,64 +802,7 @@ export const CaretakerDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════
-          SUB-VIEW: LEAVE REQUESTS
-      ══════════════════════════════════════════════════════════════ */}
-      {activeView === 'leaves' && (
-        <div className="admin-card p-6 animate-fadeIn">
-          <h2 className="text-[22px] font-semibold text-[#111827] mb-6">Leave Requests Queue</h2>
-          <div className="table-container">
-            <table className="table-enterprise">
-              <thead>
-                <tr>
-                  <th>Student</th>
-                  <th>Reason</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
-                  <th className="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingLeaves.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-[#6B7280]">
-                      No pending overnight leave requests.
-                    </td>
-                  </tr>
-                ) : (
-                  pendingLeaves.map((lv) => (
-                    <tr key={lv._id}>
-                      <td className="py-4">
-                        <span className="block font-bold text-[#111827]">{lv.student?.name}</span>
-                        <span className="text-mono text-[13px] text-[#6B7280]">{lv.student?.student_id}</span>
-                      </td>
-                      <td className="py-4 italic">"{lv.reason}"</td>
-                      <td className="py-4">{fmtDate(lv.start_date)}</td>
-                      <td className="py-4">{fmtDate(lv.end_date)}</td>
-                      <td className="py-4 text-right">
-                        <div className="flex gap-2 justify-end">
-                          <button
-                            onClick={() => openLeaveActionModal(lv, 'approve')}
-                            className="btn-primary py-1.5 px-3 text-[14px]"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => openLeaveActionModal(lv, 'reject')}
-                            className="btn-secondary text-[#DC2626] border-[#DC2626]/20 py-1.5 px-3 text-[14px] hover:bg-[#DC2626]/5"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+
 
       {/* ══════════════════════════════════════════════════════════════
           SUB-VIEW: STUDENTS OUTSIDE
@@ -969,9 +858,9 @@ export const CaretakerDashboard: React.FC = () => {
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          SUB-VIEWS: OUTING HISTORY / LEAVE HISTORY
+          SUB-VIEW: OUTING HISTORY
       ══════════════════════════════════════════════════════════════ */}
-      {(activeView === 'outing-history' || activeView === 'leave-history') && (
+      {activeView === 'outing-history' && (
         <div className="admin-card p-6 animate-fadeIn">
           <h2 className="text-[22px] font-semibold text-[#111827] mb-6 capitalize">
             {activeView.replace('-', ' ')}
@@ -995,44 +884,26 @@ export const CaretakerDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {activeView === 'outing-history' ? (
-                    outingHistory.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="py-8 text-center text-[#6B7280]">No history logs found.</td>
-                      </tr>
-                    ) : (
-                      outingHistory.map((o) => (
-                        <tr key={o._id}>
-                          <td className="py-4 text-mono font-semibold">{o.student?.student_id || '—'}</td>
-                          <td className="py-4 font-bold">{o.student?.name || '—'}</td>
-                          <td className="py-4">
-                            <span className="block font-semibold">{o.purpose}</span>
-                            <span className="text-[13px] text-[#6B7280]">{o.destination}</span>
-                          </td>
-                          <td className="py-4 text-[13px]">
-                            Out: {fmtDateTime(o.actual_exit_time || o.createdAt)}<br />
-                            In: {fmtDateTime(o.actual_return_time)}
-                          </td>
-                          <td className="py-4 text-right">{getStatusBadge(o.status)}</td>
-                        </tr>
-                      ))
-                    )
+                  {outingHistory.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-[#6B7280]">No history logs found.</td>
+                    </tr>
                   ) : (
-                    leaveHistory.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="py-8 text-center text-[#6B7280]">No history logs found.</td>
+                    outingHistory.map((o) => (
+                      <tr key={o._id}>
+                        <td className="py-4 text-mono font-semibold">{o.student?.student_id || '—'}</td>
+                        <td className="py-4 font-bold">{o.student?.name || '—'}</td>
+                        <td className="py-4">
+                          <span className="block font-semibold">{o.purpose}</span>
+                          <span className="text-[13px] text-[#6B7280]">{o.destination}</span>
+                        </td>
+                        <td className="py-4 text-[13px]">
+                          Out: {fmtDateTime(o.actual_exit_time || o.createdAt)}<br />
+                          In: {fmtDateTime(o.actual_return_time)}
+                        </td>
+                        <td className="py-4 text-right">{getStatusBadge(o.status)}</td>
                       </tr>
-                    ) : (
-                      leaveHistory.map((lv) => (
-                        <tr key={lv._id}>
-                          <td className="py-4 text-mono font-semibold">{lv.student?.student_id || '—'}</td>
-                          <td className="py-4 font-bold">{lv.student?.name || '—'}</td>
-                          <td className="py-4 italic">"{lv.reason}"</td>
-                          <td className="py-4">{fmtDate(lv.start_date)} → {fmtDate(lv.end_date)}</td>
-                          <td className="py-4 text-right">{getStatusBadge(lv.status)}</td>
-                        </tr>
-                      ))
-                    )
+                    ))
                   )}
                 </tbody>
               </table>
@@ -1054,11 +925,10 @@ export const CaretakerDashboard: React.FC = () => {
               <label className="input-label">Data Subject</label>
               <select
                 value={reportType}
-                onChange={e => setReportType(e.target.value as 'outings' | 'leaves')}
+                onChange={e => setReportType(e.target.value as 'outings')}
                 className="input-field"
               >
                 <option value="outings">Outing Passes Logs</option>
-                <option value="leaves">Leave Requests Logs</option>
               </select>
             </div>
 
@@ -1298,47 +1168,7 @@ export const CaretakerDashboard: React.FC = () => {
         )}
       </Modal>
 
-      {/* Leave Approve/Reject Modal */}
-      <Modal
-        isOpen={isLeaveActionOpen}
-        onClose={() => { setIsLeaveActionOpen(false); setSelectedLeave(null); }}
-        title={selectedLeave ? `Approve / Reject Leave: ${selectedLeave.student?.name}` : ''}
-      >
-        {selectedLeave && (
-          <form onSubmit={handleLeaveActionSubmit} className="space-y-4">
-            {formError && <div className="p-3 bg-[#DC2626]/10 text-[#DC2626] text-[15px]">{formError}</div>}
-            {formSuccess && <div className="p-3 bg-[#16A34A]/10 text-[#16A34A] text-[15px] font-semibold">{formSuccess}</div>}
 
-            <div className="bg-[#F8F9FC] border border-[#E5E7EB] rounded p-4 text-[15px] space-y-1">
-              <p className="italic text-[#111827]">"{selectedLeave.reason}"</p>
-              <p className="text-[13px] text-[#6B7280] pt-1">Dates: {fmtDate(selectedLeave.start_date)} to {fmtDate(selectedLeave.end_date)}</p>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-[15px] font-semibold text-[#111827]">Decision Remarks</label>
-              <input
-                type="text"
-                required
-                value={leaveRemarks}
-                onChange={e => setLeaveRemarks(e.target.value)}
-                className="border border-[#E5E7EB] rounded p-2.5 text-[15px]"
-                placeholder="Remarks notes for history logs..."
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 border-t border-[#E5E7EB] pt-4">
-              <button type="button" onClick={() => setIsLeaveActionOpen(false)} className="btn-secondary">Cancel</button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className={`btn-primary ${leaveActionType === 'reject' ? 'bg-[#DC2626] hover:bg-[#B91C1C]' : ''}`}
-              >
-                {submitting ? 'Processing...' : leaveActionType === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
-              </button>
-            </div>
-          </form>
-        )}
-      </Modal>
     </div>
   );
 };

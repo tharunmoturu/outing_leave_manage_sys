@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import API from '../services/api';
 import logo from '../assets/logo.png';
 import {
-  Shield,
+  
   User,
   Key,
   Mail,

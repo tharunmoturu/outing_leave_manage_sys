@@ -68,7 +68,7 @@ const studentSchema = new mongoose.Schema(
     status: {
       type: String,
       required: true,
-      enum: ['Inside', 'Outside', 'Leave'],
+      enum: ['Inside', 'Outside'],
       default: 'Inside',
     },
     Photo: {

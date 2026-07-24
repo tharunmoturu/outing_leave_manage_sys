@@ -2,7 +2,6 @@ import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import Student from '../models/Student.js';
 import Outing from '../models/Outing.js';
-import Leave from '../models/Leave.js';
 
 export const seedData = async () => {
   try {
@@ -27,7 +26,6 @@ export const seedData = async () => {
     }
     await User.deleteMany({});
     await Outing.deleteMany({});
-    await Leave.deleteMany({});
 
     // Create new students as specified by the user
     const studentsData = [
@@ -199,22 +197,6 @@ export const seedData = async () => {
     await Outing.insertMany(outingsData);
     console.log('[Seeder] Seeded outings records.');
 
-    // Create leaves records
-    const leavesData = [
-      // Nagaraju N220343 - pending leave request
-      {
-        leave_id: 'LV-20260716-9900',
-        student: studentMap['N220343']._id,
-        reason: 'Severe fever, visiting hometown doctor',
-        start_date: new Date(new Date().getTime() + 1 * 24 * 60 * 60 * 1000), // starts tomorrow
-        end_date: new Date(new Date().getTime() + 5 * 24 * 60 * 60 * 1000),
-        applied_date: new Date(),
-        status: 'Pending',
-      },
-    ];
-
-    await Leave.insertMany(leavesData);
-    console.log('[Seeder] Seeded leaves records.');
     console.log('[Seeder] Database seeding completed successfully.');
   } catch (error) {
     console.error(`[Seeder] Error seeding database: ${error.message}`);

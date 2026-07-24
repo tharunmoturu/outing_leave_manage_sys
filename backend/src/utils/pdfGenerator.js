@@ -24,7 +24,7 @@ export const generatePDFReport = (res, title, headers, rows, summaryData = {}) =
   doc.fillColor(primaryColor)
      .font('Helvetica-Bold')
      .fontSize(20)
-     .text('HOSTEL OUTING & LEAVE SYSTEM', { align: 'center' });
+     .text('HOSTEL OUTING SYSTEM', { align: 'center' });
      
   doc.fontSize(14)
      .fillColor(secondaryColor)

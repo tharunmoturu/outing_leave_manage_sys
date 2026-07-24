@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LogOut, Shield, User, Bell, ChevronDown } from 'lucide-react';
+import { LogOut, User, Bell, ChevronDown } from 'lucide-react';
 import { useAcademicYear } from '../contexts/AcademicYearContext';
 import logo from '../assets/logo.png';
 
@@ -27,7 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
 
   // Mock notifications for admin/caretaker dashboard
   const notifications = [
-    { id: 1, text: 'New overnight leave request from N220533', time: '5m ago' },
+    { id: 1, text: 'New overnight outing request from N220533', time: '5m ago' },
     { id: 2, text: 'Outing request pending approval: N210982', time: '15m ago' },
     { id: 3, text: 'Student N220192 returned 30 mins late', time: '1h ago' }
   ];
@@ -43,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
               Hostel Control Center
             </span>
             <span className="text-[12px] font-medium text-[var(--color-text-secondary)]">
-              Outing & Leave Management System
+              Student Outing Management System
             </span>
           </div>
         </div>

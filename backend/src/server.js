@@ -8,7 +8,6 @@ import { seedData } from './utils/seeder.js';
 import authRoutes from './routes/authRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
 import outingRoutes from './routes/outingRoutes.js';
-import leaveRoutes from './routes/leaveRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 
@@ -25,7 +24,6 @@ app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/outings', outingRoutes);
-app.use('/api/leaves', leaveRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
 
@@ -33,7 +31,7 @@ app.use('/api/reports', reportRoutes);
 app.get('/', (req, res) => {
   res.json({
     status: 'Running',
-    service: 'Student Outing & Leave Management System API',
+    service: 'Student Outing Management System API',
     timestamp: new Date(),
   });
 });

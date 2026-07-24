@@ -3,18 +3,18 @@ import API from '../services/api';
 import {
   FileText,
   FileSpreadsheet,
-  Download,
-  Calendar,
-  Filter,
+  
+  
+  
   Search,
-  Users,
+  
   RefreshCw,
   Eye
 } from 'lucide-react';
 import { useAcademicYear } from '../contexts/AcademicYearContext';
 
 export const ReportsPage: React.FC = () => {
-  const [reportType, setReportType] = useState<'outings' | 'leaves'>('outings');
+  const [reportType, setReportType] = useState<'outings'>('outings');
 
   // Filters state
   const [status, setStatus] = useState('');
@@ -26,14 +26,14 @@ export const ReportsPage: React.FC = () => {
   // Preview data state
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [loadingPreview, setLoadingPreview] = useState(false);
-  const [searched, setSearched] = useState(false);
+  
 
   // Fetch preview matching logs
   const handleLoadPreview = async () => {
     setLoadingPreview(true);
-    setSearched(true);
+    
     try {
-      const endpoint = reportType === 'outings' ? '/outings/history' : '/leaves/history';
+      const endpoint = '/outings/history';
       const params: any = {};
       if (status) params.status = status;
       if (branch) params.branch = branch;
@@ -58,7 +58,7 @@ export const ReportsPage: React.FC = () => {
   // Construct URL for report downloads
   const handleDownload = (format: 'pdf' | 'excel') => {
     const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-    const endpoint = reportType === 'outings' ? '/reports/outings' : '/reports/leaves';
+    const endpoint = '/reports/outings';
     
     // Build query params
     const query = new URLSearchParams();
@@ -159,20 +159,7 @@ export const ReportsPage: React.FC = () => {
                 >
                   Outing Logs
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReportType('leaves');
-                    setStatus('');
-                  }}
-                  className={`flex-1 rounded py-2 text-[13px] font-bold transition-all ${
-                    reportType === 'leaves'
-                      ? 'bg-white text-[var(--color-primary)] shadow border border-gray-200'
-                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-                  }`}
-                >
-                  Leave Logs
-                </button>
+
               </div>
             </div>
 
@@ -185,20 +172,12 @@ export const ReportsPage: React.FC = () => {
                 className="input-field"
               >
                 <option value="">All Statuses</option>
-                {reportType === 'outings' ? (
                   <>
                     <option value="Approved">Approved Pass</option>
                     <option value="Exited">Exited Outside</option>
                     <option value="Returned">Returned Inside</option>
                     <option value="Cancelled">Cancelled Pass</option>
                   </>
-                ) : (
-                  <>
-                    <option value="Pending">Pending warden</option>
-                    <option value="Approved">Approved Leave</option>
-                    <option value="Rejected">Rejected Leave</option>
-                  </>
-                )}
               </select>
             </div>
 
@@ -295,7 +274,6 @@ export const ReportsPage: React.FC = () => {
                 <table className="table-enterprise w-full">
                   <thead>
                     <tr>
-                      {reportType === 'outings' ? (
                         <>
                           <th>Outing ID</th>
                           <th>Student Name</th>
@@ -303,21 +281,11 @@ export const ReportsPage: React.FC = () => {
                           <th>Actual Return</th>
                           <th>Status</th>
                         </>
-                      ) : (
-                        <>
-                          <th>Leave ID</th>
-                          <th>Student Name</th>
-                          <th>Start Date</th>
-                          <th>End Date</th>
-                          <th>Status</th>
-                        </>
-                      )}
                     </tr>
                   </thead>
                   <tbody>
                     {previewData.slice(0, 8).map((row) => (
                       <tr key={row._id}>
-                        {reportType === 'outings' ? (
                           <>
                             <td className="font-mono text-[var(--color-text-secondary)]">{row.outing_id}</td>
                             <td className="font-bold text-[var(--color-text-primary)]">{row.student?.name || 'Deleted'}</td>
@@ -339,25 +307,6 @@ export const ReportsPage: React.FC = () => {
                               </span>
                             </td>
                           </>
-                        ) : (
-                          <>
-                            <td className="font-mono text-[var(--color-text-secondary)]">{row.leave_id}</td>
-                            <td className="font-bold text-[var(--color-text-primary)]">{row.student?.name || 'Deleted'}</td>
-                            <td>{new Date(row.start_date).toLocaleDateString()}</td>
-                            <td>{new Date(row.end_date).toLocaleDateString()}</td>
-                            <td>
-                              <span className={`badge ${
-                                row.status === 'Approved'
-                                  ? 'badge-approved'
-                                  : row.status === 'Pending'
-                                  ? 'badge-pending'
-                                  : 'badge-outside'
-                              }`}>
-                                {row.status}
-                              </span>
-                            </td>
-                          </>
-                        )}
                       </tr>
                     ))}
                   </tbody>

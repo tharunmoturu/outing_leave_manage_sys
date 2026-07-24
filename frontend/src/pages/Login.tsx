@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import API from '../services/api';
-import { ShieldCheck, Lock, User, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/logo.png';
 
 interface LoginProps {

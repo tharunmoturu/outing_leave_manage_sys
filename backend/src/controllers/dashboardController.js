@@ -1,6 +1,5 @@
 import Student from '../models/Student.js';
 import Outing from '../models/Outing.js';
-import Leave from '../models/Leave.js';
 
 // Helper to get date ranges
 const getTodayRange = () => {
@@ -20,7 +19,6 @@ export const getAdminDashboard = async (req, res) => {
 
     const totalStudents = await Student.countDocuments();
     const studentsOutside = await Student.countDocuments({ status: 'Outside' });
-    const studentsOnLeave = await Student.countDocuments({ status: 'Leave' });
     const studentsInside = await Student.countDocuments({ status: 'Inside' });
 
     // Outings created/approved today
@@ -33,8 +31,6 @@ export const getAdminDashboard = async (req, res) => {
       status: 'Returned',
       actual_return_time: { $gte: todayStart, $lte: todayEnd },
     });
-
-    const pendingLeaves = await Leave.countDocuments({ status: 'Pending' });
 
     // Analytics: Branch distribution
     const branchStatsAggregate = await Student.aggregate([
@@ -95,11 +91,9 @@ export const getAdminDashboard = async (req, res) => {
       metrics: {
         totalStudents,
         studentsOutside,
-        studentsOnLeave,
         studentsInside,
         todayOutings,
         todayReturns,
-        pendingLeaves,
       },
       charts: {
         branchStats: branchStatsAggregate,
@@ -129,7 +123,6 @@ export const getCaretakerDashboard = async (req, res) => {
     }
 
     const baseOutingQuery = studentIds ? { student: { $in: studentIds } } : {};
-    const baseLeaveQuery = studentIds ? { student: { $in: studentIds } } : {};
 
     const todayOutingsCount = await Outing.countDocuments({
       ...baseOutingQuery,
@@ -148,7 +141,6 @@ export const getCaretakerDashboard = async (req, res) => {
       actual_return_time: { $gte: todayStart, $lte: todayEnd },
     });
 
-    const pendingLeavesCount = await Leave.countDocuments({ ...baseLeaveQuery, status: 'Pending' });
     const pendingOutingsCount = await Outing.countDocuments({ ...baseOutingQuery, status: 'Pending' });
 
     // Fetch active/pending actions
@@ -160,11 +152,6 @@ export const getCaretakerDashboard = async (req, res) => {
       .sort({ updatedAt: -1 })
       .limit(10);
 
-    const pendingLeavesList = await Leave.find({ ...baseLeaveQuery, status: 'Pending' })
-      .populate('student')
-      .sort({ applied_date: 1 })
-      .limit(5);
-
     const pendingOutingsList = await Outing.find({ ...baseOutingQuery, status: 'Pending' })
       .populate('student')
       .sort({ createdAt: 1 })
@@ -175,11 +162,9 @@ export const getCaretakerDashboard = async (req, res) => {
         todayOutingsCount,
         studentsOutsideCount,
         returnedStudentsCount,
-        pendingLeavesCount,
         pendingOutingsCount,
       },
       activeOutingsList,
-      pendingLeavesList,
       pendingOutingsList,
     });
   } catch (error) {
@@ -204,19 +189,8 @@ export const getStudentDashboard = async (req, res) => {
       status: { $in: ['Pending', 'Approved', 'Exited'] },
     }).populate('approved_by', 'username');
 
-    // Find any pending leave approval
-    const activeLeave = await Leave.findOne({
-      student: student._id,
-      status: { $in: ['Pending', 'Approved'] },
-      end_date: { $gte: new Date() },
-    });
-
-    // Recent Outings & Leaves
+    // Recent Outings
     const recentOutings = await Outing.find({ student: student._id })
-      .sort({ createdAt: -1 })
-      .limit(5);
-
-    const recentLeaves = await Leave.find({ student: student._id })
       .sort({ createdAt: -1 })
       .limit(5);
 
@@ -228,9 +202,7 @@ export const getStudentDashboard = async (req, res) => {
         status: student.status,
       },
       activeOuting,
-      activeLeave,
       recentOutings,
-      recentLeaves,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

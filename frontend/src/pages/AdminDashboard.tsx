@@ -6,7 +6,7 @@ import { CustomBarChart, CustomDonutChart } from '../components/Charts';
 import {
   Users,
   DoorOpen,
-  Calendar,
+  
   AlertCircle,
   Plus,
   Edit2,
@@ -15,7 +15,7 @@ import {
   RefreshCw,
   Search,
   Filter,
-  UserPlus,
+  
   History
 } from 'lucide-react';
 
@@ -349,13 +349,7 @@ export const AdminDashboard: React.FC = () => {
               color="rose"
               description="Out on approved passes"
             />
-            <MetricCard
-              title="On Leave"
-              value={metrics.studentsOnLeave}
-              icon={<Calendar className="h-5 w-5" />}
-              color="amber"
-              description="Overnight stay permissions"
-            />
+
             <MetricCard
               title="Today's Outings"
               value={metrics.todayOutings}
@@ -363,13 +357,7 @@ export const AdminDashboard: React.FC = () => {
               color="teal"
               description={`Returns: ${metrics.todayReturns}`}
             />
-            <MetricCard
-              title="Pending Leaves"
-              value={metrics.pendingLeaves}
-              icon={<Calendar className="h-5 w-5" />}
-              color="emerald"
-              description="Requests needing approval"
-            />
+
           </div>
         )
       )}
@@ -484,7 +472,6 @@ export const AdminDashboard: React.FC = () => {
               <option value="">All Statuses</option>
               <option value="Inside">Inside</option>
               <option value="Outside">Outside</option>
-              <option value="Leave">On Leave</option>
             </select>
           </div>
         </div>
@@ -573,9 +560,7 @@ export const AdminDashboard: React.FC = () => {
                       <span className={`badge ${
                         student.status === 'Inside'
                           ? 'badge-inside'
-                          : student.status === 'Outside'
-                          ? 'badge-outside'
-                          : 'badge-pending'
+                          : 'badge-outside'
                       }`}>
                         {student.status}
                       </span>

@@ -1,7 +1,6 @@
 import Student from '../models/Student.js';
 import User from '../models/User.js';
 import Outing from '../models/Outing.js';
-import Leave from '../models/Leave.js';
 
 // Lazy reset helper to check and reset quota at the start of a new month
 export const checkAndResetQuota = async (student) => {
@@ -108,12 +107,9 @@ export const getStudentById = async (req, res) => {
 
     // Fetch Outings and Leaves history
     const outings = await Outing.find({ student: student._id }).sort({ createdAt: -1 });
-    const leaves = await Leave.find({ student: student._id }).sort({ createdAt: -1 });
-
     res.json({
       student,
-      outings,
-      leaves,
+      outings
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

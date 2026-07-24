@@ -1,5 +1,4 @@
 import Outing from '../models/Outing.js';
-import Leave from '../models/Leave.js';
 import Student from '../models/Student.js';
 import { generatePDFReport } from '../utils/pdfGenerator.js';
 import { generateExcelReport } from '../utils/excelGenerator.js';
@@ -103,57 +102,3 @@ export const getOutingsReport = async (req, res) => {
   }
 };
 
-// @desc    Generate leaves report
-// @route   GET /api/reports/leaves
-// @access  Private (Admin, Caretaker)
-export const getLeavesReport = async (req, res) => {
-  const { format } = req.query;
-
-  try {
-    const query = await buildFilterQuery(req);
-    const leaves = await Leave.find(query).populate('student').sort({ applied_date: -1 });
-
-    const title = 'Student Leaves Report';
-    const headers = [
-      'Leave ID',
-      'Student ID',
-      'Student Name',
-      'Branch/Year',
-      'Reason',
-      'Start Date',
-      'End Date',
-      'Status',
-      'Approved By',
-    ];
-
-    const rows = leaves.map((leave) => {
-      const s = leave.student;
-      return [
-        leave.leave_id,
-        s ? s.student_id : 'Deleted',
-        s ? s.name : 'Deleted',
-        s ? `${s.branch} - ${s.year}` : '-',
-        leave.reason,
-        new Date(leave.start_date).toLocaleDateString(),
-        new Date(leave.end_date).toLocaleDateString(),
-        leave.status,
-        leave.approved_by_name || 'N/A',
-      ];
-    });
-
-    const summary = {
-      'Total Leaves': leaves.length,
-      'Approved Leaves': leaves.filter(l => l.status === 'Approved').length,
-      'Pending Approvals': leaves.filter(l => l.status === 'Pending').length,
-      'Rejected Leaves': leaves.filter(l => l.status === 'Rejected').length,
-    };
-
-    if (format === 'excel') {
-      await generateExcelReport(res, title, headers, rows, 'Leaves');
-    } else {
-      generatePDFReport(res, title, headers, rows, summary);
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
