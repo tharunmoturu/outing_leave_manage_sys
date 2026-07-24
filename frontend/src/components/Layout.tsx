@@ -1,19 +1,22 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Navbar } from './Navbar';
+import { NotificationDropdown } from './dashboard/NotificationDropdown';
 import { 
   LayoutDashboard, 
   Users, 
   FileSpreadsheet, 
   Search, 
   ClipboardList, 
+  AlertTriangle,
   Activity, 
   QrCode,
   History,
   PlusCircle,
   FileText,
   Settings,
-  User
+  User,
+  Bell
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -45,12 +48,11 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
       case 'caretaker':
         return [
           { path: '/caretaker', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
-          { path: '/caretaker/search', label: 'Student Search', icon: <Search className="h-6 w-6" /> },
-          { path: '/caretaker/grant', label: 'Grant Outing', icon: <PlusCircle className="h-6 w-6" /> },
-          { path: '/caretaker/outside', label: 'Students Outside', icon: <Activity className="h-6 w-6" /> },
-          { path: '/caretaker/outing-history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
-          { path: '/caretaker/reports', label: 'Reports', icon: <FileSpreadsheet className="h-6 w-6" /> },
-          { path: '/caretaker/settings', label: 'Settings', icon: <Settings className="h-6 w-6" /> },
+          { path: '/caretaker/pending-normal', label: 'Pending Requests', icon: <ClipboardList className="h-6 w-6" /> },
+          { path: '/caretaker/emergency-requests', label: 'Emergency Requests', icon: <AlertTriangle className="h-6 w-6" /> },
+          { path: '/caretaker/student-search', label: 'Student Search', icon: <Search className="h-6 w-6" /> },
+          { path: '/caretaker/students-outside', label: 'Students Outside', icon: <Activity className="h-6 w-6" /> },
+          { path: '/caretaker/history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
         ];
       case 'security':
         return [
@@ -61,6 +63,7 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
         return [
           { path: '/student', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
           { path: '/student/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
+          { path: '/student/history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
         ];
       default:
         return [];

@@ -7,14 +7,21 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Pages
 import { Login } from './pages/Login';
-import { AdminDashboard } from './pages/AdminDashboard';
-import { CaretakerDashboard } from './pages/CaretakerDashboard';
-import { StudentDashboard } from './pages/StudentDashboard';
 import { NormalOutingPage } from './pages/NormalOutingPage';
 import { EmergencyOutingPage } from './pages/EmergencyOutingPage';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { CaretakerDashboard } from './pages/CaretakerDashboard';
+import { PendingNormalPage } from './pages/PendingNormalPage';
+import { StudentsOutsidePage } from './pages/StudentsOutsidePage';
+import { GatePassPage } from './pages/GatePassPage';
+import { StudentDashboard } from './pages/StudentDashboard';
 import { StudentProfile } from './pages/StudentProfile';
+import { StudentHistoryPage } from './pages/StudentHistoryPage';
+import { CaretakerHistoryPage } from './pages/CaretakerHistoryPage';
 import { SecurityDashboard } from './pages/SecurityDashboard';
 import { ReportsPage } from './pages/ReportsPage';
+import { CaretakerPendingEmergencyPage } from './pages/CaretakerPendingEmergencyPage';
+import { CaretakerStudentSearchPage } from './pages/CaretakerStudentSearchPage';
 
 function App() {
   const { user, logout } = useAuth();
@@ -79,6 +86,46 @@ function App() {
               }
             />
             <Route
+              path="/caretaker/pending-requests"
+              element={
+                <ProtectedRoute allowedRoles={['caretaker', 'admin']}>
+                  <PendingNormalPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/caretaker/emergency-requests"
+              element={
+                <ProtectedRoute allowedRoles={['caretaker', 'admin']}>
+                  <CaretakerPendingEmergencyPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/caretaker/students-outside"
+              element={
+                <ProtectedRoute allowedRoles={['caretaker', 'admin']}>
+                  <StudentsOutsidePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/caretaker/student-search"
+              element={
+                <ProtectedRoute allowedRoles={['caretaker', 'admin']}>
+                  <CaretakerStudentSearchPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/caretaker/history"
+              element={
+                <ProtectedRoute allowedRoles={['caretaker', 'admin']}>
+                  <CaretakerHistoryPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/caretaker/:view"
               element={
                 <ProtectedRoute allowedRoles={['caretaker', 'admin']}>
@@ -127,6 +174,30 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['student']}>
                   <EmergencyOutingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/emergency-outing"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <EmergencyOutingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/history"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentHistoryPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/gate-pass"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <GatePassPage />
                 </ProtectedRoute>
               }
             />

@@ -1,4 +1,6 @@
-import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { formatTo12Hour } from '../../utils/timeFormat';
+import { QrCode } from 'lucide-react';
 
 interface ActiveOutingCardProps {
   activeOuting: any;
@@ -13,6 +15,8 @@ interface ActiveOutingCardProps {
 export const ActiveOutingCard: React.FC<ActiveOutingCardProps> = ({ 
   activeOuting, studentName, studentId, branch, year, hostel, room 
 }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-[var(--color-border-gray)] p-6">
       <h3 className="text-[16px] font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-5">
@@ -21,54 +25,34 @@ export const ActiveOutingCard: React.FC<ActiveOutingCardProps> = ({
       
       {activeOuting ? (
          activeOuting.status === 'Approved' || activeOuting.status === 'Exited' ? (
-           <div className="bg-white border-2 border-[var(--color-primary)] rounded-xl overflow-hidden shadow-md max-w-2xl mx-auto">
-             <div className="bg-[var(--color-primary)] text-white p-4 text-center">
-               <h2 className="text-xl font-bold uppercase tracking-widest">Official Outing Pass</h2>
-               <p className="text-sm opacity-90">University Gate Pass Authorization</p>
+           <div className="bg-white border-2 border-[var(--color-primary)] rounded-xl overflow-hidden shadow-sm max-w-2xl mx-auto">
+             <div className="bg-[var(--color-primary)] text-white p-4 flex justify-between items-center">
+               <div>
+                 <h2 className="text-[16px] font-bold uppercase tracking-widest">Outing Approved</h2>
+                 <p className="text-[12px] opacity-90">Valid until {formatTo12Hour(activeOuting.reportingTime)}</p>
+               </div>
+               <div className="bg-white text-[var(--color-primary)] px-3 py-1 rounded font-bold uppercase text-[12px]">
+                 {activeOuting.status}
+               </div>
              </div>
-             <div className="p-6 space-y-6">
-               <div className="flex justify-between items-start border-b border-gray-100 pb-4">
-                 <div>
-                   <h3 className="text-2xl font-bold text-gray-900">{studentName}</h3>
-                   <p className="text-gray-500 font-medium">{studentId} • {branch} {year}</p>
-                   <p className="text-gray-500 font-medium">Room: {hostel} / {room}</p>
+             
+             <div className="p-6">
+               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                 <div className="space-y-1">
+                   <p className="text-[14px] font-bold text-gray-900">{activeOuting.destination}</p>
+                   <p className="text-[13px] text-gray-600">{activeOuting.purpose}</p>
+                   <p className="text-[12px] text-gray-400 mt-2">
+                     Approved By {activeOuting.approvedBy} at {activeOuting.approvalTime ? new Date(activeOuting.approvalTime).toLocaleString() : '-'}
+                   </p>
                  </div>
-                 <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-bold uppercase text-sm border border-green-200 shadow-sm flex flex-col items-center">
-                   <span>{activeOuting.status}</span>
-                   {activeOuting.outingType === 'Emergency' && <span className="text-[10px] bg-red-100 text-red-800 px-2 py-0.5 mt-1 rounded">EMERGENCY</span>}
-                 </div>
-               </div>
-               
-               <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
-                 <div>
-                   <span className="block text-gray-400 font-bold uppercase text-xs tracking-wider mb-1">Reason</span>
-                   <span className="block text-gray-900 font-medium">{activeOuting.purpose}</span>
-                 </div>
-                 <div>
-                   <span className="block text-gray-400 font-bold uppercase text-xs tracking-wider mb-1">Destination</span>
-                   <span className="block text-gray-900 font-medium">{activeOuting.destination}</span>
-                 </div>
-                 <div>
-                   <span className="block text-gray-400 font-bold uppercase text-xs tracking-wider mb-1">Leaving Time</span>
-                   <span className="block text-gray-900 font-medium">{activeOuting.leavingTime || '-'}</span>
-                 </div>
-                 <div>
-                   <span className="block text-gray-400 font-bold uppercase text-xs tracking-wider mb-1">Reporting Time</span>
-                   <span className="block text-gray-900 font-medium">{activeOuting.reportingTime || '-'}</span>
-                 </div>
-               </div>
-
-               <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-6 flex justify-between items-center text-sm">
-                 <div>
-                   <span className="block text-gray-400 font-bold uppercase text-xs tracking-wider mb-1">Approved By</span>
-                   <span className="block text-gray-900 font-bold">{activeOuting.approvedBy || 'Caretaker'}</span>
-                 </div>
-                 <div className="text-right">
-                   <span className="block text-gray-400 font-bold uppercase text-xs tracking-wider mb-1">Approval Time</span>
-                   <span className="block text-gray-900 font-medium">
-                     {activeOuting.approvalTime ? `${new Date(activeOuting.approvalTime).toLocaleDateString()} ${new Date(activeOuting.approvalTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` : '-'}
-                   </span>
-                 </div>
+                 
+                 <button 
+                   onClick={() => navigate('/student/gate-pass')}
+                   className="flex items-center justify-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold px-5 py-2.5 rounded-lg transition-colors border border-blue-200"
+                 >
+                   <QrCode size={18} />
+                   View Digital Gate Pass
+                 </button>
                </div>
              </div>
            </div>

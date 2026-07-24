@@ -104,6 +104,11 @@ export const getStudentDashboard = async (req, res) => {
         used: usedNormalOutings,
         remaining: remaining > 0 ? remaining : 0
       },
+      emergencyRequestsThisMonth: await Outing.countDocuments({
+        student: student._id,
+        outingType: 'Emergency',
+        createdAt: { $gte: startOfMonth, $lte: endOfMonth }
+      }),
       activeOuting: activeOutingPayload,
       recentOutings: recentOutings.map(o => ({
         id: o._id,
@@ -206,9 +211,9 @@ export const applyEmergencyOuting = async (req, res) => {
     if (!student) return res.status(404).json({ message: 'Student not found' });
     if (!student.profileCompleted) return res.status(400).json({ message: 'Please complete your profile first' });
 
-    const { reason, destination, outingDate, leavingTime, reportingTime } = req.body;
+    const { reason, destination, outingDate, leavingTime, reportingTime, emergencyCategory } = req.body;
 
-    if (!reason || !destination || !outingDate || !leavingTime || !reportingTime) {
+    if (!reason || !destination || !outingDate || !leavingTime || !reportingTime || !emergencyCategory) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -243,6 +248,7 @@ export const applyEmergencyOuting = async (req, res) => {
       student_phone: student.phone,
       parent_phone: student.parentPhone,
       outingType: 'Emergency',
+      emergencyCategory,
       purpose: reason,
       destination,
       submitted_date: outingDate,
@@ -257,4 +263,98 @@ export const applyEmergencyOuting = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+import Notification from '../models/Notification.js';
+import { isOutingCompleted } from '../utils/timeUtils.js';
+
+export const getNotifications = async (req, res) => {
+  try {
+    const student = await User.findById(req.user._id);
+    const notifications = await Notification.find({ studentId: student.studentId }).sort({ createdAt: -1 }).limit(20);
+    res.json(notifications);
+  } catch (error) { res.status(500).json({ message: error.message }); }
+};
+
+export const markNotificationsRead = async (req, res) => {
+  try {
+    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+    res.json({ success: true });
+  } catch (error) { res.status(500).json({ message: error.message }); }
+};
+
+export const getGatePass = async (req, res) => {
+  try {
+    const student = await User.findById(req.user._id);
+    const activeOuting = await Outing.findOne({
+      student: student._id,
+      status: { $in: ['Approved', 'Exited'] }
+    });
+    if (!activeOuting) return res.status(404).json({ message: 'No active gate pass' });
+    res.json({ gatePass: activeOuting });
+  } catch (error) { res.status(500).json({ message: error.message }); }
+};
+
+export const getStudentHistory = async (req, res) => {
+  try {
+    const student = await User.findById(req.user._id);
+    const { page = 1, limit = 10, search = '', status = 'All', type = 'All', sort = 'Newest First' } = req.query;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+    const query = { student: student._id, createdAt: { $gte: thirtyDaysAgo } };
+    if (type !== 'All') query.outingType = type;
+    if (search) {
+      query.$or = [
+        { destination: { $regex: search, $options: 'i' } },
+        { purpose: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    const rawHistory = await Outing.find(query).sort({ createdAt: sort === 'Oldest First' ? 1 : -1 });
+    const now = new Date();
+    const processedHistory = rawHistory.map(o => {
+      let finalStatus = o.status;
+      if (isOutingCompleted(o, now)) finalStatus = 'Completed';
+      return {
+        id: o._id,
+        outingId: o.outing_id,
+        outingType: o.outingType || 'Normal',
+        reason: o.purpose,
+        destination: o.destination,
+        leavingDate: o.submitted_date || (o.createdAt ? new Date(o.createdAt).toISOString().split('T')[0] : 'N/A'),
+        leavingTime: o.leaving_time,
+        reportingDate: o.submitted_date || (o.createdAt ? new Date(o.createdAt).toISOString().split('T')[0] : 'N/A'),
+        reportingTime: o.reporting_time,
+        status: finalStatus,
+        approvedBy: o.approved_by_name || 'N/A',
+        approvedAt: o.approved_at,
+        rejectedBy: o.rejected_by_name || 'N/A',
+        rejectedAt: o.rejected_at,
+        rejectionReason: o.rejection_reason || 'N/A',
+        createdAt: o.createdAt
+      };
+    });
+
+    let filteredHistory = processedHistory;
+    if (status !== 'All') {
+      filteredHistory = filteredHistory.filter(o => o.status === status);
+    }
+    
+    const totalCount = filteredHistory.length;
+    const startIndex = (page - 1) * limit;
+    const paginatedHistory = filteredHistory.slice(startIndex, startIndex + limit);
+
+    res.json({
+      statistics: {
+        totalRequests: processedHistory.length,
+        approved: processedHistory.filter(o => o.status === 'Approved').length,
+        rejected: processedHistory.filter(o => o.status === 'Rejected').length,
+        completed: processedHistory.filter(o => o.status === 'Completed').length
+      },
+      history: paginatedHistory,
+      pagination: { total: totalCount, page: parseInt(page), pages: Math.ceil(totalCount / limit) || 1 }
+    });
+  } catch (error) { res.status(500).json({ message: error.message }); }
 };

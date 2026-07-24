@@ -10,6 +10,7 @@ import outingRoutes from './routes/outingRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import caretakerRoutes from './routes/caretakerRoutes.js';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use('/api/outings', outingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/caretaker', caretakerRoutes);
 
 // Root route
 app.get('/', (req, res) => {

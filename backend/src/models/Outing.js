@@ -102,6 +102,12 @@ const outingSchema = new mongoose.Schema(
       enum: ['Normal', 'Emergency'],
       default: 'Normal',
     },
+    emergencyCategory: {
+      type: String,
+      required: false,
+      enum: ['Medical Emergency', 'Family Emergency', 'Hospital Visit', 'Legal / Police Matter', 'College Official Work', 'Other', ''],
+      default: '',
+    },
     approved_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -109,6 +115,37 @@ const outingSchema = new mongoose.Schema(
       default: null,
     },
     approved_by_name: {
+      type: String,
+      required: false,
+      default: '',
+    },
+    approved_at: {
+      type: Date,
+      required: false,
+      default: null,
+    },
+    gate_pass_expiry: {
+      type: Date,
+      required: false,
+      default: null,
+    },
+    rejected_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
+      default: null,
+    },
+    rejected_by_name: {
+      type: String,
+      required: false,
+      default: '',
+    },
+    rejected_at: {
+      type: Date,
+      required: false,
+      default: null,
+    },
+    rejection_reason: {
       type: String,
       required: false,
       default: '',

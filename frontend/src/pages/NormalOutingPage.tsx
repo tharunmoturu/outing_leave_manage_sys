@@ -3,19 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle, Loader2, ArrowLeft } from 'lucide-react';
 import API from '../services/api';
 import Modal from '../components/Modal';
+import { StudentInfoCard } from '../components/dashboard/StudentInfoCard';
+
+import { formatTo12Hour } from '../utils/timeFormat';
 
 const leavingTimeOptions: string[] = [];
 for (let i = 6; i <= 17; i++) {
   const h = i.toString().padStart(2, '0');
-  leavingTimeOptions.push(`${h}:00`);
-  if (i !== 17) leavingTimeOptions.push(`${h}:30`);
+  leavingTimeOptions.push(formatTo12Hour(`${h}:00`));
+  if (i !== 17) leavingTimeOptions.push(formatTo12Hour(`${h}:30`));
 }
 
 const reportingTimeOptions: string[] = [];
 for (let i = 9; i <= 20; i++) {
   const h = i.toString().padStart(2, '0');
-  reportingTimeOptions.push(`${h}:00`);
-  if (i !== 20) reportingTimeOptions.push(`${h}:30`);
+  reportingTimeOptions.push(formatTo12Hour(`${h}:00`));
+  if (i !== 20) reportingTimeOptions.push(formatTo12Hour(`${h}:30`));
 }
 
 export const NormalOutingPage: React.FC = () => {
@@ -119,41 +122,7 @@ export const NormalOutingPage: React.FC = () => {
       )}
 
       {/* Card 1: Student Information */}
-      <div className="bg-white rounded-xl shadow-sm border border-[var(--color-border-gray)] p-6">
-         <h3 className="text-[16px] font-bold text-[var(--color-text-primary)] uppercase tracking-wider mb-4 border-b pb-3">
-           Student Information
-         </h3>
-         {loadingStudent ? (
-           <div className="flex justify-center py-6"><Loader2 className="animate-spin text-[var(--color-primary)]"/></div>
-         ) : (
-           <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-6 text-sm">
-             <div>
-               <span className="block text-[var(--color-text-muted)] font-bold uppercase text-xs tracking-wider mb-1">Student Name</span>
-               <span className="block text-[var(--color-text-primary)] font-semibold">{studentData?.name || 'N/A'}</span>
-             </div>
-             <div>
-               <span className="block text-[var(--color-text-muted)] font-bold uppercase text-xs tracking-wider mb-1">Student ID</span>
-               <span className="block text-[var(--color-text-primary)] font-semibold">{studentData?.studentId || 'N/A'}</span>
-             </div>
-             <div>
-               <span className="block text-[var(--color-text-muted)] font-bold uppercase text-xs tracking-wider mb-1">Class</span>
-               <span className="block text-[var(--color-text-primary)] font-semibold">{studentData?.branch} {studentData?.year}</span>
-             </div>
-             <div>
-               <span className="block text-[var(--color-text-muted)] font-bold uppercase text-xs tracking-wider mb-1">Room</span>
-               <span className="block text-[var(--color-text-primary)] font-semibold">{studentData?.hostel} / {studentData?.room}</span>
-             </div>
-             <div>
-               <span className="block text-[var(--color-text-muted)] font-bold uppercase text-xs tracking-wider mb-1">Phone Number</span>
-               <span className="block text-[var(--color-text-primary)] font-semibold">{studentData?.phone || 'N/A'}</span>
-             </div>
-             <div>
-               <span className="block text-[var(--color-text-muted)] font-bold uppercase text-xs tracking-wider mb-1">Parent Phone</span>
-               <span className="block text-[var(--color-text-primary)] font-semibold">{studentData?.parentPhone || 'N/A'}</span>
-             </div>
-           </div>
-         )}
-      </div>
+      <StudentInfoCard studentData={studentData} loadingStudent={loadingStudent} />
 
       {/* Card 2: Outing Details */}
       <div className="bg-white rounded-xl shadow-sm border border-[var(--color-border-gray)] p-6 space-y-6">
