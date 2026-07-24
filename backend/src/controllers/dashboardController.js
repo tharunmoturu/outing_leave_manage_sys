@@ -1,4 +1,4 @@
-import Student from '../models/Student.js';
+import User from '../models/User.js';
 import Outing from '../models/Outing.js';
 
 // Helper to get date ranges
@@ -17,9 +17,9 @@ export const getAdminDashboard = async (req, res) => {
   try {
     const { start: todayStart, end: todayEnd } = getTodayRange();
 
-    const totalStudents = await Student.countDocuments();
-    const studentsOutside = await Student.countDocuments({ status: 'Outside' });
-    const studentsInside = await Student.countDocuments({ status: 'Inside' });
+    const totalStudents = await User.countDocuments({ role: { $in: ['student', 'Student'] } });
+    const studentsOutside = await User.countDocuments({ role: { $in: ['student', 'Student'] }, status: 'Outside' });
+    const studentsInside = await User.countDocuments({ role: { $in: ['student', 'Student'] }, status: 'Inside' });
 
     // Outings created/approved today
     const todayOutings = await Outing.countDocuments({
@@ -33,7 +33,8 @@ export const getAdminDashboard = async (req, res) => {
     });
 
     // Analytics: Branch distribution
-    const branchStatsAggregate = await Student.aggregate([
+    const branchStatsAggregate = await User.aggregate([
+      { $match: { role: { $in: ['student', 'Student'] } } },
       {
         $group: {
           _id: '$branch',
@@ -44,7 +45,8 @@ export const getAdminDashboard = async (req, res) => {
     ]);
 
     // Analytics: Year distribution
-    const yearStatsAggregate = await Student.aggregate([
+    const yearStatsAggregate = await User.aggregate([
+      { $match: { role: { $in: ['student', 'Student'] } } },
       {
         $group: {
           _id: '$year',

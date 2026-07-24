@@ -1,39 +1,79 @@
 import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema(
-  {
-    studentId: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-      lowercase: true,
-    },
-    fullName: {
-      type: String,
-      trim: true,
-    },
-    role: {
-      type: String,
-      required: true,
-      enum: ['admin', 'caretaker', 'student', 'security'],
-    },
-    email: {
-      type: String,
-      trim: true,
-      lowercase: true,
-    },
-    studentProfile: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Student',
-      default: null,
-    },
+const UserSchema = new mongoose.Schema({
+  // Common Fields
+  name: {
+    type: String,
+    required: true,
+    trim: true
   },
-  {
-    timestamps: true,
-    versionKey: false,
-  }
-);
 
-const User = mongoose.model('User', userSchema);
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true
+  },
+
+  role: {
+    type: String,
+    enum: ["Student", "Caretaker", "Admin", "student", "caretaker", "admin"],
+    required: true
+  },
+  
+  googleId: {
+    type: String,
+    required: false,
+    sparse: true
+  },
+
+  // Student Only
+  studentId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+
+  branch: String,
+  year: String,
+  hostel: String,
+  roomNo: String,
+  phone: String,
+  parentPhone: String,
+  address: String,
+
+  // Staff Only
+  assignedHostel: String,
+
+  // Student Metrics
+  remaining_outings: {
+    type: Number,
+    default: 3
+  },
+  used_outings: {
+    type: Number,
+    default: 0
+  },
+  status: {
+    type: String,
+    enum: ['Inside', 'Outside', 'Leave'],
+    default: 'Inside'
+  },
+
+  // Common
+  profileCompleted: {
+    type: Boolean,
+    default: false
+  },
+
+  isActive: {
+    type: Boolean,
+    default: true
+  }
+
+}, {
+  timestamps: true
+});
+
+const User = mongoose.model('User', UserSchema);
 export default User;

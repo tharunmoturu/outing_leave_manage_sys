@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
-import { seedData } from './utils/seeder.js';
 
 // Route imports
 import authRoutes from './routes/authRoutes.js';

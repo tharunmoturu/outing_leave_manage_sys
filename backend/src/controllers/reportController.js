@@ -1,5 +1,5 @@
 import Outing from '../models/Outing.js';
-import Student from '../models/Student.js';
+import User from '../models/User.js';
 import { generatePDFReport } from '../utils/pdfGenerator.js';
 import { generateExcelReport } from '../utils/excelGenerator.js';
 
@@ -8,12 +8,12 @@ const buildFilterQuery = async (req) => {
   const { status, branch, year, start_date, end_date } = req.query;
   let query = {};
 
-  let studentFilter = {};
-  if (branch) studentFilter.Branch = branch;
-  if (year) studentFilter.Year = year;
+  let studentFilter = { role: { $in: ['student', 'Student'] } };
+  if (branch) studentFilter.branch = branch;
+  if (year) studentFilter.year = year;
 
   if (branch || year) {
-    const students = await Student.find(studentFilter).select('_id');
+    const students = await User.find(studentFilter).select('_id');
     const ids = students.map(s => s._id);
     query.student = { $in: ids };
   }
