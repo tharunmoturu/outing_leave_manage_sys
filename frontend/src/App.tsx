@@ -7,7 +7,10 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Pages
 import { Login } from './pages/Login';
-import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminOperationsDashboard } from './pages/admin/AdminOperationsDashboard';
+import { AdminStudentManagement } from './pages/admin/AdminStudentManagement';
+import { AdminCaretakerManagement } from './pages/admin/AdminCaretakerManagement';
+import { AdminUserOnboarding } from './pages/admin/AdminUserOnboarding';
 import { CaretakerDashboard } from './pages/CaretakerDashboard';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { NormalOutingPage } from './pages/NormalOutingPage';
@@ -50,13 +53,16 @@ function App() {
                 )
               }
             />
-
             {/* Admin Routes */}
             <Route
               path="/admin"
+              element={<Navigate to="/admin/operations" replace />}
+            />
+            <Route
+              path="/admin/operations"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
+                  <AdminOperationsDashboard />
                 </ProtectedRoute>
               }
             />
@@ -64,7 +70,23 @@ function App() {
               path="/admin/students"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
+                  <AdminStudentManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/caretakers"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminCaretakerManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/onboarding"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminUserOnboarding />
                 </ProtectedRoute>
               }
             />
