@@ -14,7 +14,7 @@ export const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret12345');
 
       // Get user from the token
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await User.findById(decoded.id);
       
       if (!req.user) {
         return res.status(401).json({ message: 'Not authorized, user not found' });
@@ -39,7 +39,11 @@ export const authorize = (...roles) => {
       return res.status(401).json({ message: 'Not authorized' });
     }
 
-    if (!roles.includes(req.user.role)) {
+    // Fallback for case sensitivity in new User schema
+    const normalizedUserRole = req.user.role.toLowerCase();
+    const normalizedRoles = roles.map(r => r.toLowerCase());
+
+    if (!normalizedRoles.includes(normalizedUserRole)) {
       return res.status(403).json({
         message: `User role '${req.user.role}' is not authorized to access this route`,
       });

@@ -1,92 +1,34 @@
-import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { useDarkMode } from './hooks/useDarkMode';
 import { AcademicYearProvider } from './contexts/AcademicYearContext';
+import { useAuth } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+
 // Pages
 import { Login } from './pages/Login';
-import Signup from './pages/Signup';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { CaretakerDashboard } from './pages/CaretakerDashboard';
 import { StudentDashboard } from './pages/StudentDashboard';
+import { NormalOutingPage } from './pages/NormalOutingPage';
+import { EmergencyOutingPage } from './pages/EmergencyOutingPage';
+import { StudentProfile } from './pages/StudentProfile';
 import { SecurityDashboard } from './pages/SecurityDashboard';
 import { ReportsPage } from './pages/ReportsPage';
 
-// Route Guard component for Protected Routes
-interface ProtectedRouteProps {
-  user: any;
-  allowedRoles: string[];
-  children: React.ReactElement;
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ user, allowedRoles, children }) => {
-  const location = useLocation();
-
-  if (!user) {
-    // Redirect to login if unauthenticated
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (!allowedRoles.includes(user.role)) {
-    // Redirect to root if unauthorized
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
-
 function App() {
-  const [user, setUser] = useState<any>(null);
-  const [bootstrapping, setBootstrapping] = useState(true);
+  const { user, logout } = useAuth();
   const { toggleTheme, isDark } = useDarkMode();
-
-  // Retrieve user session on startup
-  useEffect(() => {
-    const userInfoString = localStorage.getItem('userInfo');
-    if (userInfoString) {
-      try {
-        const parsed = JSON.parse(userInfoString);
-        setUser(parsed);
-      } catch (err) {
-        console.error('Session parsing error', err);
-        localStorage.removeItem('userInfo');
-      }
-    }
-    setBootstrapping(false);
-  }, []);
-
-  const handleLoginSuccess = (userData: any) => {
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('userInfo');
-    setUser(null);
-  };
-
-  if (bootstrapping) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
-      </div>
-    );
-  }
 
   return (
     <AcademicYearProvider>
       <BrowserRouter>
-        <Layout user={user} onLogout={handleLogout} isDark={isDark} onToggleTheme={toggleTheme}>
+        <Layout user={user} onLogout={logout} isDark={isDark} onToggleTheme={toggleTheme}>
           <Routes>
             {/* Public Login Route */}
             <Route 
               path="/login" 
-              element={user ? <Navigate to="/" replace /> : <Login onLoginSuccess={handleLoginSuccess} />} 
-            />
-
-            {/* Public Signup Route */}
-            <Route 
-              path="/signup" 
-              element={user ? <Navigate to="/" replace /> : <Signup />} 
+              element={user ? <Navigate to="/" replace /> : <Login />} 
             />
 
             {/* Root Redirect path */}
@@ -94,11 +36,11 @@ function App() {
               path="/"
               element={
                 user ? (
-                  user.role === 'admin' ? (
+                  user.role.toLowerCase() === 'admin' ? (
                     <Navigate to="/admin" replace />
-                  ) : user.role === 'caretaker' ? (
+                  ) : user.role.toLowerCase() === 'caretaker' ? (
                     <Navigate to="/caretaker" replace />
-                  ) : user.role === 'security' ? (
+                  ) : user.role.toLowerCase() === 'security' ? (
                     <Navigate to="/security" replace />
                   ) : (
                     <Navigate to="/student" replace />
@@ -113,7 +55,7 @@ function App() {
             <Route
               path="/admin"
               element={
-                <ProtectedRoute user={user} allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
@@ -121,7 +63,7 @@ function App() {
             <Route
               path="/admin/students"
               element={
-                <ProtectedRoute user={user} allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
@@ -131,7 +73,7 @@ function App() {
             <Route
               path="/caretaker"
               element={
-                <ProtectedRoute user={user} allowedRoles={['caretaker', 'admin']}>
+                <ProtectedRoute allowedRoles={['caretaker', 'admin']}>
                   <CaretakerDashboard />
                 </ProtectedRoute>
               }
@@ -139,7 +81,7 @@ function App() {
             <Route
               path="/caretaker/:view"
               element={
-                <ProtectedRoute user={user} allowedRoles={['caretaker', 'admin']}>
+                <ProtectedRoute allowedRoles={['caretaker', 'admin']}>
                   <CaretakerDashboard />
                 </ProtectedRoute>
               }
@@ -149,7 +91,7 @@ function App() {
             <Route
               path="/security"
               element={
-                <ProtectedRoute user={user} allowedRoles={['security', 'caretaker', 'admin']}>
+                <ProtectedRoute allowedRoles={['security', 'caretaker', 'admin']}>
                   <SecurityDashboard />
                 </ProtectedRoute>
               }
@@ -157,7 +99,7 @@ function App() {
             <Route
               path="/security/active"
               element={
-                <ProtectedRoute user={user} allowedRoles={['security', 'caretaker', 'admin']}>
+                <ProtectedRoute allowedRoles={['security', 'caretaker', 'admin']}>
                   <SecurityDashboard />
                 </ProtectedRoute>
               }
@@ -167,15 +109,39 @@ function App() {
             <Route
               path="/student"
               element={
-                <ProtectedRoute user={user} allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student']}>
                   <StudentDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/normal-outing"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <NormalOutingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/emergency-outing"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <EmergencyOutingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/profile"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentProfile />
                 </ProtectedRoute>
               }
             />
             <Route
               path="/student/history"
               element={
-                <ProtectedRoute user={user} allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student']}>
                   <StudentDashboard />
                 </ProtectedRoute>
               }
@@ -185,7 +151,7 @@ function App() {
             <Route
               path="/reports"
               element={
-                <ProtectedRoute user={user} allowedRoles={['admin', 'caretaker']}>
+                <ProtectedRoute allowedRoles={['admin', 'caretaker']}>
                   <ReportsPage />
                 </ProtectedRoute>
               }

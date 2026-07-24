@@ -1,7 +1,5 @@
-import Student from '../models/Student.js';
 import User from '../models/User.js';
 import Outing from '../models/Outing.js';
-
 // Lazy reset helper to check and reset quota at the start of a new month
 export const checkAndResetQuota = async (student) => {
   const now = new Date();
@@ -27,223 +25,235 @@ export const checkAndResetQuota = async (student) => {
 // @access  Private (Admin, Caretaker)
 export const getStudents = async (req, res) => {
   const { q, branch, year, hostel, status } = req.query;
-
-  try {
-    let query = {};
-
-    // Search query (matches student_id or name)
-    if (q) {
-      query.$or = [
-        { student_id: { $regex: q, $options: 'i' } },
-        { name: { $regex: q, $options: 'i' } },
-      ];
-    }
-
-    // Filters
-    if (branch) query.Branch = branch;
-    if (year) query.Year = year;
-    if (hostel) query.Hostel = hostel;
-    if (status) query.status = status;
-
-    const students = await Student.find(query);
-
-    // Apply lazy quota reset to each matching student
-    for (let student of students) {
-      await checkAndResetQuota(student);
-    }
-
-    res.json(students);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  // TODO: Implement getStudents filtering logic as needed
+  res.json([]);
 };
 
-// @desc    Get autocomplete suggestions for student search
-// @route   GET /api/students/suggestions
-// @access  Private (Admin, Caretaker, Security)
-export const getStudentSuggestions = async (req, res) => {
-  const { q, year } = req.query;
-
-  if (!q || q.trim() === '') {
-    return res.json([]);
-  }
-
+// @desc    Get optimized student dashboard data
+// @route   GET /api/student/dashboard
+// @access  Private (Student)
+export const getStudentDashboard = async (req, res) => {
   try {
-    const searchFilter = {
-      $or: [
-        { Id: { $regex: q, $options: 'i' } },
-        { Name: { $regex: q, $options: 'i' } },
-      ],
-    };
-
-    // Apply year filter if provided
-    if (year) {
-      searchFilter.Year = year;
-    }
-
-    const students = await Student.find(searchFilter)
-      .select('student_id name photo branch year status remaining_outings')
-      .limit(8);
-
-    res.json(students);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// @desc    Get single student details with outing and leave history
-// @route   GET /api/students/:id
-// @access  Private (Admin, Caretaker, Student)
-export const getStudentById = async (req, res) => {
-  try {
-    let student = await Student.findById(req.params.id);
+    const student = await User.findById(req.user._id);
 
     if (!student) {
       return res.status(404).json({ message: 'Student profile not found' });
     }
 
-    // Apply lazy quota reset
-    student = await checkAndResetQuota(student);
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    // Fetch Outings and Leaves history
-    const outings = await Outing.find({ student: student._id }).sort({ createdAt: -1 });
+    // Calculate used normal outings for the current month
+    const usedNormalOutings = await Outing.countDocuments({
+      student: student._id,
+      outingType: 'Normal',
+      status: { $in: ['Approved', 'Exited', 'Returned'] },
+      createdAt: { $gte: startOfMonth, $lte: endOfMonth }
+    });
+
+    const allowed = 3;
+    const remaining = allowed - usedNormalOutings;
+
+    const latestOuting = await Outing.findOne({
+      student: student._id,
+    }).sort({ createdAt: -1 }).populate('approved_by', 'name');
+
+    const recentOutings = await Outing.find({ student: student._id })
+      .populate('approved_by', 'name')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    let activeOutingPayload = null;
+    if (latestOuting && ['Pending', 'Approved', 'Exited', 'Rejected'].includes(latestOuting.status)) {
+      const isRecentRejected = latestOuting.status === 'Rejected' && 
+                               (now - new Date(latestOuting.createdAt)) < 7 * 24 * 60 * 60 * 1000;
+                               
+      if (latestOuting.status !== 'Rejected' || isRecentRejected) {
+         activeOutingPayload = {
+            id: latestOuting._id,
+            status: latestOuting.status,
+            outingType: latestOuting.outingType,
+            purpose: latestOuting.purpose,
+            destination: latestOuting.destination,
+            leavingTime: latestOuting.leaving_time,
+            reportingTime: latestOuting.reporting_time,
+            approvedBy: latestOuting.approved_by_name || (latestOuting.approved_by ? latestOuting.approved_by.name : null),
+            approvalTime: ['Approved', 'Exited'].includes(latestOuting.status) ? latestOuting.updatedAt : null,
+            submittedDate: latestOuting.submitted_date || latestOuting.createdAt,
+            submittedTime: latestOuting.submitted_time || latestOuting.createdAt,
+            remarks: latestOuting.remarks
+          };
+      }
+    }
+
     res.json({
-      student,
-      outings
+      student: {
+        studentId: student.studentId,
+        name: student.name,
+        branch: student.branch,
+        year: student.year,
+        hostel: student.hostel,
+        room: student.roomNo,
+        phone: student.phone,
+        parentPhone: student.parentPhone,
+        photo: student.photo || null
+      },
+      quota: {
+        allowed,
+        used: usedNormalOutings,
+        remaining: remaining > 0 ? remaining : 0
+      },
+      activeOuting: activeOutingPayload,
+      recentOutings: recentOutings.map(o => ({
+        id: o._id,
+        date: o.createdAt,
+        outingType: o.outingType,
+        reason: o.purpose,
+        destination: o.destination,
+        status: o.status,
+        approvedBy: o.approved_by_name || (o.approved_by ? o.approved_by.name : null)
+      }))
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Create a student profile
-// @route   POST /api/students
-// @access  Private (Admin)
-export const createStudent = async (req, res) => {
-  const {
-    student_id,
-    name,
-    year,
-    branch,
-    section,
-    room,
-    phone,
-    parent_phone,
-    email,
-    hostel,
-    photo,
-  } = req.body;
-
+// @desc    Apply for normal outing
+// @route   POST /api/student/outings/normal
+// @access  Private (Student)
+export const applyNormalOuting = async (req, res) => {
   try {
-    const studentExists = await Student.findOne({ student_id });
+    const student = await User.findById(req.user._id);
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+    if (!student.profileCompleted) return res.status(400).json({ message: 'Please complete your profile first' });
 
-    if (studentExists) {
-      return res.status(400).json({ message: 'Student ID already exists' });
+    const { reason, destination, outingDate, leavingTime, reportingTime } = req.body;
+
+    if (!reason || !destination || !outingDate || !leavingTime || !reportingTime) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const student = await Student.create({
-      student_id: student_id.toUpperCase(),
-      name,
-      year,
-      branch,
-      section,
-      room,
-      phone,
-      parent_phone,
-      email,
-      hostel,
-      photo: photo || '',
-      remaining_outings: 3,
-      used_outings: 0,
-      last_quota_reset: new Date(),
+    // Check active requests
+    const activeRequest = await Outing.findOne({
+      student: student._id,
+      status: { $in: ['Pending', 'Approved', 'Exited'] }
+    });
+    
+    if (activeRequest) {
+      return res.status(400).json({ message: 'You already have an active outing request.' });
+    }
+
+    // Check quota
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const usedNormalOutings = await Outing.countDocuments({
+      student: student._id,
+      outingType: 'Normal',
+      status: { $in: ['Approved', 'Exited', 'Returned'] },
+      createdAt: { $gte: startOfMonth, $lte: endOfMonth }
     });
 
-    res.status(201).json(student);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-// @desc    Update student profile
-// @route   PUT /api/students/:id
-// @access  Private (Admin)
-export const updateStudent = async (req, res) => {
-  try {
-    const student = await Student.findById(req.params.id);
-
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
+    if (usedNormalOutings >= 3) {
+      return res.status(400).json({ message: 'Monthly normal outing quota exceeded (max 3).' });
+    }
+    
+    // Check leaving/reporting time order
+    const parseTime = (timeStr) => {
+       const [h, m] = timeStr.split(':').map(Number);
+       return h * 60 + m;
+    };
+    if (parseTime(leavingTime) >= parseTime(reportingTime)) {
+       return res.status(400).json({ message: 'Leaving time must be earlier than reporting time.' });
     }
 
-    // Keep fields if not provided
-    student.name = req.body.name || student.name;
-    student.year = req.body.year || student.year;
-    student.branch = req.body.branch || student.branch;
-    student.section = req.body.section || student.section;
-    student.room = req.body.room || student.room;
-    student.phone = req.body.phone || student.phone;
-    student.parent_phone = req.body.parent_phone || student.parent_phone;
-    student.email = req.body.email || student.email;
-    student.hostel = req.body.hostel || student.hostel;
-    student.photo = req.body.photo !== undefined ? req.body.photo : student.photo;
+    const uniqueId = `OUT-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
 
-    const updatedStudent = await student.save();
-    res.json(updatedStudent);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
+    const newOuting = await Outing.create({
+      outing_id: uniqueId,
+      student: student._id,
+      student_name: student.name,
+      class_name: `${student.branch} ${student.year}`,
+      hostel_room: `${student.hostel} ${student.roomNo}`,
+      student_phone: student.phone,
+      parent_phone: student.parentPhone,
+      outingType: 'Normal',
+      purpose: reason,
+      destination,
+      submitted_date: outingDate,
+      leaving_time: leavingTime,
+      reporting_time: reportingTime,
+      month: now.toLocaleString('default', { month: 'long' }),
+      year: now.getFullYear().toString(),
+      status: 'Pending'
+    });
 
-// @desc    Delete student profile and linked account
-// @route   DELETE /api/students/:id
-// @access  Private (Admin)
-export const deleteStudent = async (req, res) => {
-  try {
-    const student = await Student.findById(req.params.id);
-
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
-    }
-
-    // Delete linked User authentication account
-    await User.deleteMany({ studentProfile: student._id });
-
-    // Delete outings and leaves
-    await Outing.deleteMany({ student: student._id });
-    await Leave.deleteMany({ student: student._id });
-
-    await Student.findByIdAndDelete(req.params.id);
-
-    res.json({ message: 'Student profile and associated data removed' });
+    res.status(201).json({ message: 'Outing request submitted successfully', outing: newOuting });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Manual quota override
-// @route   POST /api/students/:id/override-quota
-// @access  Private (Admin)
-export const overrideQuota = async (req, res) => {
-  const { remaining } = req.body;
-
+// @desc    Apply for emergency outing
+// @route   POST /api/student/outings/emergency
+// @access  Private (Student)
+export const applyEmergencyOuting = async (req, res) => {
   try {
-    const student = await Student.findById(req.params.id);
+    const student = await User.findById(req.user._id);
+    if (!student) return res.status(404).json({ message: 'Student not found' });
+    if (!student.profileCompleted) return res.status(400).json({ message: 'Please complete your profile first' });
 
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
+    const { reason, destination, outingDate, leavingTime, reportingTime } = req.body;
+
+    if (!reason || !destination || !outingDate || !leavingTime || !reportingTime) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
-    if (remaining === undefined || remaining < 0) {
-      return res.status(400).json({ message: 'Invalid outing quota value' });
-    }
-
-    student.remaining_outings = remaining;
-    await student.save();
-
-    res.json({
-      message: `Manually set outing quota to ${remaining} for student ${student.student_id}`,
-      student,
+    // Check active requests
+    const activeRequest = await Outing.findOne({
+      student: student._id,
+      status: { $in: ['Pending', 'Approved', 'Exited'] }
     });
+    
+    if (activeRequest) {
+      return res.status(400).json({ message: 'You already have an active outing request.' });
+    }
+    
+    // Check leaving/reporting time order (not strict on emergency, but good to have)
+    const parseTime = (timeStr) => {
+       const [h, m] = timeStr.split(':').map(Number);
+       return h * 60 + m;
+    };
+    if (parseTime(leavingTime) >= parseTime(reportingTime)) {
+       return res.status(400).json({ message: 'Leaving time must be earlier than reporting time.' });
+    }
+
+    const uniqueId = `OUT-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
+    const now = new Date();
+
+    const newOuting = await Outing.create({
+      outing_id: uniqueId,
+      student: student._id,
+      student_name: student.name,
+      class_name: `${student.branch} ${student.year}`,
+      hostel_room: `${student.hostel} ${student.roomNo}`,
+      student_phone: student.phone,
+      parent_phone: student.parentPhone,
+      outingType: 'Emergency',
+      purpose: reason,
+      destination,
+      submitted_date: outingDate,
+      leaving_time: leavingTime,
+      reporting_time: reportingTime,
+      month: now.toLocaleString('default', { month: 'long' }),
+      year: now.getFullYear().toString(),
+      status: 'Pending'
+    });
+
+    res.status(201).json({ message: 'Emergency Outing request submitted successfully', outing: newOuting });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

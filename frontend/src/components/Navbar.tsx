@@ -122,19 +122,11 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                 className="flex items-center gap-3 hover:bg-[var(--color-gray-50)] p-2 rounded-[8px] transition-colors"
               >
                 <div className="h-9 w-9 overflow-hidden rounded-[8px] bg-[var(--color-gray-100)] border border-[var(--color-border-gray)] flex items-center justify-center text-[var(--color-text-secondary)]">
-                  {user.studentProfile?.photo ? (
-                    <img
-                      src={user.studentProfile.photo}
-                      alt={user.studentProfile.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <User size={18} strokeWidth={1.75} />
-                  )}
+                  <User size={18} strokeWidth={1.75} />
                 </div>
                 <div className="hidden sm:flex flex-col items-start">
                   <span className="text-[14px] font-medium text-[var(--color-text-primary)] capitalize">
-                    {user.studentProfile ? user.studentProfile.name : user.username}
+                    {user.name}
                   </span>
                   <span className="text-[11px] font-medium text-[var(--color-text-secondary)] uppercase tracking-wide">
                     {user.role}
@@ -146,7 +138,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
               {showProfileMenu && (
                 <div className="absolute right-0 mt-2 w-48 rounded-[10px] border border-[var(--color-border-gray)] bg-white py-1 shadow-[0_4px_12px_rgba(0,0,0,0.06)] z-50">
                   <div className="px-4 py-3 border-b border-[var(--color-border-gray)] text-[12px] text-[var(--color-text-secondary)]">
-                    Signed in as <strong className="text-[var(--color-text-primary)] block truncate font-medium mt-0.5">{user.username}</strong>
+                    Signed in as <strong className="text-[var(--color-text-primary)] block truncate font-medium mt-0.5">{user.email}</strong>
                   </div>
                   <button
                     onClick={onLogout}

@@ -1,6 +1,9 @@
 import Outing from '../models/Outing.js';
-import Student from '../models/Student.js';
-import { checkAndResetQuota } from './studentController.js';
+import User from '../models/User.js';
+
+const checkAndResetQuota = async (student) => {
+  return student;
+};
 
 // @desc    Grant a new outing to a student
 // @route   POST /api/outings/grant
@@ -9,7 +12,7 @@ export const grantOuting = async (req, res) => {
   const { student_id, purpose, destination, out_time, expected_return, remarks } = req.body;
 
   try {
-    let student = await Student.findOne({ student_id });
+    let student = await User.findOne({ studentId: student_id.toUpperCase(), role: { $in: ['student', 'Student'] } });
 
     if (!student) {
       return res.status(404).json({ message: 'Student not found' });
@@ -55,7 +58,7 @@ export const grantOuting = async (req, res) => {
       expected_return: new Date(expected_return),
       status: 'Approved',
       approved_by: req.user._id,
-      approved_by_name: req.user.username,
+      approved_by_name: req.user.name,
       remarks: remarks || '',
     });
 
@@ -156,7 +159,7 @@ export const cancelOuting = async (req, res) => {
     }
 
     // Role verification: Student can only cancel their own outing
-    if (req.user.role === 'student' && !outing.student._id.equals(req.user.studentProfile)) {
+    if (req.user.role === 'student' && !outing.student._id.equals(req.user._id)) {
       return res.status(403).json({ message: 'You can only cancel your own outing requests' });
     }
 
@@ -207,12 +210,12 @@ export const getOutingHistory = async (req, res) => {
 
     // Filter by student profile if role is Student
     if (req.user.role === 'student') {
-      query.student = req.user.studentProfile;
+      query.student = req.user._id;
     } else {
       // Admin/Caretaker filters
       let studentQuery = {};
       if (student_id) {
-        const student = await Student.findOne({ student_id: student_id.toUpperCase() });
+        const student = await User.findOne({ studentId: student_id.toUpperCase(), role: { $in: ['student', 'Student'] } });
         if (!student) {
           return res.json([]); // Return empty if student not found
         }
@@ -220,10 +223,10 @@ export const getOutingHistory = async (req, res) => {
       }
 
       if (branch || year) {
-        if (branch) studentQuery.Branch = branch;
-        if (year) studentQuery.Year = year;
+        if (branch) studentQuery.branch = branch;
+        if (year) studentQuery.year = year;
         
-        const matchingStudents = await Student.find(studentQuery).select('_id');
+        const matchingStudents = await User.find({ ...studentQuery, role: { $in: ['student', 'Student'] } }).select('_id');
         const ids = matchingStudents.map(s => s._id);
         
         if (query.student) {
@@ -270,14 +273,20 @@ export const getOutingDetails = async (req, res) => {
 // @route   POST /api/outings/apply
 // @access  Private (Student)
 export const applyOuting = async (req, res) => {
-  const { purpose, destination, attachment_url } = req.body;
+  const { 
+    purpose, destination, attachment_url,
+    student_name, class_name, hostel_room, 
+    leaving_time, reporting_time, student_phone, 
+    parent_phone, submitted_date, submitted_time, 
+    month, year
+  } = req.body;
 
   if (!purpose || !destination) {
     return res.status(400).json({ message: 'Purpose and destination are required.' });
   }
 
   try {
-    let student = await Student.findById(req.user.studentProfile);
+    let student = await User.findById(req.user._id);
     if (!student) {
       return res.status(404).json({ message: 'Student profile not found. Linked account error.' });
     }
@@ -313,6 +322,17 @@ export const applyOuting = async (req, res) => {
       student: student._id,
       purpose,
       destination,
+      student_name,
+      class_name,
+      hostel_room,
+      leaving_time,
+      reporting_time,
+      student_phone,
+      parent_phone,
+      submitted_date,
+      submitted_time,
+      month,
+      year,
       status: 'Pending',
       attachment_url: attachment_url || '',
     });
@@ -358,7 +378,7 @@ export const approveOuting = async (req, res) => {
     outing.out_time = now;
     outing.expected_return = expectedReturn;
     outing.approved_by = req.user._id;
-    outing.approved_by_name = req.user.username;
+    outing.approved_by_name = req.user.name;
     outing.remarks = remarks || '';
     await outing.save();
 
@@ -395,7 +415,7 @@ export const rejectOuting = async (req, res) => {
 
     outing.status = 'Rejected';
     outing.approved_by = req.user._id;
-    outing.approved_by_name = req.user.username;
+    outing.approved_by_name = req.user.name;
     outing.remarks = remarks || 'Rejected by caretaker';
     await outing.save();
 
