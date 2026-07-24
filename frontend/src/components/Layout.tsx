@@ -36,9 +36,10 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
     switch (user.role) {
       case 'admin':
         return [
-          { path: '/admin', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
-          { path: '/admin/students', label: 'Student Manage', icon: <Users className="h-6 w-6" /> },
-          { path: '/reports', label: 'Reports & Export', icon: <FileSpreadsheet className="h-6 w-6" /> },
+          { path: '/admin/operations', label: 'Outing Summary', icon: <Activity className="h-6 w-6" /> },
+          { path: '/admin/students', label: 'Student Mgmt', icon: <Users className="h-6 w-6" /> },
+          { path: '/admin/caretakers', label: 'Caretaker Mgmt', icon: <Activity className="h-6 w-6" /> },
+          { path: '/admin/onboarding', label: 'User Onboarding', icon: <PlusCircle className="h-6 w-6" /> },
         ];
       case 'caretaker':
         return [
