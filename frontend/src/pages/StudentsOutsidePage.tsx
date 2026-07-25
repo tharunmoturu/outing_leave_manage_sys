@@ -3,7 +3,8 @@ import API from '../services/api';
 import { StudentsOutsideCard, type StudentsOutsideItem } from '../components/caretaker/StudentsOutsideCard';
 import { RequestDrawer } from '../components/caretaker/RequestDrawer';
 import { Pagination } from '../components/caretaker/Pagination';
-import { Users, Clock, AlertTriangle, Search, Activity, RefreshCw } from 'lucide-react';
+import { Users, Clock, AlertTriangle, Search, Activity, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const StudentsOutsidePage: React.FC = () => {
   const [students, setStudents] = useState<StudentsOutsideItem[]>([]);
@@ -83,14 +84,15 @@ export const StudentsOutsidePage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
+            <Link to="/caretaker" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FEF2F2] text-[#991B1B] hover:bg-[#FEE2E2] rounded-lg font-bold text-[14px] transition-colors -ml-2 border border-[#FCA5A5] shadow-sm">
+              <ArrowLeft size={18} strokeWidth={2.5} />
+              Back
+            </Link>
             <h1 className="text-[28px] font-black text-gray-900 tracking-tight">Students Currently Outside</h1>
             <span className="bg-blue-100 text-blue-800 text-[13px] font-bold px-3 py-1 rounded-full border border-blue-200">
               Live: {statistics.currentlyOutside}
             </span>
           </div>
-          <p className="text-[15px] text-gray-500 font-medium">
-            Monitor students who are currently outside the hostel based on their approved gate passes.
-          </p>
         </div>
         <button
           onClick={() => fetchStudentsOutside(true)}

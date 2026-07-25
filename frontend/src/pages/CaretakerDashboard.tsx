@@ -109,9 +109,6 @@ export const CaretakerDashboard: React.FC = () => {
           <h1 className="text-[28px] font-bold text-[#111827] tracking-tight">
             Dashboard
           </h1>
-          <p className="text-[14px] text-[#6B7280] mt-0.5">
-            Hostel caretaker administration console. Clean, fast, and structured.
-          </p>
         </div>
 
         <button

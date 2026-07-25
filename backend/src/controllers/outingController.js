@@ -362,6 +362,12 @@ export const approveOuting = async (req, res) => {
       return res.status(400).json({ message: `Outing has status '${outing.status}', cannot approve.` });
     }
 
+    if (req.user.role.toLowerCase() === 'caretaker') {
+      if (!req.user.hostel || req.user.hostel !== outing.student.hostel) {
+        return res.status(403).json({ message: `You can only approve outings for students in your assigned hostel (${req.user.hostel || 'None'}). Student is in ${outing.student.hostel || 'None'}.` });
+      }
+    }
+
     let student = outing.student;
     student = await checkAndResetQuota(student);
 
@@ -404,13 +410,19 @@ export const rejectOuting = async (req, res) => {
   const { remarks } = req.body;
 
   try {
-    const outing = await Outing.findById(req.params.id);
+    const outing = await Outing.findById(req.params.id).populate('student');
     if (!outing) {
       return res.status(404).json({ message: 'Outing record not found.' });
     }
 
     if (outing.status !== 'Pending') {
       return res.status(400).json({ message: `Outing has status '${outing.status}', cannot reject.` });
+    }
+
+    if (req.user.role.toLowerCase() === 'caretaker') {
+      if (!req.user.hostel || req.user.hostel !== outing.student.hostel) {
+        return res.status(403).json({ message: `You can only reject outings for students in your assigned hostel (${req.user.hostel || 'None'}). Student is in ${outing.student.hostel || 'None'}.` });
+      }
     }
 
     outing.status = 'Rejected';
