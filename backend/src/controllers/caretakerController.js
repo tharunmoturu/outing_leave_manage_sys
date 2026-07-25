@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import { isStudentOutside, isStudentOverdue, parseTime, isOutingCompleted } from '../utils/timeUtils.js';
 import { getCaretakerHostel, getHostelStudentIds, isStudentInCaretakerHostel } from '../utils/hostelUtils.js';
+import { sendOutingApprovalEmail, sendOutingRejectionEmail } from '../utils/emailService.js';
 
 // Helper to convert time strings (e.g. "19:00", "07:30") to 12-hour AM/PM format
 const formatTo12Hour = (timeStr) => {
@@ -433,6 +434,21 @@ export const approveOuting = async (req, res) => {
         title: 'Outing Approved',
         message: `Your outing request to ${outing.destination} has been approved.`
       });
+
+      // Send email notification to student asynchronously
+      sendOutingApprovalEmail({
+        toEmail: studentUser.email,
+        studentName: studentUser.name || studentUser.studentId,
+        studentId: studentUser.studentId,
+        outingType: outing.outingType || 'Normal',
+        destination: outing.destination,
+        purpose: outing.emergencyCategory ? `${outing.emergencyCategory} - ${outing.purpose}` : outing.purpose,
+        leavingDate: outing.submitted_date || new Date().toLocaleDateString(),
+        leavingTime: outing.leaving_time || 'N/A',
+        expectedReturn: outing.gate_pass_expiry ? new Date(outing.gate_pass_expiry).toLocaleString() : (outing.reporting_time || '9:00 PM'),
+        approvedByName: caretaker.name || 'Caretaker',
+        approvedByRole: caretaker.role || 'Caretaker',
+      }).catch(err => console.error('[EmailService Error]:', err));
     }
 
     res.json({ message: 'Outing request approved successfully', outing });
@@ -490,6 +506,19 @@ export const rejectOuting = async (req, res) => {
         title: 'Outing Rejected',
         message: `Your outing request to ${outing.destination} was rejected. Reason: ${reason}`
       });
+
+      // Send rejection email asynchronously
+      sendOutingRejectionEmail({
+        toEmail: studentUser.email,
+        studentName: studentUser.name || studentUser.studentId,
+        studentId: studentUser.studentId,
+        outingType: outing.outingType || 'Normal',
+        destination: outing.destination,
+        purpose: outing.emergencyCategory ? `${outing.emergencyCategory} - ${outing.purpose}` : outing.purpose,
+        rejectionReason: reason,
+        rejectedByName: caretaker.name || 'Caretaker',
+        rejectedByRole: caretaker.role || 'Caretaker',
+      }).catch(err => console.error('[EmailService Error]:', err));
     }
 
     res.json({ message: 'Outing request rejected successfully', outing });

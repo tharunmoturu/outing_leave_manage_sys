@@ -1,6 +1,7 @@
 import Outing from '../models/Outing.js';
 import User from '../models/User.js';
 import { getCaretakerHostel, getHostelStudentIds, isStudentInCaretakerHostel } from '../utils/hostelUtils.js';
+import { sendOutingApprovalEmail, sendOutingRejectionEmail } from '../utils/emailService.js';
 
 const checkAndResetQuota = async (student) => {
   return student;
@@ -401,6 +402,21 @@ export const approveOuting = async (req, res) => {
     student.used_outings += 1;
     await student.save();
 
+    // Send approval email
+    sendOutingApprovalEmail({
+      toEmail: student.email,
+      studentName: student.name || student.studentId,
+      studentId: student.studentId,
+      outingType: outing.outingType || 'Normal',
+      destination: outing.destination,
+      purpose: outing.emergencyCategory ? `${outing.emergencyCategory} - ${outing.purpose}` : outing.purpose,
+      leavingDate: outing.submitted_date || new Date().toLocaleDateString(),
+      leavingTime: outing.leaving_time || 'N/A',
+      expectedReturn: expectedReturn ? new Date(expectedReturn).toLocaleString() : '9:00 PM',
+      approvedByName: req.user.name || 'Caretaker',
+      approvedByRole: req.user.role || 'Caretaker',
+    }).catch(err => console.error('[EmailService Error]:', err));
+
     res.json({
       message: 'Outing approved successfully.',
       outing,
@@ -438,6 +454,21 @@ export const rejectOuting = async (req, res) => {
     outing.approved_by_name = req.user.name;
     outing.remarks = remarks || 'Rejected by caretaker';
     await outing.save();
+
+    const student = outing.student;
+    if (student && student.email) {
+      sendOutingRejectionEmail({
+        toEmail: student.email,
+        studentName: student.name || student.studentId,
+        studentId: student.studentId,
+        outingType: outing.outingType || 'Normal',
+        destination: outing.destination,
+        purpose: outing.emergencyCategory ? `${outing.emergencyCategory} - ${outing.purpose}` : outing.purpose,
+        rejectionReason: remarks || 'Rejected by caretaker',
+        rejectedByName: req.user.name || 'Caretaker',
+        rejectedByRole: req.user.role || 'Caretaker',
+      }).catch(err => console.error('[EmailService Error]:', err));
+    }
 
     res.json({
       message: 'Outing rejected successfully.',
