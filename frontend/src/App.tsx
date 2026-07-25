@@ -67,7 +67,7 @@ function App() {
             {/* Admin Routes */}
             <Route
               path="/admin"
-              element={<Navigate to="/admin/operations" replace />}
+              element={<Navigate to="/admin/students" replace />}
             />
             <Route
               path="/admin/profile"

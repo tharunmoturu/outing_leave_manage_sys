@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, GraduationCap, Building, AlertCircle } from 'lucide-react';
+import { User, GraduationCap, Building2, ChevronRight, AlertCircle } from 'lucide-react';
 import { StudentStatusBadge } from './StudentStatusBadge';
 
 export interface StudentSearchResult {
@@ -23,66 +23,75 @@ interface Props {
   onViewProfile: (studentId: string) => void;
 }
 
+const getInitials = (name: string): string => {
+  if (!name || typeof name !== 'string') return 'U';
+  const parts = name.trim().split(' ').filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return name.substring(0, 2).toUpperCase();
+};
+
 export const StudentCard: React.FC<Props> = ({ student, onViewProfile }) => {
+  const initials = getInitials(student.name || student.studentId || 'User');
+  const hasClassInfo = (student.branch && student.branch !== 'N/A') || (student.year && student.year !== 'N/A');
+  const hasRoomInfo = (student.hostel && student.hostel !== 'N/A') || (student.roomNo && student.roomNo !== 'N/A');
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
-      <div className="p-5 border-b border-gray-100 flex items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {student.photoUrl ? (
-              <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover" />
-            ) : (
-              <User className="w-6 h-6 text-gray-400" />
-            )}
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 text-[16px] leading-tight truncate">{student.name}</h3>
-            <p className="text-sm font-medium text-gray-500">{student.studentId}</p>
-          </div>
-        </div>
-        <StudentStatusBadge status={student.dynamicStatus} />
-      </div>
-
-      <div className="p-5 space-y-4 flex-grow text-[13px]">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-start gap-2 text-gray-600">
-            <GraduationCap className="w-4 h-4 text-gray-400 mt-0.5" />
-            <div>
-              <p className="font-bold text-gray-500 uppercase text-[10px] tracking-wider mb-0.5">Class</p>
-              <p className="font-semibold text-gray-900">{student.branch} {student.year}</p>
+    <div
+      onClick={() => onViewProfile(student.id)}
+      className="bg-white border border-gray-200 rounded-xl p-4 transition-all duration-200 hover:border-gray-300 hover:shadow-md cursor-pointer flex flex-col justify-between h-full group"
+    >
+      <div>
+        {/* Top Header: Avatar, Name, ID, and Badge */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-11 h-11 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-700 font-bold text-sm">
+              {student.photoUrl ? (
+                <img src={student.photoUrl} alt="" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                initials
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-gray-900 text-sm truncate leading-snug group-hover:text-[var(--color-primary)] transition-colors">
+                {student.name || 'Unnamed Student'}
+              </h3>
+              <p className="text-xs text-gray-500 font-mono mt-0.5 truncate">{student.studentId}</p>
             </div>
           </div>
-          <div className="flex items-start gap-2 text-gray-600">
-            <Building className="w-4 h-4 text-gray-400 mt-0.5" />
-            <div>
-              <p className="font-bold text-gray-500 uppercase text-[10px] tracking-wider mb-0.5">Room</p>
-              <p className="font-semibold text-gray-900">{student.hostel} / {student.roomNo}</p>
-            </div>
+          <div className="flex-shrink-0">
+            <StudentStatusBadge status={student.dynamicStatus} />
           </div>
         </div>
 
-        <div className="pt-3 border-t border-gray-50 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${student.remaining_outings > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            <span className="font-semibold text-gray-700">
-              Quota: <span className="text-gray-900">{student.remaining_outings} remaining</span>
+        {/* Middle Info: Class & Room */}
+        <div className="py-2.5 px-3 bg-slate-50 rounded-lg space-y-1.5 mb-3">
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <GraduationCap className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <span className="truncate">
+              {hasClassInfo ? `${student.branch || ''} ${student.year ? `• ${student.year}` : ''}`.trim() : 'Class not specified'}
             </span>
           </div>
-          {student.hasActiveOuting && (
-            <div className="flex items-center gap-1 text-orange-600 font-bold bg-orange-50 px-2 py-0.5 rounded-md">
-              <AlertCircle size={14} /> Active Pass
-            </div>
-          )}
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <Building2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+            <span className="truncate">
+              {hasRoomInfo ? `${student.hostel || ''} ${student.roomNo ? `Room ${student.roomNo}` : ''}`.trim() : 'Room not assigned'}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="p-3 bg-gray-50 border-t border-gray-100">
-        <button
-          onClick={() => onViewProfile(student.id)}
-          className="w-full py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm"
-        >
-          View Full Profile
-        </button>
+      {/* Bottom Footer: Outing Quota & Action Link */}
+      <div className="pt-2.5 border-t border-gray-100 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-1.5">
+          <span className={`w-2 h-2 rounded-full ${student.remaining_outings > 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
+          <span className="text-gray-600 font-medium">
+            <strong className="text-gray-900 font-semibold">{student.remaining_outings}</strong> outings left
+          </span>
+        </div>
+
+        <span className="text-[var(--color-primary)] font-semibold flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
+          View Profile <ChevronRight className="w-4 h-4" />
+        </span>
       </div>
     </div>
   );
