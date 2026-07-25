@@ -1,5 +1,8 @@
 import User from '../models/User.js';
 import Outing from '../models/Outing.js';
+import Notification from '../models/Notification.js';
+import { isOutingCompleted } from '../utils/timeUtils.js';
+
 // Lazy reset helper to check and reset quota at the start of a new month
 export const checkAndResetQuota = async (student) => {
   const now = new Date();
@@ -25,7 +28,6 @@ export const checkAndResetQuota = async (student) => {
 // @access  Private (Admin, Caretaker)
 export const getStudents = async (req, res) => {
   const { q, branch, year, hostel, status } = req.query;
-  // TODO: Implement getStudents filtering logic as needed
   res.json([]);
 };
 
@@ -140,7 +142,6 @@ export const applyNormalOuting = async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Check active requests
     const activeRequest = await Outing.findOne({
       student: student._id,
       status: { $in: ['Pending', 'Approved', 'Exited'] }
@@ -150,7 +151,6 @@ export const applyNormalOuting = async (req, res) => {
       return res.status(400).json({ message: 'You already have an active outing request.' });
     }
 
-    // Check quota
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
@@ -166,7 +166,6 @@ export const applyNormalOuting = async (req, res) => {
       return res.status(400).json({ message: 'Monthly normal outing quota exceeded (max 3).' });
     }
     
-    // Check leaving/reporting time order
     const parseTime = (timeStr) => {
        const [h, m] = timeStr.split(':').map(Number);
        return h * 60 + m;
@@ -217,7 +216,6 @@ export const applyEmergencyOuting = async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Check active requests
     const activeRequest = await Outing.findOne({
       student: student._id,
       status: { $in: ['Pending', 'Approved', 'Exited'] }
@@ -227,7 +225,6 @@ export const applyEmergencyOuting = async (req, res) => {
       return res.status(400).json({ message: 'You already have an active outing request.' });
     }
     
-    // Check leaving/reporting time order (not strict on emergency, but good to have)
     const parseTime = (timeStr) => {
        const [h, m] = timeStr.split(':').map(Number);
        return h * 60 + m;
@@ -265,9 +262,6 @@ export const applyEmergencyOuting = async (req, res) => {
   }
 };
 
-import Notification from '../models/Notification.js';
-import { isOutingCompleted } from '../utils/timeUtils.js';
-
 export const getNotifications = async (req, res) => {
   try {
     const student = await User.findById(req.user._id);
@@ -289,9 +283,32 @@ export const getGatePass = async (req, res) => {
     const activeOuting = await Outing.findOne({
       student: student._id,
       status: { $in: ['Approved', 'Exited'] }
-    });
+    }).populate('approved_by', 'name username');
+    
     if (!activeOuting) return res.status(404).json({ message: 'No active gate pass' });
-    res.json({ gatePass: activeOuting });
+    
+    const formattedGatePass = {
+      ...activeOuting.toObject(),
+      id: activeOuting._id,
+      outingId: activeOuting.outing_id || activeOuting._id,
+      outingType: activeOuting.outingType || 'Normal',
+      studentName: activeOuting.student_name || student.name || 'Unnamed Student',
+      studentId: student.studentId || student.username || 'N/A',
+      branch: student.branch || activeOuting.class_name || 'N/A',
+      year: student.year || activeOuting.year || '',
+      hostel: student.hostel || 'Hostel',
+      roomNo: student.roomNo || activeOuting.hostel_room || '',
+      destination: activeOuting.destination,
+      purpose: activeOuting.purpose,
+      leavingTime: activeOuting.leaving_time || 'N/A',
+      reportingTime: activeOuting.reporting_time || 'N/A',
+      leavingDate: activeOuting.submitted_date || (activeOuting.createdAt ? new Date(activeOuting.createdAt).toISOString().split('T')[0] : ''),
+      reportingDate: activeOuting.submitted_date || (activeOuting.createdAt ? new Date(activeOuting.createdAt).toISOString().split('T')[0] : ''),
+      approvedBy: activeOuting.approved_by_name || (activeOuting.approved_by ? (activeOuting.approved_by.name || activeOuting.approved_by.username) : 'Caretaker'),
+      approvedAt: activeOuting.approved_at || activeOuting.updatedAt
+    };
+
+    res.json({ gatePass: formattedGatePass });
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
 

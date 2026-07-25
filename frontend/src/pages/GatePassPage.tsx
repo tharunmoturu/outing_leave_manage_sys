@@ -142,14 +142,14 @@ export const GatePassPage: React.FC = () => {
             
             {/* Student Info */}
             <div className="space-y-1">
-              <h2 className="text-[22px] font-black text-gray-900 leading-tight uppercase tracking-tight">{gatePass.studentName}</h2>
-              <p className="text-[15px] font-bold text-gray-500">{gatePass.studentId}</p>
+              <h2 className="text-[22px] font-black text-gray-900 leading-tight uppercase tracking-tight">{gatePass.studentName || gatePass.student_name || 'Student'}</h2>
+              <p className="text-[15px] font-bold text-gray-500">{gatePass.studentId || gatePass.student_id || 'ID N/A'}</p>
               <div className="flex items-center gap-2 mt-2">
                 <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-700 text-[11px] font-bold rounded uppercase">
-                  {gatePass.branch} - {gatePass.year}
+                  {gatePass.branch || gatePass.class_name || 'Branch'} - {gatePass.year || ''}
                 </span>
                 <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-700 text-[11px] font-bold rounded uppercase">
-                  {gatePass.hostel} {gatePass.roomNo}
+                  {gatePass.hostel || 'Hostel'} {gatePass.roomNo || gatePass.hostel_room || ''}
                 </span>
               </div>
             </div>
@@ -176,11 +176,11 @@ export const GatePassPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4 w-full">
                   <div>
                     <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Leaving</p>
-                    <p className="text-[14px] font-bold text-gray-900">{formatTo12Hour(gatePass.leavingTime)}</p>
+                    <p className="text-[14px] font-bold text-gray-900">{formatTo12Hour(gatePass.leavingTime || gatePass.leaving_time)}</p>
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Reporting</p>
-                    <p className="text-[14px] font-bold text-gray-900">{formatTo12Hour(gatePass.reportingTime)}</p>
+                    <p className="text-[14px] font-bold text-gray-900">{formatTo12Hour(gatePass.reportingTime || gatePass.reporting_time)}</p>
                   </div>
                 </div>
               </div>
@@ -191,14 +191,14 @@ export const GatePassPage: React.FC = () => {
             {/* Approval Info */}
             <div className="bg-gray-50 rounded-xl p-4 flex flex-col items-center justify-center text-center">
               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Approved By</p>
-              <p className="text-[14px] font-bold text-gray-900">{gatePass.approvedBy}</p>
+              <p className="text-[14px] font-bold text-gray-900">{gatePass.approvedBy || gatePass.approved_by_name || (gatePass.approved_by ? (gatePass.approved_by.name || gatePass.approved_by.username) : null) || 'Caretaker'}</p>
               <p className="text-[12px] font-medium text-gray-500 mt-0.5">
-                {gatePass.approvedAt ? new Date(gatePass.approvedAt).toLocaleString() : 'N/A'}
+                {(gatePass.approvedAt || gatePass.approved_at || gatePass.updatedAt) ? new Date(gatePass.approvedAt || gatePass.approved_at || gatePass.updatedAt).toLocaleString() : 'N/A'}
               </p>
             </div>
             
             <div className="text-center">
-              <p className="text-[10px] font-medium text-gray-400">ID: {gatePass.outingId}</p>
+              <p className="text-[10px] font-medium text-gray-400">ID: {gatePass.outingId || gatePass.outing_id || gatePass._id}</p>
             </div>
             
           </div>
