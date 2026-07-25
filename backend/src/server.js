@@ -74,4 +74,12 @@ const startServer = async () => {
   });
 };
 
-startServer();
+if (process.env.VERCEL === '1') {
+  // On Vercel (production serverless), just initialize the db connection
+  connectDB();
+} else {
+  // Locally or on other standard environments, start the listener
+  startServer();
+}
+
+export default app;
