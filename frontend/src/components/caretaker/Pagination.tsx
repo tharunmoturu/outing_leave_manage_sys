@@ -13,7 +13,6 @@ export const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages,
   // Generate smart pagination numbers (e.g., 1, ..., 4, 5, 6, ..., 162)
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
-    const maxVisible = 5;
 
     if (totalPages <= 7) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);

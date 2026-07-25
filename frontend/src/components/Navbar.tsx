@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { LogOut, User, Bell, ChevronDown } from 'lucide-react';
-import { useAcademicYear } from '../contexts/AcademicYearContext';
 import { NotificationDropdown } from './dashboard/NotificationDropdown';
 import logo from '../assets/logo.png';
 
@@ -24,15 +23,15 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-[var(--color-border-gray)] h-[72px]">
-      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-8">
+      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-8">
         {/* Brand / Logo */}
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="Logo" className="h-10 w-10 rounded-full object-cover" />
-          <div className="flex flex-col">
-            <span className="text-[18px] font-semibold tracking-tight text-[var(--color-text-primary)]">
-              Hostel Control Center
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-4">
+          <img src={logo} alt="Logo" className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover flex-shrink-0" />
+          <div className="flex flex-col min-w-0">
+            <span className="text-[13px] sm:text-[16px] md:text-[18px] font-semibold tracking-tight text-[var(--color-text-primary)] truncate">
+              RGUKT Nuzvid Outing Management System
             </span>
-            <span className="text-[12px] font-medium text-[var(--color-text-secondary)]">
+            <span className="hidden sm:inline text-[10px] md:text-[12px] font-medium text-[var(--color-text-secondary)]">
               Student Outing Management System
             </span>
           </div>
@@ -40,11 +39,10 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
 
         {/* Action Controls & Profile */}
         {user && (
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 md:gap-6 flex-shrink-0">
             
             {/* Academic Year Selector Removed */}
 
-            {/* Hostel Info */}
             <div className="hidden md:flex flex-col items-end border-r border-[var(--color-border-gray)] pr-6">
               <span className="text-[14px] font-medium text-[var(--color-text-primary)]">
                 {user.hostel || ''}

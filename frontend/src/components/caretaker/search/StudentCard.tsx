@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, GraduationCap, Building2, ChevronRight, AlertCircle } from 'lucide-react';
+import { GraduationCap, Building2, ChevronRight } from 'lucide-react';
 import { StudentStatusBadge } from './StudentStatusBadge';
 
 export interface StudentSearchResult {

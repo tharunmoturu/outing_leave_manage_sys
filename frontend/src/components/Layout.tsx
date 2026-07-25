@@ -1,11 +1,9 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Navbar } from './Navbar';
-import { NotificationDropdown } from './dashboard/NotificationDropdown';
 import { 
   LayoutDashboard, 
   Users, 
-  FileSpreadsheet, 
   Search, 
   ClipboardList, 
   AlertTriangle,
@@ -13,11 +11,7 @@ import {
   QrCode,
   History,
   PlusCircle,
-  Settings,
-  User,
-  Bell,
-  UserCog,
-  UserPlus
+  User
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -77,12 +71,12 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
   const navLinks = getNavLinks();
 
   return (
-    <div className="flex min-h-screen flex-col text-[var(--color-text-primary)]">
+    <div className="flex min-h-screen flex-col text-[var(--color-text-primary)] pb-16 lg:pb-0">
       {/* Top Navbar */}
       <Navbar user={user} onLogout={onLogout} isDark={isDark} onToggleTheme={onToggleTheme} />
 
       {/* Main Body */}
-      <div className="mx-auto flex w-full max-w-7xl flex-1 items-stretch px-8 py-8 gap-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 items-stretch px-4 sm:px-8 py-4 sm:py-8 gap-8">
         {/* Left Sidebar - Desktop only */}
         <aside className="hidden w-64 flex-shrink-0 lg:block">
           <nav className="sticky top-24 flex flex-col bg-white border border-[var(--color-border-gray)] rounded-[12px] p-4">
@@ -114,8 +108,39 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
         </main>
       </div>
 
+      {/* Mobile Bottom Navigation Bar (Matches Mockup Pixel-for-Pixel) */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#E6E8EC] flex items-center justify-around py-2 px-1 md:hidden">
+        {navLinks.slice(0, 5).map((link) => (
+          <NavLink
+            key={link.path}
+            to={link.path}
+            end
+            className={({ isActive }) =>
+              `flex-1 flex flex-col items-center gap-1 text-[9px] font-semibold transition-colors ${
+                isActive ? 'text-[#7C2030]' : 'text-[#6B7280]'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <div
+                  className={`flex items-center justify-center transition-all ${
+                    isActive
+                      ? 'bg-[#FCE9EA] rounded-lg w-[34px] h-[26px] text-[#7C2030]'
+                      : 'w-[22px] h-[22px] text-[#6B7280]'
+                  }`}
+                >
+                  {React.cloneElement(link.icon as React.ReactElement<any>, { size: 16, strokeWidth: 2 })}
+                </div>
+                <span className="truncate max-w-[64px] font-['Manrope']">{link.label}</span>
+              </>
+            )}
+          </NavLink>
+        ))}
+      </nav>
+
       {/* Footer */}
-      <footer className="w-full border-t border-[var(--color-border-gray)] bg-white py-6 text-center text-[13px] text-[var(--color-text-secondary)]">
+      <footer className="hidden md:block w-full border-t border-[var(--color-border-gray)] bg-white py-6 text-center text-[13px] text-[var(--color-text-secondary)]">
         &copy; {new Date().getFullYear()} RGUKT. Digitizing Campus Hostel Workflows.
       </footer>
     </div>

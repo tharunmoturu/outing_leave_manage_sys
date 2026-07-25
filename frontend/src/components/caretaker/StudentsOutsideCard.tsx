@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, MapPin, Clock } from 'lucide-react';
+import { Eye, MapPin } from 'lucide-react';
 import { formatTo12Hour } from '../../utils/timeFormat';
 
 export interface StudentsOutsideItem {

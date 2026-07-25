@@ -16,7 +16,6 @@ import { CaretakerProfile } from './pages/CaretakerProfile';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { NormalOutingPage } from './pages/NormalOutingPage';
 import { EmergencyOutingPage } from './pages/EmergencyOutingPage';
-import { AdminDashboard } from './pages/AdminDashboard';
 import { CaretakerDashboard } from './pages/CaretakerDashboard';
 import { PendingNormalPage } from './pages/PendingNormalPage';
 import { StudentsOutsidePage } from './pages/StudentsOutsidePage';

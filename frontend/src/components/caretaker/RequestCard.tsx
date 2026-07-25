@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { Clock, MapPin, Eye, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
-import API from '../../services/api';
+import React from 'react';
+import { Clock, MapPin, Eye, CheckCircle2, XCircle } from 'lucide-react';
 import { formatTo12Hour } from '../../utils/timeFormat';
 
 export interface PendingNormalRequestItem {
