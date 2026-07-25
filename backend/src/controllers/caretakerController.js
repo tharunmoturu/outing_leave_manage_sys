@@ -436,8 +436,9 @@ export const approveOuting = async (req, res) => {
       });
 
       // Send email notification to student asynchronously
+      const studentEmail = studentUser?.email || studentUser?.Mail_Id || studentUser?.studentProfile?.email || studentUser?.studentProfile?.Mail_Id;
       sendOutingApprovalEmail({
-        toEmail: studentUser.email,
+        toEmail: studentEmail,
         studentName: studentUser.name || studentUser.studentId,
         studentId: studentUser.studentId,
         outingType: outing.outingType || 'Normal',
@@ -508,8 +509,9 @@ export const rejectOuting = async (req, res) => {
       });
 
       // Send rejection email asynchronously
+      const studentEmail = studentUser?.email || studentUser?.Mail_Id || studentUser?.studentProfile?.email || studentUser?.studentProfile?.Mail_Id;
       sendOutingRejectionEmail({
-        toEmail: studentUser.email,
+        toEmail: studentEmail,
         studentName: studentUser.name || studentUser.studentId,
         studentId: studentUser.studentId,
         outingType: outing.outingType || 'Normal',

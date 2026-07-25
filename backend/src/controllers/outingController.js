@@ -403,8 +403,9 @@ export const approveOuting = async (req, res) => {
     await student.save();
 
     // Send approval email
+    const studentEmail = student?.email || student?.Mail_Id || student?.studentProfile?.email || student?.studentProfile?.Mail_Id;
     sendOutingApprovalEmail({
-      toEmail: student.email,
+      toEmail: studentEmail,
       studentName: student.name || student.studentId,
       studentId: student.studentId,
       outingType: outing.outingType || 'Normal',
@@ -456,9 +457,10 @@ export const rejectOuting = async (req, res) => {
     await outing.save();
 
     const student = outing.student;
-    if (student && student.email) {
+    const rejStudentEmail = student?.email || student?.Mail_Id || student?.studentProfile?.email || student?.studentProfile?.Mail_Id;
+    if (student && rejStudentEmail) {
       sendOutingRejectionEmail({
-        toEmail: student.email,
+        toEmail: rejStudentEmail,
         studentName: student.name || student.studentId,
         studentId: student.studentId,
         outingType: outing.outingType || 'Normal',
