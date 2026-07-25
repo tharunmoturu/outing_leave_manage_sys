@@ -85,29 +85,42 @@ export const bulkUploadUsers = async (req, res) => {
     
     let imported = 0;
     for (let u of users) {
-      if (u.studentId && u.name) {
-        // Generate email if missing: lowercase studentid@rgukt[firstLetter].ac.in
-        let email = u.email;
+      const rawId = u.studentId || u['ID NO'] || u.id || u.rollNo;
+      const rawName = u.name || u['Name of the Student'] || u.studentName;
+
+      if (rawId && rawName) {
+        const cleanStudentId = String(rawId).trim().toUpperCase();
+        const cleanName = String(rawName).trim();
+        const lowerId = cleanStudentId.toLowerCase();
+        
+        // Auto-generate email based on first character of ID if missing
+        // e.g., N220522 -> n220522@rguktn.ac.in, S260565 -> s260565@rgukts.ac.in
+        let email = u.email ? String(u.email).trim().toLowerCase() : '';
         if (!email) {
-          const firstLetter = u.studentId.charAt(0).toLowerCase();
-          email = `${u.studentId.toLowerCase()}@rgukt${firstLetter}.ac.in`;
+          const firstLetter = lowerId.charAt(0);
+          email = `${lowerId}@rgukt${firstLetter}.ac.in`;
         }
 
         const userData = {
-          name: u.name,
+          name: cleanName,
           email: email,
           role: u.role || 'Student',
-          studentId: u.studentId,
-          branch: u.branch,
-          year: u.year,
-          hostel: u.hostel,
-          roomNo: u.roomNo || u.room,
-          phone: u.phone,
-          parentPhone: u.parentPhone || u.parent_phone
+          studentId: cleanStudentId,
+          branch: u.branch ? String(u.branch).trim() : 'CSE',
+          year: u.year ? String(u.year).trim() : 'E1',
+          hostel: u.hostel ? String(u.hostel).trim() : 'Emerald Hall',
+          roomNo: u.roomNo || u.room ? String(u.roomNo || u.room).trim() : '101',
+          phone: u.phone ? String(u.phone).trim() : '9999999999',
+          parentPhone: u.parentPhone || u.parent_phone ? String(u.parentPhone || u.parent_phone).trim() : '9888888888',
+          remaining_outings: 3,
+          used_outings: 0,
+          status: 'Inside',
+          profileCompleted: true,
+          isActive: true
         };
 
         await User.findOneAndUpdate(
-          { studentId: u.studentId },
+          { studentId: cleanStudentId },
           { $set: userData },
           { upsert: true, new: true, setDefaultsOnInsert: true }
         );
@@ -115,9 +128,10 @@ export const bulkUploadUsers = async (req, res) => {
       }
     }
 
-    res.json({ message: `Successfully imported ${imported} users.`, imported });
+    res.json({ message: `Successfully imported ${imported} students to database.`, imported });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error in bulkUploadUsers:', error);
+    res.status(500).json({ message: error.message || 'Server error during bulk upload' });
   }
 };
 

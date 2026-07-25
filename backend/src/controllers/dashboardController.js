@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Outing from '../models/Outing.js';
+import { getCaretakerHostel } from '../utils/hostelUtils.js';
 
 // Helper to get date ranges
 const getTodayRange = () => {
@@ -18,8 +19,11 @@ export const getAdminDashboard = async (req, res) => {
     const { start: todayStart, end: todayEnd } = getTodayRange();
 
     const totalStudents = await User.countDocuments({ role: { $in: ['student', 'Student'] } });
-    const studentsOutside = await User.countDocuments({ role: { $in: ['student', 'Student'] }, status: 'Outside' });
-    const studentsInside = await User.countDocuments({ role: { $in: ['student', 'Student'] }, status: 'Inside' });
+    
+    // Dynamically calculate outside students from active outings (Approved or Exited)
+    const activeOutsideOutings = await Outing.find({ status: { $in: ['Approved', 'Exited'] } }).distinct('student');
+    const studentsOutside = activeOutsideOutings.length;
+    const studentsInside = Math.max(0, totalStudents - studentsOutside);
 
     // Outings created/approved today
     const todayOutings = await Outing.countDocuments({
@@ -60,7 +64,7 @@ export const getAdminDashboard = async (req, res) => {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
-    sixMonthsAgo.setHours(0,0,0,0);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
 
     const monthlyOutingsAggregate = await Outing.aggregate([
       {
@@ -116,15 +120,21 @@ export const getCaretakerDashboard = async (req, res) => {
     const { start: todayStart, end: todayEnd } = getTodayRange();
     const { year } = req.query;
 
-    let studentIds = null;
+    const caretakerHostel = getCaretakerHostel(req.user);
     let studentFilter = { role: { $in: ['student', 'Student'] } };
-    if (year) {
-      studentFilter.year = year;
-      const studentsInYear = await User.find(studentFilter).select('_id');
-      studentIds = studentsInYear.map(s => s._id);
+
+    if (caretakerHostel) {
+      studentFilter.hostel = { $regex: new RegExp(`^${caretakerHostel.trim()}$`, 'i') };
     }
 
-    const baseOutingQuery = studentIds ? { student: { $in: studentIds } } : {};
+    if (year) {
+      studentFilter.year = year;
+    }
+
+    const studentsInFilter = await User.find(studentFilter).select('_id');
+    const studentIds = studentsInFilter.map(s => s._id);
+
+    const baseOutingQuery = { student: { $in: studentIds } };
 
     const todayOutingsCount = await Outing.countDocuments({
       ...baseOutingQuery,
@@ -132,11 +142,11 @@ export const getCaretakerDashboard = async (req, res) => {
       status: { $ne: 'Cancelled' },
     });
 
-    const studentsOutsideCount = await User.countDocuments({ 
-      ...studentFilter, 
-      status: 'Outside',
-      role: { $in: ['student', 'Student'] }
-    });
+    const activeOutsideOutings = await Outing.find({
+      ...baseOutingQuery,
+      status: { $in: ['Approved', 'Exited'] }
+    }).distinct('student');
+    const studentsOutsideCount = activeOutsideOutings.length;
 
     const returnedStudentsCount = await Outing.countDocuments({
       ...baseOutingQuery,
@@ -180,19 +190,17 @@ export const getCaretakerDashboard = async (req, res) => {
 // @access  Private (Student)
 export const getStudentDashboard = async (req, res) => {
   try {
-    const student = await Student.findById(req.user.studentProfile);
+    const student = await User.findById(req.user._id);
 
     if (!student) {
       return res.status(404).json({ message: 'Student profile not found' });
     }
 
-    // Find any active outing request (Pending, Approved, or Exited)
     const activeOuting = await Outing.findOne({
       student: student._id,
       status: { $in: ['Pending', 'Approved', 'Exited'] },
-    }).populate('approved_by', 'username');
+    }).populate('approved_by', 'name username');
 
-    // Recent Outings
     const recentOutings = await Outing.find({ student: student._id })
       .sort({ createdAt: -1 })
       .limit(5);
@@ -215,8 +223,11 @@ export const getStudentDashboard = async (req, res) => {
 export const getAdminStudentManagement = async (req, res) => {
   try {
     const totalStudents = await User.countDocuments({ role: { $in: ['student', 'Student'] } });
-    const studentsOutside = await User.countDocuments({ role: { $in: ['student', 'Student'] }, status: 'Outside' });
-    const studentsInside = await User.countDocuments({ role: { $in: ['student', 'Student'] }, status: 'Inside' });
+    
+    // Dynamically calculate outside students from active outings (Approved or Exited)
+    const activeOutsideOutings = await Outing.find({ status: { $in: ['Approved', 'Exited'] } }).distinct('student');
+    const studentsOutside = activeOutsideOutings.length;
+    const studentsInside = Math.max(0, totalStudents - studentsOutside);
     const pendingOutingsCount = await Outing.countDocuments({ status: 'Pending' });
     
     res.json({
@@ -236,36 +247,54 @@ export const getAdminCaretakerStats = async (req, res) => {
   try {
     const { start: todayStart, end: todayEnd } = getTodayRange();
     
-    const caretakers = await User.find({ role: { $in: ['caretaker', 'Caretaker', 'admin'] } });
+    const caretakers = await User.find({ role: { $in: ['caretaker', 'Caretaker', 'admin', 'Admin'] } }).select('-googleId -password');
     
     const stats = await Promise.all(caretakers.map(async (ct) => {
+      const ctHostel = ct.assignedHostel || ct.hostel || 'Emerald Hall';
+
       const approvals = await Outing.countDocuments({
         approved_by: ct._id,
         status: { $in: ['Approved', 'Exited', 'Returned'] },
         updatedAt: { $gte: todayStart, $lte: todayEnd }
       });
       const rejections = await Outing.countDocuments({
-        approved_by: ct._id,
+        rejected_by: ct._id,
         status: 'Rejected',
         updatedAt: { $gte: todayStart, $lte: todayEnd }
       });
       
-      const isActiveToday = approvals > 0 || rejections > 0;
+      let pendingAssigned = 0;
+      if (ctHostel && ctHostel !== 'Unassigned') {
+        const studentIdsInHostel = await User.find({
+          role: { $in: ['student', 'Student'] },
+          hostel: { $regex: new RegExp(`^${ctHostel.trim()}$`, 'i') }
+        }).select('_id');
+        
+        pendingAssigned = await Outing.countDocuments({
+          status: 'Pending',
+          student: { $in: studentIdsInHostel.map(s => s._id) }
+        });
+      } else {
+        pendingAssigned = await Outing.countDocuments({ status: 'Pending' });
+      }
+
+      const isActiveToday = approvals > 0 || rejections > 0 || ct.role.toLowerCase() === 'caretaker';
       
       return {
         _id: ct._id,
-        name: ct.name || ct.username,
-        status: isActiveToday ? 'Online' : 'Offline',
+        name: ct.name || ct.email?.split('@')[0] || 'Staff Member',
+        email: ct.email,
+        role: ct.role,
+        assignedHostel: ctHostel,
+        status: isActiveToday ? 'Active Shift' : 'Off Shift',
         loginTime: isActiveToday ? todayStart : null,
-        logoutTime: null,
         handled: approvals + rejections,
         approvals,
         rejections,
-        pendingAssigned: 0 
+        pendingAssigned
       };
     }));
     
-    // Always show at least some for demo purposes if no active caretakers exist
     res.json({ caretakers: stats });
   } catch (error) {
     res.status(500).json({ message: error.message });

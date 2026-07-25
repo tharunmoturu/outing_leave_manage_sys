@@ -75,22 +75,63 @@ export const AdminUserOnboarding: React.FC = () => {
           const sheet = workbook.Sheets[sheetName];
           const parsedData = XLSX.utils.sheet_to_json(sheet);
           
-          // Map to expected format
-          const formatted = parsedData.map((row: any) => ({
-            studentId: row.StudentId || row.studentId || row.ID || '',
-            name: row.Name || row.name || '',
-            branch: row.Branch || row.branch || '',
-            year: row.Year || row.year || '',
-            hostel: row.Hostel || row.hostel || '',
-            roomNo: row.Room || row.roomNo || row.RoomNo || '',
-            phone: row.Phone || row.phone || '',
-            parentPhone: row.ParentPhone || row.parentPhone || '',
-            email: row.Email || row.email || ''
-          })).filter((row) => row.studentId && row.name);
-          
-          setPreviewData(formatted);
+          const getRowValue = (row: any, keys: string[]) => {
+            for (const key of keys) {
+              for (const rowKey of Object.keys(row)) {
+                if (rowKey.trim().toLowerCase() === key.toLowerCase()) {
+                  return String(row[rowKey]).trim();
+                }
+              }
+            }
+            return '';
+          };
+
+          // Map to expected format with flexible column header matching
+          const formatted = parsedData.map((row: any) => {
+            const rawId = getRowValue(row, ['ID NO', 'Id No', 'ID_NO', 'ID', 'StudentId', 'Student ID', 'Roll No', 'RollNo', 'STUDENT_ID']);
+            const name = getRowValue(row, ['Name of the Student', 'Name Of The Student', 'Student Name', 'StudentName', 'NAME', 'Name', 'Full Name', 'FullName']);
+            const branch = getRowValue(row, ['Branch', 'Department', 'BRANCH']);
+            const year = getRowValue(row, ['Year', 'Class', 'YEAR']);
+            const hostel = getRowValue(row, ['Hostel', 'Hostel Name', 'HOSTEL']);
+            const roomNo = getRowValue(row, ['Room', 'Room No', 'RoomNo', 'HOSTEL_ROOM']);
+            const phone = getRowValue(row, ['Phone', 'Mobile', 'PHONE']);
+            const parentPhone = getRowValue(row, ['Parent Phone', 'ParentPhone', 'PARENT_PHONE']);
+            let email = getRowValue(row, ['Email', 'Email Address', 'EMAIL']);
+
+            const studentId = rawId.toUpperCase();
+
+            // Auto-generate email based on first character of student ID if missing
+            // e.g. N220522 -> n220522@rguktn.ac.in, S260565 -> s260565@rgukts.ac.in
+            if (studentId && !email) {
+              const lowerId = studentId.toLowerCase();
+              const firstLetter = lowerId.charAt(0);
+              email = `${lowerId}@rgukt${firstLetter}.ac.in`;
+            }
+
+            return {
+              studentId,
+              name,
+              branch: branch || 'CSE',
+              year: year || 'E1',
+              hostel: hostel || 'Emerald Hall',
+              roomNo: roomNo || '101',
+              phone: phone || 'N/A',
+              parentPhone: parentPhone || 'N/A',
+              email
+            };
+          }).filter((row: any) => row.studentId && row.name);
+
+          if (formatted.length === 0) {
+            setBulkStatus({ 
+              error: 'No valid rows found. Please ensure the Excel sheet has headers like "ID NO" (or "StudentId") and "Name of the Student" (or "Name").', 
+              success: '', 
+              uploading: false 
+            });
+          } else {
+            setPreviewData(formatted);
+          }
         } catch (err) {
-          setBulkStatus({ error: 'Failed to parse Excel file. Please check format.', success: '', uploading: false });
+          setBulkStatus({ error: 'Failed to parse Excel file. Please check file format.', success: '', uploading: false });
         }
       };
       reader.readAsBinaryString(selectedFile);
@@ -102,11 +143,12 @@ export const AdminUserOnboarding: React.FC = () => {
     setBulkStatus({ error: '', success: '', uploading: true });
     
     try {
-      await API.post('/users/bulk', { users: previewData });
-      setBulkStatus({ error: '', success: `Successfully imported ${previewData.length} users!`, uploading: false });
+      const { data } = await API.post('/users/bulk', { users: previewData });
+      setBulkStatus({ error: '', success: data.message || `Successfully imported ${previewData.length} students to database!`, uploading: false });
       setFile(null);
       setPreviewData([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
+      fetchUsers();
     } catch (err: any) {
       setBulkStatus({ error: err.response?.data?.message || 'Bulk upload failed', success: '', uploading: false });
     }
@@ -192,28 +234,63 @@ export const AdminUserOnboarding: React.FC = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
-                      <label className="input-label">Student ID / Roll No</label>
-                      <input type="text" required value={studentForm.studentId} onChange={(e) => setStudentForm({ ...studentForm, studentId: e.target.value })} className="input-field bg-white" placeholder="e.g. S106" />
+                      <label className="input-label">
+                        Student ID / Roll No <span className="text-red-500 font-bold">*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={studentForm.studentId} 
+                        onChange={(e) => setStudentForm({ ...studentForm, studentId: e.target.value })} 
+                        className="input-field bg-white" 
+                        placeholder="e.g. S106" 
+                      />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="input-label">Full Name</label>
-                      <input type="text" required value={studentForm.name} onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })} className="input-field bg-white" placeholder="e.g. John Doe" />
+                      <label className="input-label">
+                        Full Name <span className="text-red-500 font-bold">*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        required 
+                        value={studentForm.name} 
+                        onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })} 
+                        className="input-field bg-white" 
+                        placeholder="e.g. John Doe" 
+                      />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
-                      <label className="input-label">Role</label>
-                      <select value={studentForm.role} onChange={(e) => setStudentForm({ ...studentForm, role: e.target.value })} className="input-field bg-white">
-                        <option value="Student">Student</option><option value="Caretaker">Caretaker</option><option value="Admin">Admin</option>
+                      <label className="input-label">
+                        Role <span className="text-red-500 font-bold">*</span>
+                      </label>
+                      <select 
+                        required
+                        value={studentForm.role} 
+                        onChange={(e) => setStudentForm({ ...studentForm, role: e.target.value })} 
+                        className="input-field bg-white"
+                      >
+                        <option value="Student">Student</option>
+                        <option value="Caretaker">Caretaker</option>
+                        <option value="Admin">Admin</option>
                       </select>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="input-label">Email (Optional)</label>
-                      <input type="email" value={studentForm.email} onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })} className="input-field bg-white" placeholder="Leave empty to auto-generate" />
+                      <label className="input-label">
+                        Email Address <span className="text-red-500 font-bold">*</span>
+                      </label>
+                      <input 
+                        type="email" 
+                        required 
+                        value={studentForm.email} 
+                        onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })} 
+                        className="input-field bg-white" 
+                        placeholder="e.g. john.doe@rgukt.ac.in" 
+                      />
                     </div>
                   </div>
-
                 </div>
 
                 <div className="pt-6">
@@ -229,43 +306,45 @@ export const AdminUserOnboarding: React.FC = () => {
               {bulkStatus.success && <div className="alert-success">{bulkStatus.success}</div>}
               
               <div 
-                className="border-2 border-dashed border-[var(--color-border-gray)] hover:border-[var(--color-primary)] rounded-2xl p-16 text-center transition-colors cursor-pointer bg-[var(--color-gray-50)]"
+                className="border-2 border-dashed border-[var(--color-border-gray)] hover:border-[var(--color-primary)] rounded-2xl p-12 text-center transition-colors cursor-pointer bg-[var(--color-gray-50)]"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <input type="file" ref={fileInputRef} className="hidden" accept=".xlsx,.xls,.csv" onChange={handleFileChange} />
-                <div className="flex flex-col items-center gap-4">
-                  <div className="h-16 w-16 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center">
-                    <Upload size={32} />
+                <div className="flex flex-col items-center gap-3">
+                  <div className="h-14 w-14 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)] flex items-center justify-center">
+                    <Upload size={28} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Click to upload Excel file</h3>
-                    <p className="text-sm text-[var(--color-text-secondary)] mt-1">Expected headers: StudentId, Name, Branch, Year, Hostel, Room</p>
-                    <p className="text-sm text-[var(--color-primary)] mt-2 font-medium">Emails will be auto-generated if missing.</p>
+                    <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Click to upload Excel / CSV file</h3>
+                    <p className="text-sm text-[var(--color-text-secondary)] mt-1">Minimum headers required: <strong>ID NO</strong> and <strong>Name of the Student</strong></p>
+                    <p className="text-xs text-[var(--color-primary)] mt-2 font-medium">Emails are auto-generated based on ID prefix (e.g. N220522 → n220522@rguktn.ac.in, S260565 → s260565@rgukts.ac.in)</p>
                   </div>
-                  {file && <div className="mt-4 px-4 py-2 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-full text-sm font-medium">{file.name}</div>}
+                  {file && <div className="mt-3 px-4 py-1.5 bg-[var(--color-primary-light)] text-[var(--color-primary)] rounded-full text-xs font-bold">{file.name}</div>}
                 </div>
               </div>
 
               {previewData.length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-label">Data Preview ({previewData.length} valid rows)</h3>
-                  <div className="overflow-x-auto border border-[var(--color-border-gray)] rounded-xl max-h-80">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-label font-bold text-[#1F2937]">Students Ready for Database Import ({previewData.length} valid rows)</h3>
+                  </div>
+                  <div className="overflow-x-auto border border-[var(--color-border-gray)] rounded-xl max-h-80 shadow-xs">
                     <table className="w-full text-left text-sm whitespace-nowrap">
                       <thead className="bg-[var(--color-bg-main)] border-b border-[var(--color-border-gray)] text-[var(--color-text-secondary)] sticky top-0">
                         <tr>
-                          <th className="px-4 py-3 font-medium">Student ID</th>
-                          <th className="px-4 py-3 font-medium">Name</th>
-                          <th className="px-4 py-3 font-medium">Branch/Year</th>
-                          <th className="px-4 py-3 font-medium">Hostel</th>
+                          <th className="px-4 py-3 font-semibold">Student ID</th>
+                          <th className="px-4 py-3 font-semibold">Student Name</th>
+                          <th className="px-4 py-3 font-semibold">Auto-Generated Email</th>
+                          <th className="px-4 py-3 font-semibold">Hostel / Room</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--color-border-gray)]">
                         {previewData.map((row, i) => (
-                          <tr key={i} className="hover:bg-[var(--color-gray-50)]">
-                            <td className="px-4 py-3 font-medium">{row.studentId}</td>
-                            <td className="px-4 py-3">{row.name}</td>
-                            <td className="px-4 py-3">{row.branch} - {row.year}</td>
-                            <td className="px-4 py-3 text-[var(--color-text-secondary)]">{row.hostel} | {row.roomNo}</td>
+                          <tr key={i} className="hover:bg-slate-50">
+                            <td className="px-4 py-3 font-bold text-[var(--color-primary)]">{row.studentId}</td>
+                            <td className="px-4 py-3 font-semibold text-slate-800">{row.name}</td>
+                            <td className="px-4 py-3 text-indigo-700 font-mono text-xs bg-indigo-50/50 rounded-md">{row.email}</td>
+                            <td className="px-4 py-3 text-slate-500 text-xs">{row.hostel} | {row.roomNo}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -275,7 +354,7 @@ export const AdminUserOnboarding: React.FC = () => {
                   <div className="pt-4 flex justify-end gap-3">
                     <button onClick={() => { setFile(null); setPreviewData([]); }} className="btn-secondary">Cancel</button>
                     <button onClick={handleBulkSubmit} disabled={bulkStatus.uploading} className="btn-primary">
-                      {bulkStatus.uploading ? 'Importing...' : `Confirm Import`}
+                      {bulkStatus.uploading ? 'Inserting to Database...' : `Insert ${previewData.length} Students to Database`}
                     </button>
                   </div>
                 </div>

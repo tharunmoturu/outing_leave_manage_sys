@@ -2,6 +2,7 @@ import Outing from '../models/Outing.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import { isStudentOutside, isStudentOverdue, parseTime, isOutingCompleted } from '../utils/timeUtils.js';
+import { getCaretakerHostel, getHostelStudentIds, isStudentInCaretakerHostel } from '../utils/hostelUtils.js';
 
 // Helper to convert time strings (e.g. "19:00", "07:30") to 12-hour AM/PM format
 const formatTo12Hour = (timeStr) => {
@@ -35,9 +36,17 @@ export const getCaretakerDashboard = async (req, res) => {
 
     const now = new Date();
 
+    const caretakerHostel = getCaretakerHostel(req.user);
+    let studentFilter = {};
+    if (caretakerHostel) {
+      const hostelStudentIds = await getHostelStudentIds(caretakerHostel);
+      studentFilter = { student: { $in: hostelStudentIds } };
+    }
+
     // Fetch all active outings to calculate dynamic outside status
     const activeOutings = await Outing.find({
-      status: { $in: ['Approved', 'Exited'] }
+      status: { $in: ['Approved', 'Exited'] },
+      ...studentFilter
     }).populate('student', 'name studentId branch year hostel roomNo');
 
     const currentlyOutsideOutings = activeOutings.filter(o => isStudentOutside(o, now));
@@ -47,23 +56,27 @@ export const getCaretakerDashboard = async (req, res) => {
 
     const pendingNormalCount = await Outing.countDocuments({
       status: 'Pending',
-      outingType: 'Normal'
+      outingType: 'Normal',
+      ...studentFilter
     });
 
     const pendingEmergencyCount = await Outing.countDocuments({
       status: 'Pending',
-      outingType: 'Emergency'
+      outingType: 'Emergency',
+      ...studentFilter
     });
 
     const approvedTodayCount = await Outing.countDocuments({
       status: { $in: ['Approved', 'Exited', 'Returned'] },
-      updatedAt: { $gte: todayStart, $lte: todayEnd }
+      updatedAt: { $gte: todayStart, $lte: todayEnd },
+      ...studentFilter
     });
 
     // 2. Pending Normal Requests (latest 5)
     const rawPendingNormal = await Outing.find({
       status: 'Pending',
-      outingType: 'Normal'
+      outingType: 'Normal',
+      ...studentFilter
     })
       .populate('student', 'name studentId branch year hostel roomNo')
       .sort({ createdAt: -1 })
@@ -83,7 +96,8 @@ export const getCaretakerDashboard = async (req, res) => {
     // 3. Pending Emergency Requests (latest 3)
     const rawPendingEmergency = await Outing.find({
       status: 'Pending',
-      outingType: 'Emergency'
+      outingType: 'Emergency',
+      ...studentFilter
     })
       .populate('student', 'name studentId branch year hostel roomNo')
       .sort({ createdAt: -1 })
@@ -145,26 +159,43 @@ export const getCaretakerDashboard = async (req, res) => {
 export const getPendingNormalRequests = async (req, res) => {
   try {
     const { q, sort, leavingDate, destination, page = 1, limit = 10 } = req.query;
+    const caretakerHostel = getCaretakerHostel(req.user);
 
     let query = {
       status: 'Pending',
       outingType: 'Normal'
     };
 
+    if (caretakerHostel) {
+      const hostelStudentIds = await getHostelStudentIds(caretakerHostel);
+      query.student = { $in: hostelStudentIds };
+    }
+
     // 1. Search by Student Name or Student ID
     if (q && q.trim() !== '') {
       const searchRegex = new RegExp(q.trim(), 'i');
-      const matchingUsers = await User.find({
+      const userSearchQuery = {
         role: { $in: ['student', 'Student'] },
         $or: [{ name: searchRegex }, { studentId: searchRegex }]
-      }).select('_id');
+      };
+      if (caretakerHostel) {
+        userSearchQuery.hostel = { $regex: new RegExp(`^${caretakerHostel.trim()}$`, 'i') };
+      }
+      const matchingUsers = await User.find(userSearchQuery).select('_id');
 
       const userIds = matchingUsers.map((u) => u._id);
-      query.$or = [
+      const searchOr = [
         { student: { $in: userIds } },
         { student_name: searchRegex },
         { student_id: searchRegex }
       ];
+
+      if (query.student) {
+        query.$and = [{ student: query.student }, { $or: searchOr }];
+        delete query.student;
+      } else {
+        query.$or = searchOr;
+      }
     }
 
     // 2. Filter by Leaving Date
@@ -252,6 +283,7 @@ export const getPendingNormalRequests = async (req, res) => {
 export const getPendingNormalDetail = async (req, res) => {
   try {
     const { outingId } = req.params;
+    const caretakerHostel = getCaretakerHostel(req.user);
 
     const outing = await Outing.findById(outingId).populate(
       'student',
@@ -260,6 +292,12 @@ export const getPendingNormalDetail = async (req, res) => {
 
     if (!outing) {
       return res.status(404).json({ message: 'Outing request not found' });
+    }
+
+    if (caretakerHostel && outing.student?.hostel && !isStudentInCaretakerHostel(req.user, outing.student.hostel)) {
+      return res.status(403).json({
+        message: `Access denied: This request belongs to a student in ${outing.student.hostel}, but you are assigned to ${caretakerHostel}.`
+      });
     }
 
     const studentObj = outing.student;
@@ -322,8 +360,9 @@ export const approveOuting = async (req, res) => {
   try {
     const { outingId } = req.params;
     const caretaker = req.user;
+    const caretakerHostel = getCaretakerHostel(caretaker);
 
-    const outing = await Outing.findById(outingId);
+    const outing = await Outing.findById(outingId).populate('student');
     
     if (!outing) {
       return res.status(404).json({ message: 'Outing request not found' });
@@ -331,6 +370,14 @@ export const approveOuting = async (req, res) => {
 
     if (outing.status !== 'Pending') {
       return res.status(400).json({ message: `Cannot approve request with status: ${outing.status}` });
+    }
+
+    const studentUser = outing.student || await User.findById(outing.student);
+
+    if (caretakerHostel && studentUser?.hostel && !isStudentInCaretakerHostel(caretaker, studentUser.hostel)) {
+      return res.status(403).json({
+        message: `You can only approve requests for students in your assigned hostel (${caretakerHostel}). This student belongs to ${studentUser.hostel}.`
+      });
     }
 
     // Calculate gate pass expiry (Leaving Date + Time + 1 Hour)
@@ -372,7 +419,6 @@ export const approveOuting = async (req, res) => {
 
     await outing.save();
 
-    const studentUser = await User.findById(outing.student);
     if (studentUser) {
       if (outing.outingType === 'Normal' || !outing.outingType) {
         studentUser.remaining_outings = Math.max(0, studentUser.remaining_outings - 1);
@@ -403,12 +449,13 @@ export const rejectOuting = async (req, res) => {
     const { outingId } = req.params;
     const { reason } = req.body;
     const caretaker = req.user;
+    const caretakerHostel = getCaretakerHostel(caretaker);
 
     if (!reason || !reason.trim()) {
       return res.status(400).json({ message: 'Rejection reason is required' });
     }
 
-    const outing = await Outing.findById(outingId);
+    const outing = await Outing.findById(outingId).populate('student');
     
     if (!outing) {
       return res.status(404).json({ message: 'Outing request not found' });
@@ -416,6 +463,14 @@ export const rejectOuting = async (req, res) => {
 
     if (outing.status !== 'Pending') {
       return res.status(400).json({ message: `Cannot reject request with status: ${outing.status}` });
+    }
+
+    const studentUser = outing.student || await User.findById(outing.student);
+
+    if (caretakerHostel && studentUser?.hostel && !isStudentInCaretakerHostel(caretaker, studentUser.hostel)) {
+      return res.status(403).json({
+        message: `You can only reject requests for students in your assigned hostel (${caretakerHostel}). This student belongs to ${studentUser.hostel}.`
+      });
     }
 
     outing.status = 'Rejected';
@@ -427,7 +482,6 @@ export const rejectOuting = async (req, res) => {
 
     await outing.save();
 
-    const studentUser = await User.findById(outing.student);
     if (studentUser) {
       await Notification.create({
         studentId: studentUser.studentId,
@@ -452,11 +506,17 @@ export const getStudentsOutside = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || '';
+    const caretakerHostel = getCaretakerHostel(req.user);
+
+    let activeQuery = { status: { $in: ['Approved', 'Exited'] } };
+    if (caretakerHostel) {
+      const hostelStudentIds = await getHostelStudentIds(caretakerHostel);
+      activeQuery.student = { $in: hostelStudentIds };
+    }
 
     // Fetch all potentially active outings
-    const activeOutings = await Outing.find({
-      status: { $in: ['Approved', 'Exited'] }
-    }).populate('student', 'name studentId branch year hostel roomNo');
+    const activeOutings = await Outing.find(activeQuery)
+      .populate('student', 'name studentId branch year hostel roomNo');
 
     const now = new Date();
     
@@ -542,6 +602,7 @@ export const getCaretakerHistory = async (req, res) => {
     const sortOrder = req.query.sort === 'Oldest First' ? 1 : -1;
     const dateFrom = req.query.dateFrom;
     const dateTo = req.query.dateTo;
+    const caretakerHostel = getCaretakerHostel(req.user);
 
     // Base query: last 30 days
     const thirtyDaysAgo = new Date();
@@ -552,6 +613,11 @@ export const getCaretakerHistory = async (req, res) => {
       createdAt: { $gte: thirtyDaysAgo }
     };
 
+    if (caretakerHostel) {
+      const hostelStudentIds = await getHostelStudentIds(caretakerHostel);
+      query.student = { $in: hostelStudentIds };
+    }
+
     if (typeFilter !== 'All') {
       query.outingType = typeFilter;
     }
@@ -560,7 +626,6 @@ export const getCaretakerHistory = async (req, res) => {
       const from = new Date(dateFrom);
       const to = new Date(dateTo);
       to.setHours(23, 59, 59, 999);
-      // Make sure the range isn't older than 30 days
       if (from > thirtyDaysAgo) {
         query.createdAt = { $gte: from, $lte: to };
       } else {
@@ -659,9 +724,15 @@ export const getCaretakerEmergencyRequests = async (req, res) => {
     const statusFilter = req.query.status || 'All';
     const categoryFilter = req.query.category || 'All';
     const sortOrder = req.query.sort === 'Oldest First' ? 1 : -1;
+    const caretakerHostel = getCaretakerHostel(req.user);
 
     // Build the query
     const query = { outingType: 'Emergency' };
+
+    if (caretakerHostel) {
+      const hostelStudentIds = await getHostelStudentIds(caretakerHostel);
+      query.student = { $in: hostelStudentIds };
+    }
 
     if (statusFilter !== 'All') {
       query.status = statusFilter;
@@ -672,20 +743,18 @@ export const getCaretakerEmergencyRequests = async (req, res) => {
     }
 
     if (search) {
+      const searchRegex = new RegExp(search.trim(), 'i');
       query.$or = [
-        { student_name: { $regex: search, $options: 'i' } },
-        { 'student.name': { $regex: search, $options: 'i' } },
-        { 'student.studentId': { $regex: search, $options: 'i' } }
+        { student_name: searchRegex },
+        { 'student.name': searchRegex },
+        { 'student.studentId': searchRegex }
       ];
     }
 
-    // Since search might depend on populated fields, we might need to filter after fetching if $or doesn't fully cover it, 
-    // but we will do a simple fetch then map approach.
     const rawRequests = await Outing.find(query)
       .populate('student', 'name studentId branch year hostel roomNo phone parentPhone')
       .sort({ createdAt: sortOrder });
 
-    // Filter by search string explicitly if needed
     const searchLower = search.toLowerCase();
     let filteredRequests = rawRequests.filter(o => {
       if (!searchLower) return true;
@@ -733,7 +802,12 @@ export const getCaretakerEmergencyRequests = async (req, res) => {
     }));
 
     // Statistics
-    const allEmergencies = await Outing.find({ outingType: 'Emergency' });
+    let emergencyStatsQuery = { outingType: 'Emergency' };
+    if (caretakerHostel) {
+      const hostelStudentIds = await getHostelStudentIds(caretakerHostel);
+      emergencyStatsQuery.student = { $in: hostelStudentIds };
+    }
+    const allEmergencies = await Outing.find(emergencyStatsQuery);
     const pendingCount = allEmergencies.filter(o => o.status === 'Pending').length;
     const approvedToday = allEmergencies.filter(o => 
       ['Approved', 'Exited', 'Returned', 'Completed'].includes(o.status) && 
@@ -777,13 +851,19 @@ export const searchStudents = async (req, res) => {
     const year = req.query.year || 'All';
     const hostel = req.query.hostel || 'All';
     const activeOutingOnly = req.query.activeOutingOnly === 'true';
+    const caretakerHostel = getCaretakerHostel(req.user);
 
     // Build the query
     const query = { role: { $in: ['student', 'Student'] } };
 
+    if (caretakerHostel) {
+      query.hostel = { $regex: new RegExp(`^${caretakerHostel.trim()}$`, 'i') };
+    } else if (hostel !== 'All') {
+      query.hostel = hostel;
+    }
+
     if (branch !== 'All') query.branch = branch;
     if (year !== 'All') query.year = year;
-    if (hostel !== 'All') query.hostel = hostel;
 
     if (search) {
       query.$or = [
@@ -797,10 +877,8 @@ export const searchStudents = async (req, res) => {
       .select('name studentId email branch year hostel roomNo remaining_outings profileCompleted')
       .lean();
 
-    // Now we need to determine the dynamic status for each student
     const studentIds = students.map(s => s._id);
     
-    // Get all pending or active outings for these students
     const relevantOutings = await Outing.find({
       student: { $in: studentIds },
       status: { $in: ['Pending', 'Approved', 'Exited'] }
@@ -819,7 +897,6 @@ export const searchStudents = async (req, res) => {
       
       let dynamicStatus = 'Inside Hostel';
       let hasActive = false;
-      let isEmergency = false;
       let lastOutingDate = null;
 
       if (outings.length > 0) {
@@ -828,7 +905,6 @@ export const searchStudents = async (req, res) => {
         }, outings[0].createdAt);
       }
 
-      // Check logic
       const pendingOuting = outings.find(o => o.status === 'Pending');
       const approvedOuting = outings.find(o => o.status === 'Approved' || o.status === 'Exited');
 
@@ -891,6 +967,13 @@ export const getStudentFullProfile = async (req, res) => {
     const student = await User.findById(req.params.studentId).lean();
     if (!student || !['student', 'Student'].includes(student.role)) {
       return res.status(404).json({ message: 'Student not found' });
+    }
+
+    const caretakerHostel = getCaretakerHostel(req.user);
+    if (caretakerHostel && student.hostel && !isStudentInCaretakerHostel(req.user, student.hostel)) {
+      return res.status(403).json({
+        message: `Access denied: Student belongs to ${student.hostel}, but you are assigned to ${caretakerHostel}.`
+      });
     }
 
     // Recent History (last 5 outings)
@@ -977,3 +1060,4 @@ export const getStudentFullProfile = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+

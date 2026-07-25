@@ -1,5 +1,6 @@
 import Outing from '../models/Outing.js';
 import User from '../models/User.js';
+import { getCaretakerHostel, getHostelStudentIds, isStudentInCaretakerHostel } from '../utils/hostelUtils.js';
 
 const checkAndResetQuota = async (student) => {
   return student;
@@ -16,6 +17,13 @@ export const grantOuting = async (req, res) => {
 
     if (!student) {
       return res.status(404).json({ message: 'Student not found' });
+    }
+
+    const caretakerHostel = getCaretakerHostel(req.user);
+    if (caretakerHostel && student.hostel && !isStudentInCaretakerHostel(req.user, student.hostel)) {
+      return res.status(403).json({
+        message: `You can only grant outings for students in your assigned hostel (${caretakerHostel}). Student is in ${student.hostel}.`
+      });
     }
 
     // Apply lazy quota reset first
