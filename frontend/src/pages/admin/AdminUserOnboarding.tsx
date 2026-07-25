@@ -189,13 +189,17 @@ export const AdminUserOnboarding: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fade-in relative max-w-5xl mx-auto">
-      <div className="section-header">
-        <div>
-          <h1 className="text-title-large">User Onboarding</h1>
+      {/* =========================================================================
+          DESKTOP VIEW (Original Web Layout)
+         ========================================================================= */}
+      <div className="hidden md:block space-y-8">
+        <div className="section-header">
+          <div>
+            <h1 className="text-title-large">User Onboarding</h1>
+          </div>
         </div>
-      </div>
 
-      <div className="admin-card-flat !p-0 overflow-hidden shadow-sm">
+        <div className="admin-card-flat !p-0 overflow-hidden shadow-sm">
         <div className="flex bg-[var(--color-bg-main)] rounded-t-xl overflow-hidden">
           <button 
             className={`flex-1 py-4 font-bold text-sm transition-colors flex items-center justify-center gap-2 ${activeTab === 'single' ? 'bg-[var(--color-primary)] text-white shadow-inner' : 'bg-[var(--color-gray-100)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-gray-200)]'}`}
@@ -422,6 +426,285 @@ export const AdminUserOnboarding: React.FC = () => {
                    </table>
                  </div>
                )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+
+      {/* =========================================================================
+          MOBILE VIEW (Mockup Layout)
+         ========================================================================= */}
+      <div className="block md:hidden space-y-4">
+        {/* Subheader / Title */}
+        <div className="mb-2">
+          <h1 className="font-['Lexend'] text-[20px] font-bold text-[#1E293B] tracking-[-0.3px] m-0">User Onboarding</h1>
+        </div>
+
+        {/* Segmented Tabs (Matches Mockup .seg-tabs) */}
+        <div className="flex gap-1.5 overflow-x-auto pb-3 mb-2 no-scrollbar">
+          <button 
+            type="button"
+            className={`flex-none px-4 py-2 rounded-[9px] text-[12px] font-bold transition-all border flex items-center gap-1.5 ${
+              activeTab === 'single'
+                ? 'bg-[#7C2030] text-white border-[#7C2030]'
+                : 'bg-white text-[#6B7280] border-[#E6E8EC]'
+            }`}
+            onClick={() => setActiveTab('single')}
+          >
+            <Plus size={13} strokeWidth={2.5} />
+            <span>Single User</span>
+          </button>
+          <button 
+            type="button"
+            className={`flex-none px-4 py-2 rounded-[9px] text-[12px] font-bold transition-all border flex items-center gap-1.5 ${
+              activeTab === 'bulk'
+                ? 'bg-[#7C2030] text-white border-[#7C2030]'
+                : 'bg-white text-[#6B7280] border-[#E6E8EC]'
+            }`}
+            onClick={() => setActiveTab('bulk')}
+          >
+            <FileSpreadsheet size={13} strokeWidth={2.5} />
+            <span>Bulk Excel</span>
+          </button>
+          <button 
+            type="button"
+            className={`flex-none px-4 py-2 rounded-[9px] text-[12px] font-bold transition-all border flex items-center gap-1.5 ${
+              activeTab === 'manage'
+                ? 'bg-[#7C2030] text-white border-[#7C2030]'
+                : 'bg-white text-[#6B7280] border-[#E6E8EC]'
+            }`}
+            onClick={() => setActiveTab('manage')}
+          >
+            <UsersIcon size={13} strokeWidth={2.5} />
+            <span>Manage Users</span>
+          </button>
+        </div>
+
+        <div className="p-2 bg-white rounded-xl border border-[#E6E8EC]">
+          {activeTab === 'single' ? (
+            <div className="max-w-xl mx-auto">
+              <form onSubmit={handleSingleSubmit} className="bg-white rounded-[16px] p-4 shadow-xs">
+                <div className="text-center mb-4">
+                  <div className="text-[14px] font-extrabold text-[#7C2030]">Add New User</div>
+                  <div className="text-[10.5px] text-[#6B7280] mt-1">Enter the essential details to create a new account.</div>
+                </div>
+                
+                {singleFormStatus.error && (
+                  <div className="p-3 bg-[#FCE9EA] border border-[#C23B3B] text-[#C23B3B] rounded-lg text-xs mb-4 flex items-center gap-2">
+                    <AlertCircle size={16} /><span>{singleFormStatus.error}</span>
+                  </div>
+                )}
+                {singleFormStatus.success && (
+                  <div className="p-3 bg-[#E7F6EC] border border-[#1E8A4C] text-[#1E8A4C] rounded-lg text-xs mb-4">
+                    {singleFormStatus.success}
+                  </div>
+                )}
+
+                <div className="space-y-3.5">
+                  <div className="field">
+                    <label className="block text-[11px] font-bold text-[#1E293B] mb-1.5">
+                      Student ID / Roll No <span className="text-[#7C2030]">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={studentForm.studentId} 
+                      onChange={(e) => setStudentForm({ ...studentForm, studentId: e.target.value })} 
+                      className="w-full h-[42px] rounded-[10px] border border-[#E6E8EC] bg-white px-3 text-[12.5px] text-[#1E293B] outline-none focus:border-[#7C2030]" 
+                      placeholder="e.g. S106" 
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label className="block text-[11px] font-bold text-[#1E293B] mb-1.5">
+                      Full Name <span className="text-[#7C2030]">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={studentForm.name} 
+                      onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })} 
+                      className="w-full h-[42px] rounded-[10px] border border-[#E6E8EC] bg-white px-3 text-[12.5px] text-[#1E293B] outline-none focus:border-[#7C2030]" 
+                      placeholder="e.g. John Doe" 
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label className="block text-[11px] font-bold text-[#1E293B] mb-1.5">
+                      Role <span className="text-[#7C2030]">*</span>
+                    </label>
+                    <select 
+                      required
+                      value={studentForm.role} 
+                      onChange={(e) => setStudentForm({ ...studentForm, role: e.target.value })} 
+                      className="w-full h-[42px] rounded-[10px] border border-[#E6E8EC] bg-white px-3 text-[12.5px] text-[#1E293B] outline-none focus:border-[#7C2030]"
+                    >
+                      <option value="Student">Student</option>
+                      <option value="Caretaker">Caretaker</option>
+                      <option value="Admin">Admin</option>
+                    </select>
+                  </div>
+
+                  <div className="field">
+                    <label className="block text-[11px] font-bold text-[#1E293B] mb-1.5">
+                      Email Address <span className="text-[#7C2030]">*</span>
+                    </label>
+                    <input 
+                      type="email" 
+                      required 
+                      value={studentForm.email} 
+                      onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })} 
+                      className="w-full h-[42px] rounded-[10px] border border-[#E6E8EC] bg-white px-3 text-[12.5px] text-[#1E293B] outline-none focus:border-[#7C2030]" 
+                      placeholder="e.g. john.doe@rgukt.ac.in" 
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <button 
+                    type="submit" 
+                    disabled={singleFormStatus.submitting} 
+                    className="w-full h-[44px] rounded-[11px] bg-[#7C2030] hover:bg-[#651828] text-white text-[13px] font-bold flex items-center justify-center gap-1.5 border-none transition-colors"
+                  >
+                    {singleFormStatus.submitting ? 'Creating User...' : 'Create User Profile'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          ) : activeTab === 'bulk' ? (
+            <div className="space-y-6 max-w-2xl mx-auto p-4">
+              {bulkStatus.error && (
+                <div className="p-3 bg-[#FCE9EA] border border-[#C23B3B] text-[#C23B3B] rounded-lg text-xs flex items-center gap-2">
+                  <AlertCircle size={16} /><span>{bulkStatus.error}</span>
+                </div>
+              )}
+              {bulkStatus.success && (
+                <div className="p-3 bg-[#E7F6EC] border border-[#1E8A4C] text-[#1E8A4C] rounded-lg text-xs">
+                  {bulkStatus.success}
+                </div>
+              )}
+              
+              <div 
+                className="border-[1.5px] border-dashed border-[#E2C7CB] rounded-[14px] bg-[#FCF6F7] p-8 text-center cursor-pointer hover:bg-[#F9EEF0] transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input type="file" className="hidden" accept=".xlsx,.xls,.csv" onChange={handleFileChange} />
+                <div className="w-11 h-11 rounded-full bg-[#FCE9EA] text-[#7C2030] flex items-center justify-center mx-auto mb-3">
+                  <Upload size={20} />
+                </div>
+                <div className="text-[13px] font-bold text-[#1E293B] mb-1">Click to upload Excel / CSV file</div>
+                <div className="text-[10.5px] text-[#6B7280] mb-2.5 leading-relaxed">
+                  Minimum headers required: <b>ID NO</b> and <b>Name of the Student</b>
+                </div>
+                <div className="text-[9.5px] text-[#7C2030] leading-relaxed bg-[#FCEFF0] rounded-[8px] p-2 max-w-md mx-auto">
+                  Emails are auto-generated based on ID prefix (e.g. N220522 → n220522@rguktn.ac.in, S260565 → s260565@rgukts.ac.in)
+                </div>
+                {file && <div className="mt-3 px-4 py-1.5 bg-[#FCE9EA] text-[#7C2030] rounded-full text-xs font-bold inline-block">{file.name}</div>}
+              </div>
+
+              {previewData.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-label font-bold text-[#1F2937]">Students Ready for Database Import ({previewData.length} valid rows)</h3>
+                  </div>
+                  <div className="overflow-x-auto border border-[#E2C7CB] rounded-xl max-h-80 shadow-xs">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                      <thead className="bg-[#FCE9EA] border-b border-[#E2C7CB] text-[#7C2030] sticky top-0">
+                        <tr>
+                          <th className="px-4 py-3 font-semibold">Student ID</th>
+                          <th className="px-4 py-3 font-semibold">Student Name</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#E2C7CB]">
+                        {previewData.map((row, i) => (
+                          <tr key={i} className="hover:bg-slate-50">
+                            <td className="px-4 py-3 font-bold text-[#7C2030]">{row.studentId}</td>
+                            <td className="px-4 py-3 font-semibold text-slate-800">{row.name}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div className="pt-4 flex justify-end gap-3">
+                    <button type="button" onClick={() => { setFile(null); setPreviewData([]); }} className="btn-secondary border border-[#E6E8EC] px-4 py-2 rounded-lg font-bold">Cancel</button>
+                    <button type="button" onClick={handleBulkSubmit} disabled={bulkStatus.uploading} className="btn-primary bg-[#7C2030] text-white px-4 py-2 rounded-lg font-bold">
+                      {bulkStatus.uploading ? 'Inserting to Database...' : `Insert ${previewData.length} Students to Database`}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3 max-w-3xl mx-auto p-2">
+              <div className="flex items-center gap-1.5 bg-[#F4F5F7] border border-[#E6E8EC] rounded-[9px] px-2.5 py-1.5 mb-3 text-[11px] text-[#6B7280]">
+                <Search size={13} className="text-[#6B7280] shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search by name or ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent border-none outline-none w-full text-[11px] text-[#1E293B] placeholder-[#9CA3AF]"
+                />
+              </div>
+              
+              {loadingUsers ? (
+                <div className="p-8 text-center text-[#6B7280] text-xs">Loading users...</div>
+              ) : (
+                <div className="block space-y-2.5">
+                  {users
+                    .filter((u) => 
+                      u.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                      (u.studentId || '').toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .slice(0, 25)
+                    .map((user) => {
+                      const initial = (user.name || 'U').charAt(0).toUpperCase();
+
+                      return (
+                        <div key={user._id} className="border border-[#E6E8EC] rounded-[12px] p-3 bg-[#FCFCFD] flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-full bg-[#EFEFF3] text-[#7C2030] flex items-center justify-center font-bold text-xs shrink-0">
+                            {initial}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[12px] font-bold text-[#1E293B] truncate">{user.name}</div>
+                            <div className="text-[9.5px] text-[#6B7280]">{user.studentId || user.email}</div>
+                            <div className="flex gap-1 mt-1">
+                              <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-md bg-[#EAF1FE] text-[#2A5ADA]">
+                                {user.role}
+                              </span>
+                              <span className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded-md ${user.isActive ? 'bg-[#E7F6EC] text-[#1E8A4C]' : 'bg-[#FCE9EA] text-[#C23B3B]'}`}>
+                                {user.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-1.5 shrink-0">
+                            <button 
+                              type="button"
+                              onClick={() => setEditingUser(user)} 
+                              className="w-7 h-7 rounded-[8px] bg-[#EAF1FE] text-[#2A5ADA] flex items-center justify-center"
+                              title="Edit user"
+                            >
+                              <Edit size={13} />
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => handleDeleteUser(user)} 
+                              className="w-7 h-7 rounded-[8px] bg-[#FCE9EA] text-[#C23B3B] flex items-center justify-center"
+                              title="Delete user"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {users.length === 0 && <div className="p-6 text-center text-xs text-[#6B7280]">No users found.</div>}
+                </div>
+              )}
             </div>
           )}
         </div>

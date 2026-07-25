@@ -1,7 +1,6 @@
 import React from 'react';
 import { Eye, CheckCircle2, XCircle } from 'lucide-react';
 import { PriorityBadge } from './PriorityBadge';
-import { formatTo12Hour } from '../../utils/timeFormat';
 
 interface EmergencyRequestItem {
   id: string;

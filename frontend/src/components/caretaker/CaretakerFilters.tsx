@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, Filter, Calendar, MapPin, ArrowUpDown } from 'lucide-react';
+import { Search, X, MapPin, ArrowUpDown } from 'lucide-react';
 
 interface CaretakerFiltersProps {
   searchQuery: string;

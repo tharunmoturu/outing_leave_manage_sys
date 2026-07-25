@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Mail, GraduationCap, MapPin, Building, Phone } from 'lucide-react';
+import { User, Phone, GraduationCap, Building } from 'lucide-react';
 
 interface StudentInfoCardProps {
   studentData: any;

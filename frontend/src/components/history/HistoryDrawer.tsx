@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, MapPin, Calendar, Clock, User, Phone, CheckCircle2, XCircle } from 'lucide-react';
+import { X, MapPin, Calendar, User } from 'lucide-react';
 import { TimelineComponent } from './TimelineComponent';
 
 interface HistoryDrawerProps {

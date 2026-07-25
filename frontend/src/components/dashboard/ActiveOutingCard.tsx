@@ -4,16 +4,16 @@ import { QrCode } from 'lucide-react';
 
 interface ActiveOutingCardProps {
   activeOuting: any;
-  studentName: string;
-  studentId: string;
-  branch: string;
-  year: string;
-  hostel: string;
-  room: string;
+  studentName?: string;
+  studentId?: string;
+  branch?: string;
+  year?: string;
+  hostel?: string;
+  room?: string;
 }
 
 export const ActiveOutingCard: React.FC<ActiveOutingCardProps> = ({ 
-  activeOuting, studentName, studentId, branch, year, hostel, room 
+  activeOuting
 }) => {
   const navigate = useNavigate();
 

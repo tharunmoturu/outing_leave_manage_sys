@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, User, Phone, MapPin, Calendar, Clock, History, FileText, Loader2 } from 'lucide-react';
+import { X, User, History, FileText, Loader2 } from 'lucide-react';
 import API from '../../services/api';
 
 interface RequestDrawerProps {
