@@ -73,6 +73,7 @@ export const getCaretakerDashboard = async (req, res) => {
       id: o._id,
       studentId: o.student?.studentId || o.student_id || 'N/A',
       studentName: o.student?.name || o.student_name || 'N/A',
+      studentHostel: o.student?.hostel || 'N/A',
       reason: o.purpose || 'N/A',
       destination: o.destination || 'N/A',
       leavingDate: o.submitted_date || (o.createdAt ? new Date(o.createdAt).toISOString().split('T')[0] : 'N/A'),
@@ -92,6 +93,7 @@ export const getCaretakerDashboard = async (req, res) => {
       id: o._id,
       studentId: o.student?.studentId || o.student_id || 'N/A',
       studentName: o.student?.name || o.student_name || 'N/A',
+      studentHostel: o.student?.hostel || 'N/A',
       reason: o.purpose || 'N/A',
       destination: o.destination || 'N/A',
       leavingTime: formatTo12Hour(o.leaving_time)
@@ -219,6 +221,7 @@ export const getPendingNormalRequests = async (req, res) => {
           outing_id: o.outing_id,
           studentId: o.student?.studentId || o.student_id || 'N/A',
           studentName: o.student?.name || o.student_name || 'N/A',
+          studentHostel: o.student?.hostel || 'N/A',
           reason: o.purpose || 'N/A',
           destination: o.destination || 'N/A',
           leavingDate: o.submitted_date || (o.createdAt ? new Date(o.createdAt).toISOString().split('T')[0] : 'N/A'),

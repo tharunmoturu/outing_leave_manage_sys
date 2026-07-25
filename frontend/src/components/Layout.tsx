@@ -15,7 +15,9 @@ import {
   PlusCircle,
   Settings,
   User,
-  Bell
+  Bell,
+  UserCog,
+  UserPlus
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -37,22 +39,19 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
 
   // Determine sidebar navigation links based on user role
   const getNavLinks = () => {
-    switch (user.role) {
+    switch (user.role?.toLowerCase()) {
       case 'admin':
         return [
-          { path: '/admin/operations', label: 'Outing Summary', icon: <Activity className="h-6 w-6" /> },
-          { path: '/admin/students', label: 'Student Mgmt', icon: <Users className="h-6 w-6" /> },
-          { path: '/admin/caretakers', label: 'Caretaker Mgmt', icon: <Activity className="h-6 w-6" /> },
-          { path: '/admin/onboarding', label: 'User Onboarding', icon: <PlusCircle className="h-6 w-6" /> },
+          { path: '/admin/operations', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
+          { path: '/admin/students', label: 'Students', icon: <Users className="h-6 w-6" /> },
+          { path: '/admin/caretakers', label: 'Caretakers', icon: <UserCog className="h-6 w-6" /> },
+          { path: '/admin/onboarding', label: 'Onboarding', icon: <UserPlus className="h-6 w-6" /> },
+          { path: '/admin/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
         ];
       case 'caretaker':
         return [
           { path: '/caretaker', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
-          { path: '/caretaker/pending-normal', label: 'Pending Requests', icon: <ClipboardList className="h-6 w-6" /> },
-          { path: '/caretaker/emergency-requests', label: 'Emergency Requests', icon: <AlertTriangle className="h-6 w-6" /> },
-          { path: '/caretaker/student-search', label: 'Student Search', icon: <Search className="h-6 w-6" /> },
-          { path: '/caretaker/students-outside', label: 'Students Outside', icon: <Activity className="h-6 w-6" /> },
-          { path: '/caretaker/history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
+          { path: '/caretaker/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
         ];
       case 'security':
         return [

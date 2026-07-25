@@ -1,14 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import API from '../services/api';
-import { CaretakerFilters } from '../components/caretaker/CaretakerFilters';
 import { EmergencyRequestTable } from '../components/caretaker/EmergencyRequestTable';
 import { RequestDrawer } from '../components/caretaker/RequestDrawer';
 import { Pagination } from '../components/caretaker/Pagination';
 import { RejectionDialog } from '../components/caretaker/RejectionDialog';
-import { Loader2, RefreshCw, AlertCircle, FileWarning } from 'lucide-react';
+import { Loader2, RefreshCw, AlertCircle, FileWarning, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { emergencyCategories } from '../components/dashboard/EmergencyCategorySelector';
+import { useAuth } from '../contexts/AuthContext';
 
 export const CaretakerPendingEmergencyPage: React.FC = () => {
+  const { user } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
   const [totalPending, setTotalPending] = useState<number>(0);
   const [approvedToday, setApprovedToday] = useState<number>(0);
@@ -70,13 +72,6 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
     fetchEmergencyRequests();
   }, [fetchEmergencyRequests]);
 
-  const handleClearFilters = () => {
-    setSearchQuery('');
-    setSortOrder('newest');
-    setStatusFilter('Pending');
-    setCategoryFilter('All');
-    setPage(1);
-  };
 
   const handleOpenDrawer = (outingId: string) => {
     setSelectedOutingId(outingId);
@@ -121,12 +116,15 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
     <div className="space-y-6 max-w-6xl mx-auto pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
+          <Link to="/caretaker" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FEF2F2] text-[#991B1B] hover:bg-[#FEE2E2] rounded-lg font-bold text-[14px] transition-colors -ml-2 border border-[#FCA5A5] shadow-sm">
+            <ArrowLeft size={18} strokeWidth={2.5} />
+            Back
+          </Link>
           <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600">
             <FileWarning size={24} />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Emergency Requests</h1>
-            <p className="text-sm text-gray-500 font-medium">Review urgent outing requests requiring immediate attention.</p>
           </div>
         </div>
         <button
@@ -212,11 +210,12 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
             onViewDetails={handleOpenDrawer}
             onApproveClick={handleDirectApprove}
             onRejectClick={(req) => { setRejectionDialogData(req); setIsRejectionOpen(true); }}
+            currentUserHostel={user?.hostel}
           />
 
           {requests.length > 0 && (
             <Pagination 
-              page={page} 
+              currentPage={page} 
               totalPages={totalPages} 
               onPageChange={setPage} 
             />
@@ -231,6 +230,7 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
         onClose={handleCloseDrawer}
         onApproveClick={(req) => handleDirectApprove(req)}
         onRejectClick={(req) => { setRejectionDialogData(req); setIsRejectionOpen(true); }}
+        currentUserHostel={user?.hostel}
       />
 
       {/* Rejection Dialog */}
@@ -239,7 +239,7 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
         onClose={() => setIsRejectionOpen(false)}
         onConfirm={handleRejectConfirm}
         studentName={rejectionDialogData?.studentName}
-        isSubmitting={actionLoading}
+        loading={actionLoading}
       />
     </div>
   );

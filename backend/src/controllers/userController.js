@@ -20,25 +20,44 @@ export const getProfile = async (req, res) => {
 // @access  Private
 export const updateProfile = async (req, res) => {
   try {
-    const { branch, year, hostel, roomNo, phone, parentPhone, address } = req.body;
+    const { name, email, studentId, branch, year, hostel, roomNo, phone, parentPhone, address } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if (!year || !hostel || !roomNo || !phone || !parentPhone || !address) {
-      return res.status(400).json({ message: 'Please fill in all required fields.' });
+    if (['admin', 'caretaker', 'security'].includes(user.role.toLowerCase())) {
+      const isCaretaker = user.role.toLowerCase() === 'caretaker';
+      if (!name || !email || !phone || (isCaretaker && !hostel)) {
+        return res.status(400).json({ message: isCaretaker ? 'Please fill in all required fields (Name, Email, Phone, Hostel).' : 'Please fill in all required fields (Name, Email, Phone).' });
+      }
+      if (email !== user.email || (studentId && studentId !== user.studentId)) {
+        const userExists = await User.findOne({
+          $and: [
+            { _id: { $ne: user._id } },
+            { $or: [{ email }, { studentId }] }
+          ]
+        });
+        if (userExists) return res.status(400).json({ message: 'User with this email or ID already exists.' });
+      }
+      user.name = name.trim();
+      user.email = email.trim();
+      user.phone = phone.trim();
+      if (isCaretaker) user.hostel = hostel.trim();
+      if (studentId) user.studentId = studentId.trim();
+    } else {
+      if (!year || !hostel || !roomNo || !phone || !parentPhone || !address) {
+        return res.status(400).json({ message: 'Please fill in all required fields.' });
+      }
+      user.branch = branch ? branch.trim() : 'N/A';
+      user.year = year.trim();
+      user.hostel = hostel.trim();
+      user.roomNo = roomNo.trim();
+      user.phone = phone.trim();
+      user.parentPhone = parentPhone.trim();
+      user.address = address.trim();
     }
-
-    // Branch might be empty/null for PUC students
-    user.branch = branch ? branch.trim() : 'N/A';
-    user.year = year.trim();
-    user.hostel = hostel.trim();
-    user.roomNo = roomNo.trim();
-    user.phone = phone.trim();
-    user.parentPhone = parentPhone.trim();
-    user.address = address.trim();
 
     user.profileCompleted = true;
 

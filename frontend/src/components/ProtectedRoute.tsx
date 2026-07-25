@@ -39,5 +39,23 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles, ch
     return <Navigate to="/student/profile" replace />;
   }
 
+  // Profile completion enforcement for admins
+  if (
+    normalizedUserRole === 'admin' &&
+    user.profileCompleted === false &&
+    location.pathname !== '/admin/profile'
+  ) {
+    return <Navigate to="/admin/profile" replace />;
+  }
+
+  // Profile completion enforcement for caretakers
+  if (
+    normalizedUserRole === 'caretaker' &&
+    user.profileCompleted === false &&
+    location.pathname !== '/caretaker/profile'
+  ) {
+    return <Navigate to="/caretaker/profile" replace />;
+  }
+
   return children;
 };

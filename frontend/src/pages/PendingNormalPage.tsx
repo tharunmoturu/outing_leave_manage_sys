@@ -5,9 +5,12 @@ import { RequestCard, type PendingNormalRequestItem } from '../components/careta
 import { RequestDrawer } from '../components/caretaker/RequestDrawer';
 import { Pagination } from '../components/caretaker/Pagination';
 import { RejectionDialog } from '../components/caretaker/RejectionDialog';
-import { Inbox, RefreshCw } from 'lucide-react';
+import { Inbox, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export const PendingNormalPage: React.FC = () => {
+  const { user } = useAuth();
   const [requests, setRequests] = useState<PendingNormalRequestItem[]>([]);
   const [totalPending, setTotalPending] = useState<number>(0);
   const [page, setPage] = useState<number>(1);
@@ -118,6 +121,10 @@ export const PendingNormalPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#E5E7EB]">
         <div>
           <div className="flex items-center gap-3">
+            <Link to="/caretaker" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FEF2F2] text-[#991B1B] hover:bg-[#FEE2E2] rounded-lg font-bold text-[14px] transition-colors -ml-2 border border-[#FCA5A5] shadow-sm">
+              <ArrowLeft size={18} strokeWidth={2.5} />
+              Back
+            </Link>
             <h1 className="text-[28px] font-bold text-[#111827] tracking-tight">
               Pending Normal Outing Requests
             </h1>
@@ -125,9 +132,6 @@ export const PendingNormalPage: React.FC = () => {
               Total Pending: {totalPending}
             </span>
           </div>
-          <p className="text-[14px] text-[#6B7280] mt-1">
-            Review and manage all pending normal outing requests.
-          </p>
         </div>
 
         <button
@@ -210,6 +214,7 @@ export const PendingNormalPage: React.FC = () => {
                   onViewDetails={handleOpenDrawer}
                   onApproveClick={handleDirectApprove}
                   onRejectClick={(r) => { setRejectionDialogData(r); setIsRejectionOpen(true); }}
+                  currentUserHostel={user?.hostel}
                 />
               ))}
             </tbody>
@@ -227,6 +232,7 @@ export const PendingNormalPage: React.FC = () => {
         onClose={handleCloseDrawer} 
         onApproveClick={handleDirectApprove}
         onRejectClick={(req) => { setRejectionDialogData(req); setIsRejectionOpen(true); }}
+        currentUserHostel={user?.hostel}
       />
 
       {/* ── Dialogs ── */}
