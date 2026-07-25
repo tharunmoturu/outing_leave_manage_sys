@@ -3,6 +3,8 @@ import API from '../services/api';
 import MetricCard from '../components/MetricCard';
 import Modal from '../components/Modal';
 import { CustomBarChart, CustomDonutChart } from '../components/Charts';
+import { AlertDialog } from '../components/ui/AlertDialog';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
   Users,
   DoorOpen,
@@ -75,6 +77,18 @@ export const AdminDashboard: React.FC = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Dialog States
+  const [alertConfig, setAlertConfig] = useState<{isOpen: boolean, type: 'success' | 'error' | 'info', title: string, message: string}>({
+    isOpen: false, type: 'info', title: '', message: ''
+  });
+  const [confirmConfig, setConfirmConfig] = useState<{isOpen: boolean, title: string, message: string, onConfirm: () => void}>({
+    isOpen: false, title: '', message: '', onConfirm: () => {}
+  });
+
+  const showAlert = (type: 'success' | 'error' | 'info', title: string, message: string) => {
+    setAlertConfig({ isOpen: true, type, title, message });
+  };
 
   // Fetch login activity logs
   const fetchLoginLogs = async () => {
@@ -255,20 +269,24 @@ export const AdminDashboard: React.FC = () => {
   };
 
   // Delete Student Profile Handler
-  const handleDeleteStudent = async (id: string, name: string) => {
-    if (!window.confirm(`Are you absolutely sure you want to delete ${name}? This will delete all their history and login accounts.`)) {
-      return;
-    }
-
-    try {
-      await API.delete(`/students/${id}`);
-      fetchStudents();
-      fetchDashboardStats();
-      alert('Student deleted successfully');
-    } catch (err) {
-      console.error(err);
-      alert('Failed to delete student profile');
-    }
+  const handleDeleteStudent = (id: string, name: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Student',
+      message: `Are you absolutely sure you want to delete ${name}? This will delete all their history and login accounts.`,
+      onConfirm: async () => {
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+        try {
+          await API.delete(`/students/${id}`);
+          fetchStudents();
+          fetchDashboardStats();
+          showAlert('success', 'Student Deleted', 'Student deleted successfully');
+        } catch (err) {
+          console.error(err);
+          showAlert('error', 'Deletion Failed', 'Failed to delete student profile');
+        }
+      }
+    });
   };
 
   // Colors for charts
@@ -294,6 +312,21 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      <AlertDialog 
+        isOpen={alertConfig.isOpen}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+      />
+      <ConfirmDialog
+        isOpen={confirmConfig.isOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        onConfirm={confirmConfig.onConfirm}
+        onCancel={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+      />
+
       {/* Title Header */}
       <div className="section-header">
         <div>

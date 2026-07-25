@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import API from '../services/api';
+import { AlertDialog } from '../components/ui/AlertDialog';
 import {
   QrCode,
   Search,
@@ -25,6 +26,18 @@ export const SecurityDashboard: React.FC = () => {
   const [scannedOuting, setScannedOuting] = useState<any>(null);
   const [searchingPass, setSearchingPass] = useState(false);
   const [scanError, setScanError] = useState('');
+  
+  // Alert dialog state
+  const [alertConfig, setAlertConfig] = useState<{isOpen: boolean, type: 'success' | 'error' | 'info', title: string, message: string}>({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: ''
+  });
+
+  const showAlert = (type: 'success' | 'error' | 'info', title: string, message: string) => {
+    setAlertConfig({ isOpen: true, type, title, message });
+  };
 
   // Suggestions search state for quick student lookup
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,7 +135,7 @@ export const SecurityDashboard: React.FC = () => {
   const handleMarkExit = async (id: string) => {
     try {
       await API.post(`/outings/${id}/exit`);
-      alert('Checkout marked successfully. Student status set to OUTSIDE.');
+      showAlert('success', 'Checkout Successful', 'Checkout marked successfully. Student status set to OUTSIDE.');
       
       // Reload details and roster
       fetchOccupancyBoard();
@@ -130,7 +143,7 @@ export const SecurityDashboard: React.FC = () => {
         handlePassLookup(scannedOuting.outing_id);
       }
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Checkout failed');
+      showAlert('error', 'Checkout Failed', err.response?.data?.message || 'Checkout failed');
     }
   };
 
@@ -138,7 +151,7 @@ export const SecurityDashboard: React.FC = () => {
   const handleMarkReturn = async (id: string) => {
     try {
       await API.post(`/outings/${id}/return`);
-      alert('Checkin marked successfully. Student status set to INSIDE.');
+      showAlert('success', 'Checkin Successful', 'Checkin marked successfully. Student status set to INSIDE.');
       
       // Reload details and roster
       fetchOccupancyBoard();
@@ -146,12 +159,20 @@ export const SecurityDashboard: React.FC = () => {
         handlePassLookup(scannedOuting.outing_id);
       }
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Checkin failed');
+      showAlert('error', 'Checkin Failed', err.response?.data?.message || 'Checkin failed');
     }
   };
 
   return (
     <div className="space-y-8">
+      <AlertDialog 
+        isOpen={alertConfig.isOpen}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+      />
+      
       {/* Title Header */}
       <div className="section-header">
         <div>

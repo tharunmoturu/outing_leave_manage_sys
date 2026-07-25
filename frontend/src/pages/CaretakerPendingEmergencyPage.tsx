@@ -8,6 +8,7 @@ import { Loader2, RefreshCw, AlertCircle, FileWarning, ArrowLeft } from 'lucide-
 import { Link } from 'react-router-dom';
 import { emergencyCategories } from '../components/dashboard/EmergencyCategorySelector';
 import { useAuth } from '../contexts/AuthContext';
+import { AlertDialog } from '../components/ui/AlertDialog';
 
 export const CaretakerPendingEmergencyPage: React.FC = () => {
   const { user } = useAuth();
@@ -36,6 +37,15 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
   const [isRejectionOpen, setIsRejectionOpen] = useState<boolean>(false);
   
   const [actionLoading, setActionLoading] = useState<boolean>(false);
+
+  // Alert dialog state
+  const [alertConfig, setAlertConfig] = useState<{isOpen: boolean, type: 'success' | 'error' | 'info', title: string, message: string}>({
+    isOpen: false, type: 'info', title: '', message: ''
+  });
+
+  const showAlert = (type: 'success' | 'error' | 'info', title: string, message: string) => {
+    setAlertConfig({ isOpen: true, type, title, message });
+  };
 
   const fetchEmergencyRequests = useCallback(
     async (isManualRefresh = false) => {
@@ -90,7 +100,7 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
       setIsDrawerOpen(false);
       fetchEmergencyRequests(true);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to approve request');
+      showAlert('error', 'Approval Failed', err.response?.data?.message || 'Failed to approve request');
     } finally {
       setActionLoading(false);
     }
@@ -106,14 +116,22 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
       setRejectionDialogData(null);
       fetchEmergencyRequests(true);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to reject request');
+      showAlert('error', 'Rejection Failed', err.response?.data?.message || 'Failed to reject request');
     } finally {
       setActionLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-10">
+    <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-fadeIn">
+      <AlertDialog 
+        isOpen={alertConfig.isOpen}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+      />
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link to="/caretaker" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FEF2F2] text-[#991B1B] hover:bg-[#FEE2E2] rounded-lg font-bold text-[14px] transition-colors -ml-2 border border-[#FCA5A5] shadow-sm">
@@ -211,6 +229,7 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
             onApproveClick={handleDirectApprove}
             onRejectClick={(req) => { setRejectionDialogData(req); setIsRejectionOpen(true); }}
             currentUserHostel={user?.hostel}
+            currentUserRole={user?.role?.toLowerCase()}
           />
 
           {requests.length > 0 && (
@@ -231,6 +250,7 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
         onApproveClick={(req) => handleDirectApprove(req)}
         onRejectClick={(req) => { setRejectionDialogData(req); setIsRejectionOpen(true); }}
         currentUserHostel={user?.hostel}
+        currentUserRole={user?.role?.toLowerCase()}
       />
 
       {/* Rejection Dialog */}

@@ -25,6 +25,7 @@ interface Props {
   onApproveClick: (req: EmergencyRequestItem) => void;
   onRejectClick: (req: EmergencyRequestItem) => void;
   currentUserHostel?: string;
+  currentUserRole?: string;
 }
 
 export const EmergencyRequestTable: React.FC<Props> = ({
@@ -32,7 +33,8 @@ export const EmergencyRequestTable: React.FC<Props> = ({
   onViewDetails,
   onApproveClick,
   onRejectClick,
-  currentUserHostel
+  currentUserHostel,
+  currentUserRole
 }) => {
   if (requests.length === 0) {
     return (
@@ -104,17 +106,17 @@ export const EmergencyRequestTable: React.FC<Props> = ({
                       <>
                         <button
                           onClick={() => onApproveClick(req)}
-                          disabled={currentUserHostel ? req.studentHostel !== currentUserHostel : false}
+                          disabled={currentUserRole === 'admin' ? false : (currentUserHostel ? req.studentHostel !== currentUserHostel : false)}
                           className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={currentUserHostel && req.studentHostel !== currentUserHostel ? `Student belongs to ${req.studentHostel || 'another'} hostel` : "Direct Approve"}
+                          title={currentUserRole !== 'admin' && currentUserHostel && req.studentHostel !== currentUserHostel ? `Student belongs to ${req.studentHostel || 'another'} hostel` : "Direct Approve"}
                         >
                           <CheckCircle2 size={18} />
                         </button>
                         <button
                           onClick={() => onRejectClick(req)}
-                          disabled={currentUserHostel ? req.studentHostel !== currentUserHostel : false}
+                          disabled={currentUserRole === 'admin' ? false : (currentUserHostel ? req.studentHostel !== currentUserHostel : false)}
                           className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                          title={currentUserHostel && req.studentHostel !== currentUserHostel ? `Student belongs to ${req.studentHostel || 'another'} hostel` : "Reject"}
+                          title={currentUserRole !== 'admin' && currentUserHostel && req.studentHostel !== currentUserHostel ? `Student belongs to ${req.studentHostel || 'another'} hostel` : "Reject"}
                         >
                           <XCircle size={18} />
                         </button>

@@ -16,19 +16,19 @@ import { protect, authorize } from '../middleware/auth.js';
 const router = express.Router();
 
 // GET /api/caretaker/dashboard
-router.get('/dashboard', protect, authorize('caretaker'), getCaretakerDashboard);
+router.get('/dashboard', protect, authorize('caretaker', 'admin'), getCaretakerDashboard);
 
 // GET /api/caretaker/pending-normal
-router.get('/pending-normal', protect, authorize('caretaker'), getPendingNormalRequests);
+router.get('/pending-normal', protect, authorize('caretaker', 'admin'), getPendingNormalRequests);
 
 // GET /api/caretaker/pending-normal/:outingId
-router.get('/pending-normal/:outingId', protect, authorize('caretaker'), getPendingNormalDetail);
+router.get('/pending-normal/:outingId', protect, authorize('caretaker', 'admin'), getPendingNormalDetail);
 
 // PUT /api/caretaker/outings/:outingId/approve
-router.put('/outings/:outingId/approve', protect, authorize('caretaker'), approveOuting);
+router.put('/outings/:outingId/approve', protect, authorize('caretaker', 'admin'), approveOuting);
 
 // PUT /api/caretaker/outings/:outingId/reject
-router.put('/outings/:outingId/reject', protect, authorize('caretaker'), rejectOuting);
+router.put('/outings/:outingId/reject', protect, authorize('caretaker', 'admin'), rejectOuting);
 
 // GET /api/caretaker/students-outside
 router.get('/students-outside', protect, authorize('caretaker', 'admin'), getStudentsOutside);

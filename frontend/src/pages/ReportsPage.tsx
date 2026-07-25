@@ -12,9 +12,19 @@ import {
   Eye
 } from 'lucide-react';
 import { useAcademicYear } from '../contexts/AcademicYearContext';
+import { AlertDialog } from '../components/ui/AlertDialog';
 
 export const ReportsPage: React.FC = () => {
   const [reportType, setReportType] = useState<'outings'>('outings');
+
+  // Alert dialog state
+  const [alertConfig, setAlertConfig] = useState<{isOpen: boolean, type: 'success' | 'error' | 'info', title: string, message: string}>({
+    isOpen: false, type: 'info', title: '', message: ''
+  });
+
+  const showAlert = (type: 'success' | 'error' | 'info', title: string, message: string) => {
+    setAlertConfig({ isOpen: true, type, title, message });
+  };
 
   // Filters state
   const [status, setStatus] = useState('');
@@ -115,12 +125,19 @@ export const ReportsPage: React.FC = () => {
       window.URL.revokeObjectURL(fileUrl);
     } catch (err) {
       console.error(err);
-      alert('Error triggering document export download');
+      showAlert('error', 'Export Failed', 'Error triggering document export download');
     }
   };
 
   return (
     <div className="space-y-8">
+      <AlertDialog 
+        isOpen={alertConfig.isOpen}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+      />
       {/* Title Header */}
       <div className="section-header">
         <div>
