@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../services/api';
 import MetricCard from '../../components/MetricCard';
-import { Users, DoorOpen, AlertCircle, RefreshCw, Search, Check, X } from 'lucide-react';
+import { Users, DoorOpen, AlertCircle, RefreshCw, Search, Check, X, Eye } from 'lucide-react';
+import { AlertDialog } from '../../components/ui/AlertDialog';
+import { RequestDrawer } from '../../components/caretaker/RequestDrawer';
+import { RejectionDialog } from '../../components/caretaker/RejectionDialog';
 
 export const AdminStudentManagement: React.FC = () => {
   const [metrics, setMetrics] = useState<any>(null);
@@ -12,7 +15,26 @@ export const AdminStudentManagement: React.FC = () => {
   const [loadingOutings, setLoadingOutings] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Drawer state
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  const [selectedOutingId, setSelectedOutingId] = useState<string | null>(null);
+  
+  // Rejection dialog state
+  const [rejectionDialogData, setRejectionDialogData] = useState<{id: string, name: string} | null>(null);
+  const [isRejectionOpen, setIsRejectionOpen] = useState<boolean>(false);
+  
+  const [actionLoading, setActionLoading] = useState<boolean>(false);
+
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Alert dialog state
+  const [alertConfig, setAlertConfig] = useState<{isOpen: boolean, type: 'success' | 'error' | 'info', title: string, message: string}>({
+    isOpen: false, type: 'info', title: '', message: ''
+  });
+
+  const showAlert = (type: 'success' | 'error' | 'info', title: string, message: string) => {
+    setAlertConfig({ isOpen: true, type, title, message });
+  };
 
   const fetchData = async () => {
     setLoadingStats(true);
@@ -41,28 +63,65 @@ export const AdminStudentManagement: React.FC = () => {
     fetchData();
   }, []);
 
-  const handleAction = async (id: string, action: 'approve' | 'reject') => {
-    setProcessingId(id);
+  const handleOpenDrawer = (outingId: string) => {
+    setSelectedOutingId(outingId);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+    setSelectedOutingId(null);
+  };
+
+  const handleDirectApprove = async (req: any) => {
+    setActionLoading(true);
     try {
-      await API.post(`/outings/${id}/${action}`);
-      await fetchData();
-    } catch (err) {
-      console.error(`Failed to ${action} outing`, err);
-      alert(`Failed to ${action} outing`);
+      await API.put(`/caretaker/outings/${req.id}/approve`);
+      setIsDrawerOpen(false);
+      fetchData();
+      showAlert('success', 'Approved', 'Outing approved successfully');
+    } catch (err: any) {
+      console.error(`Failed to approve outing`, err);
+      showAlert('error', 'Approval Failed', err.response?.data?.message || `Failed to approve outing`);
     } finally {
-      setProcessingId(null);
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectConfirm = async (reason: string) => {
+    if (!rejectionDialogData) return;
+    setActionLoading(true);
+    try {
+      await API.put(`/caretaker/outings/${rejectionDialogData.id}/reject`, { reason });
+      setIsRejectionOpen(false);
+      setRejectionDialogData(null);
+      setIsDrawerOpen(false);
+      fetchData();
+      showAlert('success', 'Rejected', 'Outing rejected successfully');
+    } catch (err: any) {
+      console.error(`Failed to reject outing`, err);
+      showAlert('error', 'Rejection Failed', err.response?.data?.message || `Failed to reject outing`);
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const filteredOutings = outings.filter(o => 
     o.status === 'Pending' && // Strict filter for Pending only
-    (activeTab === 'normal' ? o.outingType === 'Normal' : o.outingType === 'Emergency') &&
-    (o.student_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (activeTab === 'normal' ? (o.outingType || 'Normal') === 'Normal' : o.outingType === 'Emergency') &&
+    ((o.student_name || o.student?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
      (o.student?.studentId || '').toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
     <div className="space-y-8 animate-fade-in relative max-w-6xl mx-auto">
+      <AlertDialog 
+        isOpen={alertConfig.isOpen}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+      />
       <div className="section-header">
         <div>
           <h1 className="text-title-large">Student Management</h1>
@@ -148,10 +207,9 @@ export const AdminStudentManagement: React.FC = () => {
             <table className="table-enterprise">
               <thead>
                 <tr>
-                  <th>Student ID</th>
-                  <th>Student Name</th>
-                  <th>Destination & Purpose</th>
-                  <th>Requested Time</th>
+                  <th>Student Info</th>
+                  <th>Destination & Reason</th>
+                  <th>Date & Time</th>
                   <th className="text-right">Actions</th>
                 </tr>
               </thead>
@@ -159,32 +217,34 @@ export const AdminStudentManagement: React.FC = () => {
                 {filteredOutings.map(req => (
                   <tr key={req._id}>
                     <td>
-                      <span className="td-id text-base font-bold text-[var(--color-primary)]">
-                        {req.student?.studentId ? req.student.studentId.toUpperCase() : 'N/A'}
-                      </span>
-                    </td>
-                    <td>
                       <div className="flex flex-col">
-                        <span className="td-name font-semibold">{req.student_name}</span>
-                        <span className="td-time">{req.class_name} | {req.hostel_room}</span>
+                        <span className="td-name font-semibold">{req.student?.name || req.student_name || 'Unknown'}</span>
+                        <span className="td-time">{req.student?.studentId || 'No ID'}</span>
                       </div>
                     </td>
                     <td>
                       <div className="flex flex-col">
-                        <span className="td-name">{req.destination}</span>
-                        <span className="td-time">{req.purpose}</span>
+                        <span className="td-name">{req.destination || 'Not specified'}</span>
+                        <span className="td-time">{req.purpose || 'No reason provided'}</span>
                       </div>
                     </td>
                     <td>
-                      <div className="flex flex-col gap-1 items-start">
-                        <span className="td-time">{req.leaving_time} - {req.reporting_time}</span>
-                        <span className="badge badge-pending">Pending</span>
-                      </div>
+                      <p className="text-gray-900 font-medium">
+                        {req.submitted_date ? new Date(req.submitted_date).toLocaleDateString('en-GB') : new Date(req.createdAt).toLocaleDateString('en-GB')}
+                      </p>
+                      <p className="text-sm text-gray-500">{req.leaving_time}</p>
                     </td>
                     <td className="text-right">
                        <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => handleAction(req._id, 'approve')} disabled={processingId === req._id} className="p-2.5 text-white bg-green-500 hover:bg-green-600 rounded-lg transition-all shadow-sm" title="Approve"><Check size={18} /></button>
-                        <button onClick={() => handleAction(req._id, 'reject')} disabled={processingId === req._id} className="p-2.5 text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all shadow-sm" title="Reject"><X size={18} /></button>
+                        <button onClick={() => handleDirectApprove({ id: req._id })} className="p-2.5 text-[#059669] bg-[#ECFDF5] hover:bg-[#D1FAE5] rounded-lg transition-all shadow-sm" title="Approve">
+                          <Check size={18} />
+                        </button>
+                        <button onClick={() => { setRejectionDialogData({ id: req._id, name: req.student?.name || req.student_name }); setIsRejectionOpen(true); }} className="p-2.5 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all shadow-sm" title="Reject">
+                          <X size={18} />
+                        </button>
+                        <button onClick={() => handleOpenDrawer(req._id)} className="p-2.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all shadow-sm" title="View Details">
+                          <Eye size={18} />
+                        </button>
                        </div>
                     </td>
                   </tr>
@@ -194,6 +254,29 @@ export const AdminStudentManagement: React.FC = () => {
           )}
         </div>
       </div>
+
+      <RequestDrawer
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        outingId={selectedOutingId}
+        currentUserRole="admin"
+        onApproveClick={handleDirectApprove}
+        onRejectClick={(req: any) => {
+          setRejectionDialogData({ id: req.id, name: req.studentName });
+          setIsRejectionOpen(true);
+        }}
+      />
+
+      <RejectionDialog
+        isOpen={isRejectionOpen}
+        onClose={() => {
+          setIsRejectionOpen(false);
+          setRejectionDialogData(null);
+        }}
+        onConfirm={handleRejectConfirm}
+        studentName={rejectionDialogData?.name || ''}
+        loading={actionLoading}
+      />
     </div>
   );
 };

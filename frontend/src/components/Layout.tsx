@@ -116,7 +116,7 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
 
       {/* Footer */}
       <footer className="w-full border-t border-[var(--color-border-gray)] bg-white py-6 text-center text-[13px] text-[var(--color-text-secondary)]">
-        &copy; {new Date().getFullYear()} Antigravity Systems. Digitizing Campus Hostel Workflows.
+        &copy; {new Date().getFullYear()} RGUKT. Digitizing Campus Hostel Workflows.
       </footer>
     </div>
   );

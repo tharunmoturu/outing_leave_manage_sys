@@ -47,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             {/* Hostel Info */}
             <div className="hidden md:flex flex-col items-end border-r border-[var(--color-border-gray)] pr-6">
               <span className="text-[14px] font-medium text-[var(--color-text-primary)]">
-                {user.hostel || 'Emerald Hall'}
+                {user.hostel || ''}
               </span>
               <span className="text-[12px] text-[var(--color-text-secondary)] font-medium">
                 Warden Office

@@ -25,6 +25,7 @@ interface RequestCardProps {
   onApproveClick: (req: PendingNormalRequestItem) => void;
   onRejectClick: (req: PendingNormalRequestItem) => void;
   currentUserHostel?: string;
+  currentUserRole?: string;
 }
 
 export const RequestCard: React.FC<RequestCardProps> = ({
@@ -33,6 +34,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({
   onApproveClick,
   onRejectClick,
   currentUserHostel,
+  currentUserRole,
 }) => {
   // Format time ago
   const formatTimeAgo = (dateStr: string) => {
@@ -103,8 +105,8 @@ export const RequestCard: React.FC<RequestCardProps> = ({
           {/* Approve Button */}
           <button
             onClick={handleApprove}
-            disabled={currentUserHostel ? request.studentHostel !== currentUserHostel : false}
-            title={currentUserHostel && request.studentHostel !== currentUserHostel ? `Student belongs to ${request.studentHostel || 'another'} hostel` : "Approve"}
+            disabled={currentUserRole === 'admin' ? false : (currentUserHostel ? request.studentHostel !== currentUserHostel : false)}
+            title={currentUserRole !== 'admin' && currentUserHostel && request.studentHostel !== currentUserHostel ? `Student belongs to ${request.studentHostel} hostel` : "Approve"}
             className="inline-flex items-center gap-1 bg-[#059669] hover:bg-[#047857] text-white font-bold text-[12px] px-3 py-1.5 rounded-md transition-colors shadow-2xs cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <CheckCircle2 size={14} />
@@ -114,8 +116,8 @@ export const RequestCard: React.FC<RequestCardProps> = ({
           {/* Reject Button */}
           <button
             onClick={handleReject}
-            disabled={currentUserHostel ? request.studentHostel !== currentUserHostel : false}
-            title={currentUserHostel && request.studentHostel !== currentUserHostel ? `Student belongs to ${request.studentHostel || 'another'} hostel` : "Reject"}
+            disabled={currentUserRole === 'admin' ? false : (currentUserHostel ? request.studentHostel !== currentUserHostel : false)}
+            title={currentUserRole !== 'admin' && currentUserHostel && request.studentHostel !== currentUserHostel ? `Student belongs to ${request.studentHostel} hostel` : "Reject"}
             className="inline-flex items-center gap-1 bg-white border border-rose-300 text-rose-700 hover:bg-rose-50 font-bold text-[12px] px-3 py-1.5 rounded-md transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <XCircle size={14} />

@@ -92,6 +92,8 @@ export const Login: React.FC = () => {
                   text="continue_with"
                   shape="rectangular"
                   width="100%"
+                  // @ts-ignore
+                  locale="en"
                 />
               )}
             </div>

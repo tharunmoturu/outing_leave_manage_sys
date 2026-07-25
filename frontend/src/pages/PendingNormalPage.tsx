@@ -5,6 +5,7 @@ import { RequestCard, type PendingNormalRequestItem } from '../components/careta
 import { RequestDrawer } from '../components/caretaker/RequestDrawer';
 import { Pagination } from '../components/caretaker/Pagination';
 import { RejectionDialog } from '../components/caretaker/RejectionDialog';
+import { AlertDialog } from '../components/ui/AlertDialog';
 import { Inbox, RefreshCw, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -34,6 +35,15 @@ export const PendingNormalPage: React.FC = () => {
   const [isRejectionOpen, setIsRejectionOpen] = useState<boolean>(false);
   
   const [actionLoading, setActionLoading] = useState<boolean>(false);
+
+  // Alert dialog state
+  const [alertConfig, setAlertConfig] = useState<{isOpen: boolean, type: 'success' | 'error' | 'info', title: string, message: string}>({
+    isOpen: false, type: 'info', title: '', message: ''
+  });
+
+  const showAlert = (type: 'success' | 'error' | 'info', title: string, message: string) => {
+    setAlertConfig({ isOpen: true, type, title, message });
+  };
 
   const fetchPendingRequests = useCallback(
     async (isManualRefresh = false) => {
@@ -93,7 +103,7 @@ export const PendingNormalPage: React.FC = () => {
       setIsDrawerOpen(false); // Close drawer if open
       fetchPendingRequests(true);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to approve request');
+      showAlert('error', 'Approval Failed', err.response?.data?.message || 'Failed to approve request');
     } finally {
       setActionLoading(false);
     }
@@ -109,7 +119,7 @@ export const PendingNormalPage: React.FC = () => {
       setIsDrawerOpen(false); // Close drawer if open
       fetchPendingRequests(true);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to reject request');
+      showAlert('error', 'Rejection Failed', err.response?.data?.message || 'Failed to reject request');
     } finally {
       setActionLoading(false);
     }
@@ -117,6 +127,14 @@ export const PendingNormalPage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10 animate-fadeIn">
+      <AlertDialog 
+        isOpen={alertConfig.isOpen}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+      />
+
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#E5E7EB]">
         <div>
@@ -215,6 +233,7 @@ export const PendingNormalPage: React.FC = () => {
                   onApproveClick={handleDirectApprove}
                   onRejectClick={(r) => { setRejectionDialogData(r); setIsRejectionOpen(true); }}
                   currentUserHostel={user?.hostel}
+                  currentUserRole={user?.role?.toLowerCase()}
                 />
               ))}
             </tbody>
@@ -233,6 +252,7 @@ export const PendingNormalPage: React.FC = () => {
         onApproveClick={handleDirectApprove}
         onRejectClick={(req) => { setRejectionDialogData(req); setIsRejectionOpen(true); }}
         currentUserHostel={user?.hostel}
+        currentUserRole={user?.role?.toLowerCase()}
       />
 
       {/* ── Dialogs ── */}
