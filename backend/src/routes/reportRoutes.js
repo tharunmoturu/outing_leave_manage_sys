@@ -4,7 +4,7 @@ import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/outings', protect, authorize('admin', 'caretaker'), getOutingsReport);
+router.get('/outings', protect, authorize('admin', 'caretaker', 'sanctionAuthority'), getOutingsReport);
 
 
 export default router;

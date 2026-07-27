@@ -11,10 +11,10 @@ import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/admin', protect, authorize('admin'), getAdminDashboard);
-router.get('/admin/student-management', protect, authorize('admin'), getAdminStudentManagement);
-router.get('/admin/caretakers', protect, authorize('admin'), getAdminCaretakerStats);
-router.get('/admin/operations-summary', protect, authorize('admin'), getAdminOperationsSummary);
+router.get('/admin', protect, authorize('admin', 'sanctionAuthority'), getAdminDashboard);
+router.get('/admin/student-management', protect, authorize('admin', 'sanctionAuthority'), getAdminStudentManagement);
+router.get('/admin/caretakers', protect, authorize('admin', 'sanctionAuthority'), getAdminCaretakerStats);
+router.get('/admin/operations-summary', protect, authorize('admin', 'sanctionAuthority'), getAdminOperationsSummary);
 router.get('/caretaker', protect, authorize('admin', 'caretaker'), getCaretakerDashboard);
 router.get('/student', protect, authorize('student'), getStudentDashboard);
 
