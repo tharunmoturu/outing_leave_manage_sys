@@ -1,3 +1,7 @@
+import Outing from '../models/Outing.js';
+import User from '../models/User.js';
+import mongoose from 'mongoose';
+
 /**
  * Helper to convert time strings (e.g. "19:00", "07:30") to 12-hour AM/PM format
  */
@@ -116,5 +120,88 @@ export const isOutingCompleted = (outing, now = new Date()) => {
   } catch (error) {
     console.error('Error calculating outing completed status:', error);
     return false;
+  }
+};
+
+const SystemConfigSchema = new mongoose.Schema({
+  key: { type: String, required: true, unique: true },
+  value: { type: mongoose.Schema.Types.Mixed, required: true }
+});
+const SystemConfig = mongoose.models.SystemConfig || mongoose.model('SystemConfig', SystemConfigSchema);
+
+/**
+ * Checks if a new month has started and resets student outing counts to 3.
+ */
+export const checkAndResetMonthlyOutings = async () => {
+  try {
+    const now = new Date();
+    const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    let lastResetDoc = await SystemConfig.findOne({ key: 'last_monthly_reset_month' });
+
+    if (!lastResetDoc) {
+      lastResetDoc = new SystemConfig({ key: 'last_monthly_reset_month', value: currentMonthStr });
+      await lastResetDoc.save();
+      
+      const updateResult = await User.updateMany(
+        { role: { $in: ['Student', 'student'] } },
+        { remaining_outings: 3, used_outings: 0 }
+      );
+      console.log(`[Monthly Reset] Initialized monthly outing counts to 3 for all active students.`);
+      return;
+    }
+
+    if (lastResetDoc.value !== currentMonthStr) {
+      const updateResult = await User.updateMany(
+        { role: { $in: ['Student', 'student'] } },
+        { remaining_outings: 3, used_outings: 0 }
+      );
+
+      lastResetDoc.value = currentMonthStr;
+      await lastResetDoc.save();
+
+      console.log(`[Monthly Reset] New month detected (${currentMonthStr}). Reset student outing counts to 3.`);
+    }
+  } catch (error) {
+    console.error('Error during monthly outings reset check:', error);
+  }
+};
+
+/**
+ * Automatically completes outings that are past their expected reporting time.
+ */
+export const autoCompleteExpiredOutings = async () => {
+  try {
+    // Check and trigger monthly reset if it's a new month
+    await checkAndResetMonthlyOutings();
+
+    const now = new Date();
+    const activeOutings = await Outing.find({ status: { $in: ['Approved', 'Exited'] } });
+    
+    let updatedCount = 0;
+    for (const outing of activeOutings) {
+      if (isStudentOverdue(outing, now)) {
+        outing.status = 'Returned';
+        
+        // Calculate expected return time to set as actual return time
+        if (outing.submitted_date && outing.reporting_time) {
+          const reportingDate = new Date(outing.submitted_date);
+          const { hours, minutes } = parseTime(outing.reporting_time);
+          reportingDate.setHours(hours, minutes, 0, 0);
+          outing.actual_return_time = reportingDate;
+          outing.actual_exit_time = outing.actual_exit_time || now; // Backfill if empty
+        } else {
+          outing.actual_return_time = now;
+        }
+        
+        await outing.save();
+        updatedCount++;
+      }
+    }
+    if (updatedCount > 0) {
+      console.log(`[Auto-Complete] Completed ${updatedCount} expired outings.`);
+    }
+  } catch (error) {
+    console.error('Error auto-completing expired outings:', error);
   }
 };

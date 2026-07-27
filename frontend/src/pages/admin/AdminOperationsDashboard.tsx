@@ -1,12 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../services/api';
-import { Search, RefreshCw } from 'lucide-react';
+import { Search, RefreshCw, Eye } from 'lucide-react';
+import { RequestDrawer } from '../../components/caretaker/RequestDrawer';
 
 export const AdminOperationsDashboard: React.FC = () => {
   const [outings, setOutings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Drawer state
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
+  const [selectedOutingId, setSelectedOutingId] = useState<string | null>(null);
+
+  const handleOpenDrawer = (outingId: string) => {
+    setSelectedOutingId(outingId);
+    setIsDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+    setSelectedOutingId(null);
+  };
 
   const years = [
     { label: 'All', value: 'All' },
@@ -103,7 +118,7 @@ export const AdminOperationsDashboard: React.FC = () => {
                 <span className="empty-state-subtext">All students are currently on campus for this selection.</span>
               </div>
             ) : (
-              <table className="table-enterprise">
+               <table className="table-enterprise">
                 <thead>
                   <tr>
                     <th>Student ID</th>
@@ -111,6 +126,7 @@ export const AdminOperationsDashboard: React.FC = () => {
                     <th>Destination & Purpose</th>
                     <th>Exit Time</th>
                     <th>Status</th>
+                    <th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -141,6 +157,13 @@ export const AdminOperationsDashboard: React.FC = () => {
                       </td>
                       <td>
                         <span className="badge badge-exited">Outside</span>
+                      </td>
+                      <td className="text-right">
+                         <div className="flex items-center justify-end gap-2">
+                           <button onClick={() => handleOpenDrawer(req._id)} className="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all shadow-sm cursor-pointer" title="View Details">
+                             <Eye size={18} />
+                           </button>
+                         </div>
                       </td>
                     </tr>
                   ))}
@@ -218,7 +241,7 @@ export const AdminOperationsDashboard: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-2.5">
-                {filteredOutings.map(req => (
+                 {filteredOutings.map(req => (
                   <div key={req._id} className="border border-[#E6E8EC] rounded-[12px] p-3 bg-[#FCFCFD]">
                     <div className="flex justify-between items-start mb-2">
                       <div>
@@ -232,9 +255,14 @@ export const AdminOperationsDashboard: React.FC = () => {
                           {req.class_name || 'Student'} · {req.hostel_room || 'Campus'}
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold text-[#B5303F] bg-[#FCE9EA] px-2.5 py-1 rounded-[20px]">
-                        Outside
-                      </span>
+                      <div className="flex flex-col items-end gap-1.5">
+                        <span className="text-[10px] font-bold text-[#B5303F] bg-[#FCE9EA] px-2.5 py-1 rounded-[20px]">
+                          Outside
+                        </span>
+                        <button onClick={() => handleOpenDrawer(req._id)} className="p-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all cursor-pointer" title="View Details">
+                          <Eye size={14} />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-[10.5px] border-t border-[#E6E8EC] pt-2 mt-2">
@@ -254,6 +282,13 @@ export const AdminOperationsDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      <RequestDrawer
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        outingId={selectedOutingId}
+        currentUserRole="admin"
+      />
     </div>
   );
 };

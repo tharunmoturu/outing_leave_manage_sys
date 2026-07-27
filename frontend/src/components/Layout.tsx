@@ -10,8 +10,10 @@ import {
   Activity, 
   QrCode,
   History,
-  PlusCircle,
-  User
+  User,
+  UserCog,
+  FileText,
+  UserPlus
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -37,10 +39,19 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
       case 'admin':
         return [
           { path: '/admin/students', label: 'Student Mgmt', icon: <Users className="h-6 w-6" /> },
-          { path: '/admin/caretakers', label: 'Caretaker Mgmt', icon: <Activity className="h-6 w-6" /> },
-          { path: '/admin/operations', label: 'Outing Summary', icon: <Activity className="h-6 w-6" /> },
-          { path: '/admin/onboarding', label: 'User Onboarding', icon: <PlusCircle className="h-6 w-6" /> },
+          { path: '/admin/caretakers', label: 'Caretaker Mgmt', icon: <UserCog className="h-6 w-6" /> },
+          { path: '/admin/operations', label: 'Outing Summary', icon: <FileText className="h-6 w-6" /> },
+          { path: '/admin/history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
+          { path: '/admin/onboarding', label: 'User Onboarding', icon: <UserPlus className="h-6 w-6" /> },
           { path: '/admin/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
+        ];
+      case 'sanctionauthority':
+        return [
+          { path: '/sanction/students', label: 'Student Mgmt', icon: <Users className="h-6 w-6" /> },
+          { path: '/sanction/caretakers', label: 'Caretaker Mgmt', icon: <UserCog className="h-6 w-6" /> },
+          { path: '/sanction/operations', label: 'Outing Summary', icon: <FileText className="h-6 w-6" /> },
+          { path: '/sanction/history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
+          { path: '/sanction/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
         ];
       case 'caretaker':
         return [

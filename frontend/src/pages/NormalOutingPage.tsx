@@ -56,11 +56,39 @@ export const NormalOutingPage: React.FC = () => {
     }
   };
 
+  const getTodayDateString = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const isTimeInPast = (timeStr: string) => {
+    if (form.outingDate !== getTodayDateString()) return false;
+    
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const [timePart, modifier] = timeStr.trim().split(/\s+/);
+    let [hours, minutes] = timePart.split(':').map(Number);
+    if (modifier && modifier.toUpperCase() === 'PM' && hours < 12) hours += 12;
+    if (modifier && modifier.toUpperCase() === 'AM' && hours === 12) hours = 0;
+
+    const optionMinutes = hours * 60 + minutes;
+    return optionMinutes < currentMinutes;
+  };
+
   const handleValidation = () => {
     setFormError('');
     if (!form.reason.trim() || !form.destination.trim() || !form.outingDate || !form.leavingTime || !form.reportingTime) {
       setFormError('All fields are required.');
       return false;
+    }
+
+    if (form.outingDate === getTodayDateString() && isTimeInPast(form.leavingTime)) {
+       setFormError('Leaving time cannot be in the past.');
+       return false;
     }
 
     const parseTime = (timeStr: string) => {
@@ -159,6 +187,7 @@ export const NormalOutingPage: React.FC = () => {
                  value={form.outingDate}
                  onChange={e => setForm({ ...form, outingDate: e.target.value })}
                  type="date" 
+                 min={getTodayDateString()}
                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]" 
                />
             </div>
@@ -171,9 +200,12 @@ export const NormalOutingPage: React.FC = () => {
                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] bg-white" 
                >
                  <option value="" disabled>Select leaving time</option>
-                 {leavingTimeOptions.map(time => (
-                   <option key={time} value={time}>{time}</option>
-                 ))}
+                 {leavingTimeOptions.map(time => {
+                   const isPast = isTimeInPast(time);
+                   return (
+                     <option key={time} value={time} disabled={isPast}>{time}</option>
+                   );
+                 })}
                </select>
             </div>
 

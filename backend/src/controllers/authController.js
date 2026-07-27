@@ -107,7 +107,10 @@ export const googleLogin = async (req, res) => {
         userAgent,
       });
     } catch (logErr) {}
-    res.status(500).json({ message: 'Authentication failed. Invalid Google token.' });
+    res.status(500).json({ 
+      message: 'Authentication failed.', 
+      error: error.message 
+    });
   }
 };
 
