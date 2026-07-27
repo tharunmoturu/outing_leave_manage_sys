@@ -6,8 +6,12 @@ dotenv.config();
 
 // Force Node.js to use Google DNS (8.8.8.8) to resolve MongoDB Atlas SRV records
 // This fixes ECONNREFUSED errors caused by local network DNS not supporting SRV lookups
-dns.setDefaultResultOrder('ipv4first');
-dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+try {
+  dns.setDefaultResultOrder('ipv4first');
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+} catch (error) {
+  console.warn('[Database] Failed to set custom DNS servers:', error.message);
+}
 
 const connectDB = async () => {
   const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/outing_leave_system';
