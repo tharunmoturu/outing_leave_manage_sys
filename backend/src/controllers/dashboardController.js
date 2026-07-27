@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import Outing from '../models/Outing.js';
 import { getCaretakerHostel } from '../utils/hostelUtils.js';
+import { autoCompleteExpiredOutings } from '../utils/timeUtils.js';
 
 // Helper to get date ranges
 const getTodayRange = () => {
@@ -16,6 +17,7 @@ const getTodayRange = () => {
 // @access  Private (Admin)
 export const getAdminDashboard = async (req, res) => {
   try {
+    await autoCompleteExpiredOutings();
     const { start: todayStart, end: todayEnd } = getTodayRange();
 
     const totalStudents = await User.countDocuments({ role: { $in: ['student', 'Student'] } });

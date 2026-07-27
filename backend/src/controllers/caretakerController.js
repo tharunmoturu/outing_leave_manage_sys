@@ -1,7 +1,7 @@
 import Outing from '../models/Outing.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
-import { isStudentOutside, isStudentOverdue, parseTime, isOutingCompleted } from '../utils/timeUtils.js';
+import { isStudentOutside, isStudentOverdue, parseTime, isOutingCompleted, autoCompleteExpiredOutings } from '../utils/timeUtils.js';
 import { getCaretakerHostel, getHostelStudentIds, isStudentInCaretakerHostel } from '../utils/hostelUtils.js';
 import { sendOutingApprovalEmail, sendOutingRejectionEmail } from '../utils/emailService.js';
 
@@ -30,6 +30,7 @@ const formatTo12Hour = (timeStr) => {
 // @access  Private (Caretaker)
 export const getCaretakerDashboard = async (req, res) => {
   try {
+    await autoCompleteExpiredOutings();
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date();
@@ -534,6 +535,7 @@ export const rejectOuting = async (req, res) => {
 // @access  Private (Caretaker)
 export const getStudentsOutside = async (req, res) => {
   try {
+    await autoCompleteExpiredOutings();
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || '';

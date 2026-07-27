@@ -7,8 +7,10 @@ import { HistoryDrawer } from '../components/history/HistoryDrawer';
 import { Pagination } from '../components/caretaker/Pagination';
 import { RefreshCw, Search, SlidersHorizontal, History, Calendar, Clock, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export const CaretakerHistoryPage: React.FC = () => {
+  const { user } = useAuth();
   const [data, setData] = useState<{
     statistics: any;
     history: any[];
@@ -86,7 +88,7 @@ export const CaretakerHistoryPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E7EB] pb-4">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <Link to="/caretaker" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FEF2F2] text-[#991B1B] hover:bg-[#FEE2E2] rounded-lg font-bold text-[14px] transition-colors -ml-2 border border-[#FCA5A5] shadow-sm">
+              <Link to={user?.role?.toLowerCase() === 'admin' ? '/admin/operations' : user?.role?.toLowerCase() === 'sanctionauthority' ? '/sanction/operations' : '/caretaker'} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FEF2F2] text-[#991B1B] hover:bg-[#FEE2E2] rounded-lg font-bold text-[14px] transition-colors -ml-2 border border-[#FCA5A5] shadow-sm">
                 <ArrowLeft size={18} strokeWidth={2.5} />
                 Back
               </Link>

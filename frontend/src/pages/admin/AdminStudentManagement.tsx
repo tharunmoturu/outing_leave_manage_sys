@@ -242,12 +242,13 @@ export const AdminStudentManagement: React.FC = () => {
                           <span className="badge badge-pending">Pending</span>
                         </div>
                       </td>
-                      <td className="text-right">
-                         <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => handleDirectApprove({ id: req._id })} className="p-2.5 text-white bg-green-500 hover:bg-green-600 rounded-lg transition-all shadow-sm" title="Approve"><Check size={18} /></button>
-                          <button onClick={() => { setRejectionDialogData({ id: req._id, name: req.student?.name || req.student_name }); setIsRejectionOpen(true); }} className="p-2.5 text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all shadow-sm" title="Reject"><X size={18} /></button>
-                         </div>
-                      </td>
+                       <td className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                           <button onClick={() => handleDirectApprove({ id: req._id })} className="p-2.5 text-white bg-green-500 hover:bg-green-600 rounded-lg transition-all shadow-sm cursor-pointer" title="Approve"><Check size={18} /></button>
+                           <button onClick={() => { setRejectionDialogData({ id: req._id, name: req.student?.name || req.student_name }); setIsRejectionOpen(true); }} className="p-2.5 text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all shadow-sm cursor-pointer" title="Reject"><X size={18} /></button>
+                           <button onClick={() => handleOpenDrawer(req._id)} className="p-2.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all shadow-sm cursor-pointer" title="View Details"><Eye size={18} /></button>
+                          </div>
+                       </td>
                     </tr>
                   ))}
                 </tbody>

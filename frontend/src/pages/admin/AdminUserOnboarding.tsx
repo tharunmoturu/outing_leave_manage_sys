@@ -278,7 +278,8 @@ export const AdminUserOnboarding: React.FC = () => {
                       >
                         <option value="Student">Student</option>
                         <option value="Caretaker">Caretaker</option>
-                        <option value="Admin">Admin</option>
+                        <option value="Admin">DSW BOYS</option>
+                        <option value="sanctionAuthority">Sanction Authority</option>
                       </select>
                     </div>
                     <div className="flex flex-col gap-1">
@@ -542,7 +543,8 @@ export const AdminUserOnboarding: React.FC = () => {
                     >
                       <option value="Student">Student</option>
                       <option value="Caretaker">Caretaker</option>
-                      <option value="Admin">Admin</option>
+                      <option value="Admin">DSW BOYS</option>
+                      <option value="sanctionAuthority">Sanction Authority</option>
                     </select>
                   </div>
 
@@ -735,7 +737,7 @@ export const AdminUserOnboarding: React.FC = () => {
                   <div className="flex flex-col gap-1">
                     <label className="input-label">Role</label>
                     <select value={editingUser.role} onChange={(e) => setEditingUser({...editingUser, role: e.target.value})} className="input-field bg-white">
-                      <option value="Student">Student</option><option value="Caretaker">Caretaker</option><option value="Admin">Admin</option>
+                      <option value="Student">Student</option><option value="Caretaker">Caretaker</option><option value="Admin">DSW BOYS</option><option value="sanctionAuthority">Sanction Authority</option>
                     </select>
                   </div>
                 </div>

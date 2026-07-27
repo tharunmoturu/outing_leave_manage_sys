@@ -51,6 +51,8 @@ function App() {
                 user ? (
                   user.role.toLowerCase() === 'admin' ? (
                     <Navigate to="/admin" replace />
+                  ) : user.role.toLowerCase() === 'sanctionauthority' ? (
+                    <Navigate to="/sanction" replace />
                   ) : user.role.toLowerCase() === 'caretaker' ? (
                     <Navigate to="/caretaker" replace />
                   ) : user.role.toLowerCase() === 'security' ? (
@@ -85,6 +87,14 @@ function App() {
               }
             />
             <Route
+              path="/admin/history"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <CaretakerHistoryPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/students"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
@@ -105,6 +115,52 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminUserOnboarding />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Sanction Authority Routes */}
+            <Route
+              path="/sanction"
+              element={<Navigate to="/sanction/students" replace />}
+            />
+            <Route
+              path="/sanction/profile"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'caretaker', 'security', 'sanctionAuthority']}>
+                  <AdminProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sanction/operations"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'sanctionAuthority']}>
+                  <AdminOperationsDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sanction/history"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'sanctionAuthority']}>
+                  <CaretakerHistoryPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sanction/students"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'sanctionAuthority']}>
+                  <AdminStudentManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sanction/caretakers"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'sanctionAuthority']}>
+                  <AdminCaretakerManagement />
                 </ProtectedRoute>
               }
             />
@@ -263,7 +319,7 @@ function App() {
             <Route
               path="/reports"
               element={
-                <ProtectedRoute allowedRoles={['admin', 'caretaker']}>
+                <ProtectedRoute allowedRoles={['admin', 'caretaker', 'sanctionAuthority']}>
                   <ReportsPage />
                 </ProtectedRoute>
               }
