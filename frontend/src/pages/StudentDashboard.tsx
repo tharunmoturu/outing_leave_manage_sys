@@ -23,6 +23,20 @@ export const StudentDashboard: React.FC = () => {
     }
   };
 
+  const [isCancelling, setIsCancelling] = useState(false);
+  const handleCancelOuting = async (id: string) => {
+    if (!window.confirm('Are you sure you want to cancel this request?')) return;
+    setIsCancelling(true);
+    try {
+      await API.post(`/outings/${id}/cancel`);
+      await fetchStudentDashboard(); // Refresh data
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to cancel request');
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   useEffect(() => {
     fetchStudentDashboard();
   }, []);
@@ -59,7 +73,7 @@ export const StudentDashboard: React.FC = () => {
                     <span className="text-2xl font-black text-red-950">{data.emergencyRequestsThisMonth || 0}</span>
                   </div>
                 </div>
-                <QuickActions activeStatus={activeStatus} />
+                <QuickActions activeStatus={activeStatus} remainingOutings={data.quota.remaining} />
               </div>
             </div>
 
@@ -72,6 +86,8 @@ export const StudentDashboard: React.FC = () => {
               year={data.student.year}
               hostel={data.student.hostel}
               room={data.student.room}
+              onCancel={activeStatus === 'Pending' ? handleCancelOuting : undefined}
+              isCancelling={isCancelling}
             />
 
             {/* Recent Outings Table */}

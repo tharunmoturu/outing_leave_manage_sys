@@ -6,7 +6,7 @@ import { RequestDrawer } from '../components/caretaker/RequestDrawer';
 import { Pagination } from '../components/caretaker/Pagination';
 import { RejectionDialog } from '../components/caretaker/RejectionDialog';
 import { AlertDialog } from '../components/ui/AlertDialog';
-import { Inbox, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Inbox, RefreshCw, ArrowLeft, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -257,8 +257,16 @@ export const PendingNormalPage: React.FC = () => {
             placeholder="Search student name or ID..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-            className="flex-1 text-[13px] font-medium text-[#1E293B] placeholder-[#9CA3AF] outline-none bg-transparent"
+            className="flex-1 text-[13px] font-medium text-[#1E293B] placeholder-[#9CA3AF] outline-none bg-transparent pr-10"
           />
+          {searchQuery && (
+            <button
+              onClick={() => { setSearchQuery(''); setPage(1); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#4B5563]"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
 
         {error && (

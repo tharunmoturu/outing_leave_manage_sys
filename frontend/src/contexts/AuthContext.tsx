@@ -17,6 +17,8 @@ export interface User {
   phone?: string;
   parentPhone?: string;
   address?: string;
+  remaining_outings?: number;
+  used_outings?: number;
 }
 
 interface AuthContextType {

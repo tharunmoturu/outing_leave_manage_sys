@@ -195,6 +195,32 @@ export const applyNormalOuting = async (req, res) => {
       status: 'Pending'
     });
 
+    // Create notifications for staff roles
+    await Notification.create({
+      recipientRole: 'caretaker',
+      studentId: student.studentId,
+      outingId: newOuting._id,
+      type: 'OUTING_REQUEST',
+      title: 'New Outing Request',
+      message: `New Normal outing request from ${student.name} (${student.studentId})`
+    });
+    await Notification.create({
+      recipientRole: 'admin',
+      studentId: student.studentId,
+      outingId: newOuting._id,
+      type: 'OUTING_REQUEST',
+      title: 'New Outing Request',
+      message: `New Normal outing request from ${student.name} (${student.studentId})`
+    });
+    await Notification.create({
+      recipientRole: 'sanctionAuthority',
+      studentId: student.studentId,
+      outingId: newOuting._id,
+      type: 'OUTING_REQUEST',
+      title: 'New Outing Request',
+      message: `New Normal outing request from ${student.name} (${student.studentId})`
+    });
+
     res.status(201).json({ message: 'Outing request submitted successfully', outing: newOuting });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -209,6 +235,11 @@ export const applyEmergencyOuting = async (req, res) => {
     const student = await User.findById(req.user._id);
     if (!student) return res.status(404).json({ message: 'Student not found' });
     if (!student.profileCompleted) return res.status(400).json({ message: 'Please complete your profile first' });
+
+    // Restrict emergency outings if normal outings are still available
+    if ((student.remaining_outings || 0) > 0) {
+      return res.status(400).json({ message: 'Emergency outings can only be applied after all 3 normal outings have been used.' });
+    }
 
     const { reason, destination, outingDate, leavingTime, reportingTime, emergencyCategory } = req.body;
 
@@ -256,6 +287,32 @@ export const applyEmergencyOuting = async (req, res) => {
       status: 'Pending'
     });
 
+    // Create notifications for staff roles
+    await Notification.create({
+      recipientRole: 'caretaker',
+      studentId: student.studentId,
+      outingId: newOuting._id,
+      type: 'OUTING_REQUEST',
+      title: 'New Emergency Outing Request',
+      message: `New Emergency outing request from ${student.name} (${student.studentId})`
+    });
+    await Notification.create({
+      recipientRole: 'admin',
+      studentId: student.studentId,
+      outingId: newOuting._id,
+      type: 'OUTING_REQUEST',
+      title: 'New Emergency Outing Request',
+      message: `New Emergency outing request from ${student.name} (${student.studentId})`
+    });
+    await Notification.create({
+      recipientRole: 'sanctionAuthority',
+      studentId: student.studentId,
+      outingId: newOuting._id,
+      type: 'OUTING_REQUEST',
+      title: 'New Emergency Outing Request',
+      message: `New Emergency outing request from ${student.name} (${student.studentId})`
+    });
+
     res.status(201).json({ message: 'Emergency Outing request submitted successfully', outing: newOuting });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -265,14 +322,17 @@ export const applyEmergencyOuting = async (req, res) => {
 export const getNotifications = async (req, res) => {
   try {
     const student = await User.findById(req.user._id);
-    const notifications = await Notification.find({ studentId: student.studentId }).sort({ createdAt: -1 }).limit(20);
+    // Only return unread notifications so read ones disappear
+    const notifications = await Notification.find({ studentId: student.studentId, isRead: false }).sort({ createdAt: -1 }).limit(20);
     res.json(notifications);
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
 
 export const markNotificationsRead = async (req, res) => {
   try {
-    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+    const student = await User.findById(req.user._id);
+    // Delete notifications so they are permanently gone from database
+    await Notification.deleteMany({ studentId: student.studentId });
     res.json({ success: true });
   } catch (error) { res.status(500).json({ message: error.message }); }
 };

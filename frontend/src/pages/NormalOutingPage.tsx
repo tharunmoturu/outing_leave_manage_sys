@@ -42,6 +42,7 @@ export const NormalOutingPage: React.FC = () => {
 
   useEffect(() => {
     fetchStudentData();
+    setForm(prev => ({ ...prev, outingDate: getTodayDateString() }));
   }, []);
 
   const fetchStudentData = async () => {
@@ -64,19 +65,27 @@ export const NormalOutingPage: React.FC = () => {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  const isTimeInPast = (timeStr: string) => {
-    if (form.outingDate !== getTodayDateString()) return false;
-    
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
+  const parseTimeStringToMinutes = (timeStr: string) => {
+    if (!timeStr) return 0;
     const [timePart, modifier] = timeStr.trim().split(/\s+/);
+    if (!timePart) return 0;
     let [hours, minutes] = timePart.split(':').map(Number);
     if (modifier && modifier.toUpperCase() === 'PM' && hours < 12) hours += 12;
     if (modifier && modifier.toUpperCase() === 'AM' && hours === 12) hours = 0;
+    return (hours * 60) + (minutes || 0);
+  };
 
-    const optionMinutes = hours * 60 + minutes;
-    return optionMinutes < currentMinutes;
+  const isTimeInPast = (timeStr: string) => {
+    if (form.outingDate !== getTodayDateString()) return false;
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    return parseTimeStringToMinutes(timeStr) < currentMinutes;
+  };
+
+  const isReportingTimeInvalid = (timeStr: string) => {
+    if (isTimeInPast(timeStr)) return true;
+    if (form.leavingTime && parseTimeStringToMinutes(timeStr) <= parseTimeStringToMinutes(form.leavingTime)) return true;
+    return false;
   };
 
   const handleValidation = () => {
@@ -91,11 +100,7 @@ export const NormalOutingPage: React.FC = () => {
        return false;
     }
 
-    const parseTime = (timeStr: string) => {
-       const [h, m] = timeStr.split(':').map(Number);
-       return h * 60 + m;
-    };
-    if (parseTime(form.leavingTime) >= parseTime(form.reportingTime)) {
+    if (parseTimeStringToMinutes(form.leavingTime) >= parseTimeStringToMinutes(form.reportingTime)) {
        setFormError('Leaving time must be earlier than reporting time.');
        return false;
     }
@@ -181,17 +186,6 @@ export const NormalOutingPage: React.FC = () => {
                />
             </div>
 
-            <div className="space-y-2 col-span-1 md:col-span-2">
-               <label className="text-[14px] font-bold text-[var(--color-text-secondary)]">Date of Outing <span className="text-red-500">*</span></label>
-               <input 
-                 value={form.outingDate}
-                 onChange={e => setForm({ ...form, outingDate: e.target.value })}
-                 type="date" 
-                 min={getTodayDateString()}
-                 className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]" 
-               />
-            </div>
-
             <div className="space-y-2">
                <label className="text-[14px] font-bold text-[var(--color-text-secondary)]">Leaving Time <span className="text-red-500">*</span></label>
                <select 
@@ -217,9 +211,12 @@ export const NormalOutingPage: React.FC = () => {
                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] bg-white" 
                >
                  <option value="" disabled>Select reporting time</option>
-                 {reportingTimeOptions.map(time => (
-                   <option key={time} value={time}>{time}</option>
-                 ))}
+                 {reportingTimeOptions.map(time => {
+                   const isInvalid = isReportingTimeInvalid(time);
+                   return (
+                     <option key={time} value={time} disabled={isInvalid}>{time}</option>
+                   );
+                 })}
                </select>
             </div>
          </div>

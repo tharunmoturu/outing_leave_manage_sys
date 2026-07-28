@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import { getCaretakerHostel, getHostelStudentIds, isStudentInCaretakerHostel } from '../utils/hostelUtils.js';
 import { sendOutingApprovalEmail, sendOutingRejectionEmail } from '../utils/emailService.js';
 import { autoCompleteExpiredOutings } from '../utils/timeUtils.js';
+import Notification from '../models/Notification.js';
 
 const checkAndResetQuota = async (student) => {
   return student;
@@ -164,23 +165,33 @@ export const cancelOuting = async (req, res) => {
       return res.status(404).json({ message: 'Outing record not found' });
     }
 
-    if (outing.status !== 'Approved') {
+    if (outing.status !== 'Approved' && outing.status !== 'Pending') {
       return res.status(400).json({ message: `Outing status is '${outing.status}', cannot cancel.` });
     }
 
+    const previousStatus = outing.status;
+
     // Role verification: Student can only cancel their own outing
-    if (req.user.role === 'student' && !outing.student._id.equals(req.user._id)) {
-      return res.status(403).json({ message: 'You can only cancel your own outing requests' });
+    if (req.user.role === 'student') {
+      if (!outing.student._id.equals(req.user._id)) {
+        return res.status(403).json({ message: 'You can only cancel your own outing requests' });
+      }
+      if (outing.status === 'Approved') {
+        return res.status(403).json({ message: 'Students cannot cancel approved outing requests.' });
+      }
     }
 
     outing.status = 'Cancelled';
     await outing.save();
 
-    // Revert the remaining outing quota
     const student = outing.student;
-    student.remaining_outings += 1;
-    student.used_outings = Math.max(0, student.used_outings - 1);
-    await student.save();
+    
+    // Revert the remaining outing quota ONLY if it was already Approved and it's a Normal outing
+    if (previousStatus === 'Approved' && outing.outingType !== 'Emergency') {
+      student.remaining_outings += 1;
+      student.used_outings = Math.max(0, student.used_outings - 1);
+      await student.save();
+    }
 
     res.json({
       message: 'Outing cancelled and quota reverted successfully',
@@ -406,6 +417,16 @@ export const approveOuting = async (req, res) => {
     student.used_outings += 1;
     await student.save();
 
+    await Notification.create({
+      recipientId: student._id,
+      recipientRole: 'student',
+      studentId: student.studentId,
+      outingId: outing._id,
+      type: 'APPROVED',
+      title: 'Outing Approved',
+      message: `Your outing request to ${outing.destination} has been approved.`
+    });
+
     // Send approval email
     const studentEmail = student?.email || student?.Mail_Id || student?.studentProfile?.email || student?.studentProfile?.Mail_Id;
     sendOutingApprovalEmail({
@@ -457,10 +478,22 @@ export const rejectOuting = async (req, res) => {
     outing.status = 'Rejected';
     outing.approved_by = req.user._id;
     outing.approved_by_name = req.user.name;
-    outing.remarks = remarks || 'Rejected by caretaker';
+    outing.remarks = remarks || 'Rejected';
     await outing.save();
 
     const student = outing.student;
+    
+    if (student) {
+      await Notification.create({
+        recipientId: student._id,
+        recipientRole: 'student',
+        studentId: student.studentId,
+        outingId: outing._id,
+        type: 'REJECTED',
+        title: 'Outing Rejected',
+        message: `Your outing request to ${outing.destination} was rejected. Reason: ${remarks || 'None provided'}`
+      });
+    }
     const rejStudentEmail = student?.email || student?.Mail_Id || student?.studentProfile?.email || student?.studentProfile?.Mail_Id;
     if (student && rejStudentEmail) {
       sendOutingRejectionEmail({

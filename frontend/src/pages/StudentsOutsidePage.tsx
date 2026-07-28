@@ -3,7 +3,7 @@ import API from '../services/api';
 import { StudentsOutsideCard, type StudentsOutsideItem } from '../components/caretaker/StudentsOutsideCard';
 import { RequestDrawer } from '../components/caretaker/RequestDrawer';
 import { Pagination } from '../components/caretaker/Pagination';
-import { Users, Clock, AlertTriangle, Search, Activity, RefreshCw, ArrowLeft } from 'lucide-react';
+import { Users, Clock, Search, Activity, RefreshCw, ArrowLeft , X} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const StudentsOutsidePage: React.FC = () => {
@@ -108,7 +108,7 @@ export const StudentsOutsidePage: React.FC = () => {
         </div>
 
         {/* ── Statistics Cards ── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
               <Activity className="text-blue-600" size={24} />
@@ -128,16 +128,6 @@ export const StudentsOutsidePage: React.FC = () => {
               <p className="text-[24px] font-black text-gray-900 leading-none">{statistics.expectedReturnsToday}</p>
             </div>
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
-              <AlertTriangle className="text-red-600" size={24} />
-            </div>
-            <div>
-              <p className="text-[12px] font-bold text-gray-400 uppercase tracking-wider mb-1">Overdue Students</p>
-              <p className="text-[24px] font-black text-gray-900 leading-none">{statistics.overdueStudents}</p>
-            </div>
-          </div>
         </div>
 
         {/* ── Filters ── */}
@@ -149,8 +139,18 @@ export const StudentsOutsidePage: React.FC = () => {
               placeholder="Search student name or ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium text-[14px]"
+              className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium text-[14px]"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors flex items-center justify-center p-1 rounded-full hover:bg-gray-100"
+                title="Clear search"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -217,7 +217,7 @@ export const StudentsOutsidePage: React.FC = () => {
         </div>
 
         {/* Mobile Stats Summary */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <div className="bg-white border border-[#E6E8EC] rounded-[14px] p-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-[#E7F6EC] flex items-center justify-center flex-shrink-0">
                <Clock className="text-[#1E8A4C]" size={16} />
@@ -225,15 +225,6 @@ export const StudentsOutsidePage: React.FC = () => {
             <div>
               <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mb-0.5">Returns Today</p>
               <p className="text-[16px] font-black text-[#1E293B] leading-none">{statistics.expectedReturnsToday}</p>
-            </div>
-          </div>
-          <div className="bg-white border border-[#E6E8EC] rounded-[14px] p-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#FCE9EA] flex items-center justify-center flex-shrink-0">
-               <AlertTriangle className="text-[#C23B3B]" size={16} />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider mb-0.5">Overdue</p>
-              <p className="text-[16px] font-black text-[#1E293B] leading-none">{statistics.overdueStudents}</p>
             </div>
           </div>
         </div>
@@ -246,8 +237,18 @@ export const StudentsOutsidePage: React.FC = () => {
             placeholder="Search student name or ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 text-[13px] font-medium text-[#1E293B] placeholder-[#9CA3AF] outline-none bg-transparent"
+            className="pr-10 flex-1 text-[13px] font-medium text-[#1E293B] placeholder-[#9CA3AF] outline-none bg-transparent"
           />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors flex items-center justify-center p-1 rounded-full hover:bg-gray-100"
+                title="Clear search"
+              >
+                <X size={16} />
+              </button>
+            )}
         </div>
 
         {/* Student Cards */}

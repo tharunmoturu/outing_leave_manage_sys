@@ -18,7 +18,8 @@ import {
   Search,
   Filter,
   
-  History
+  History,
+  X
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -457,8 +458,17 @@ export const AdminDashboard: React.FC = () => {
               placeholder="Search by ID or Name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
+              className="search-input pr-10"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
 
           {/* Branch filter */}

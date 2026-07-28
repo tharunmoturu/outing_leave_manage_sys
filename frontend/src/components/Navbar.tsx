@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut, User, Bell, ChevronDown } from 'lucide-react';
+import { LogOut, User, Bell, ChevronDown, X, Trash2 } from 'lucide-react';
 import { NotificationDropdown } from './dashboard/NotificationDropdown';
 import logo from '../assets/logo.png';
+import API from '../services/api';
 
 interface NavbarProps {
   user: any;
@@ -13,9 +14,27 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  const fetchNotifications = async () => {
+    if (!user || user.role === 'student') return;
+    try {
+      const res = await API.get('/notifications');
+      setNotifications(res.data);
+    } catch (err) {
+      console.error('Failed to fetch staff notifications:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000); // Poll every minute
+    return () => clearInterval(interval);
+  }, [user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -34,12 +53,27 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
     };
   }, []);
 
-  // Mock notifications for admin/caretaker dashboard
-  const notifications = [
-    { id: 1, text: 'New overnight outing request from N220533', time: '5m ago' },
-    { id: 2, text: 'Outing request pending approval: N210982', time: '15m ago' },
-    { id: 3, text: 'Student N220192 returned 30 mins late', time: '1h ago' }
-  ];
+  const handleDismissNotification = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await API.delete(`/notifications/${id}`);
+      setNotifications(notifications.filter(n => n._id !== id));
+    } catch (err) {
+      console.error('Failed to delete notification:', err);
+    }
+  };
+
+  const handleClearAll = async () => {
+    setLoading(true);
+    try {
+      await API.delete('/notifications');
+      setNotifications([]);
+    } catch (err) {
+      console.error('Failed to clear notifications:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-[var(--color-border-gray)] h-[72px]">
@@ -86,21 +120,46 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                   title="Notifications"
                 >
                   <Bell size={20} strokeWidth={1.75} />
-                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[var(--color-danger)]" />
+                  {notifications.length > 0 && (
+                    <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[var(--color-danger)]" />
+                  )}
                 </button>
 
                 {showNotifications && (
                   <div className="fixed left-4 right-4 md:absolute md:left-auto md:right-0 mt-2 md:w-80 rounded-[12px] border border-[var(--color-border-gray)] bg-white p-2 shadow-[0_4px_12px_rgba(0,0,0,0.06)] z-50">
-                    <div className="px-3 py-2 border-b border-[var(--color-border-gray)] text-[11px] font-semibold text-[var(--color-text-primary)] uppercase tracking-wider">
-                      Recent Alerts
+                    <div className="px-3 py-2 border-b border-[var(--color-border-gray)] flex justify-between items-center text-[11px] font-semibold text-[var(--color-text-primary)] uppercase tracking-wider">
+                      <span>Recent Alerts</span>
+                      {notifications.length > 0 && (
+                        <button onClick={handleClearAll} disabled={loading} className="text-red-600 hover:text-red-700 capitalize font-bold text-[10px] flex items-center gap-1">
+                          <Trash2 size={10} /> Clear All
+                        </button>
+                      )}
                     </div>
                     <div className="divide-y divide-[var(--color-border-gray)] max-h-60 overflow-y-auto">
-                      {notifications.map((n) => (
-                        <div key={n.id} className="p-3 text-[13px] hover:bg-[var(--color-gray-50)] transition-colors cursor-pointer">
-                          <p className="text-[var(--color-text-primary)] font-medium">{n.text}</p>
-                          <span className="text-[11px] text-[var(--color-text-secondary)]">{n.time}</span>
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-center text-gray-500 text-[12px]">
+                          No new notifications
                         </div>
-                      ))}
+                      ) : (
+                        notifications.map((n) => (
+                          <div key={n._id} className="p-3 text-[13px] hover:bg-[var(--color-gray-50)] transition-colors flex justify-between items-start gap-2">
+                            <div className="flex-1">
+                              <p className="text-[var(--color-text-primary)] font-semibold">{n.title}</p>
+                              <p className="text-[var(--color-text-secondary)] text-[12px] mt-0.5">{n.message}</p>
+                              <span className="text-[10px] text-gray-400 mt-1 block">
+                                {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <button
+                              onClick={(e) => handleDismissNotification(n._id, e)}
+                              className="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-gray-100 transition-colors flex-shrink-0"
+                              title="Dismiss"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 )}

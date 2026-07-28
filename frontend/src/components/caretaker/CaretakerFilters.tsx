@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, MapPin, ArrowUpDown } from 'lucide-react';
+import { Search, MapPin, ArrowUpDown, X } from 'lucide-react';
 
 interface CaretakerFiltersProps {
   searchQuery: string;
@@ -41,8 +41,16 @@ export const CaretakerFilters: React.FC<CaretakerFiltersProps> = ({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search student name or ID..."
-            className="w-full pl-9 pr-3 py-2 bg-[#F9FAFB] border border-[#D1D5DB] rounded-lg text-[14px] text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#800000] focus:bg-white transition-all"
+            className="w-full pl-9 pr-10 py-2 bg-[#F9FAFB] border border-[#D1D5DB] rounded-lg text-[14px] text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#800000] focus:bg-white transition-all"
           />
+          {searchQuery && (
+            <button
+              onClick={() => onSearchChange('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#4B5563]"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
 
         {/* Sort Dropdown */}
