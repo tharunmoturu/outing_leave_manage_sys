@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LogOut, User, Bell, ChevronDown } from 'lucide-react';
 import { NotificationDropdown } from './dashboard/NotificationDropdown';
 import logo from '../assets/logo.png';
@@ -13,6 +13,26 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (notificationRef.current && !notificationRef.current.contains(target)) {
+        setShowNotifications(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(target)) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Mock notifications for admin/caretaker dashboard
   const notifications = [
@@ -56,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             {user.role === 'student' ? (
               <NotificationDropdown />
             ) : (
-              <div className="relative">
+              <div className="relative" ref={notificationRef}>
                 <button
                   onClick={() => {
                     setShowNotifications(!showNotifications);
@@ -70,7 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 rounded-[12px] border border-[var(--color-border-gray)] bg-white p-2 shadow-[0_4px_12px_rgba(0,0,0,0.06)] z-50">
+                  <div className="fixed left-4 right-4 md:absolute md:left-auto md:right-0 mt-2 md:w-80 rounded-[12px] border border-[var(--color-border-gray)] bg-white p-2 shadow-[0_4px_12px_rgba(0,0,0,0.06)] z-50">
                     <div className="px-3 py-2 border-b border-[var(--color-border-gray)] text-[11px] font-semibold text-[var(--color-text-primary)] uppercase tracking-wider">
                       Recent Alerts
                     </div>
@@ -88,7 +108,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             )}
 
             {/* User Profile Info Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={profileMenuRef}>
               <button
                 onClick={() => {
                   setShowProfileMenu(!showProfileMenu);
