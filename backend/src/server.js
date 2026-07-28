@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import connectDB from './config/db.js';
 
 // Route imports
@@ -20,6 +21,18 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '15mb' })); // Support base64 image strings
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+
+// Database connection state check for Serverless/Cloud hosting (e.g. Vercel)
+app.use(async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    console.log('[Database] Connection state is not active. Re-connecting before request...');
+    const connected = await connectDB();
+    if (!connected) {
+      return res.status(503).json({ message: 'Database connection is temporarily unavailable. Please try again.' });
+    }
+  }
+  next();
+});
 
 // Route registrations
 app.use('/api/auth', authRoutes);

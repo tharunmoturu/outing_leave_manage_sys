@@ -71,7 +71,7 @@ export const NotificationDropdown: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-fadeIn" style={{ transformOrigin: 'top right' }}>
+        <div className="fixed left-4 right-4 md:absolute md:left-auto md:right-0 mt-2 md:w-96 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-fadeIn" style={{ transformOrigin: 'top right' }}>
           <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <h3 className="text-[15px] font-bold text-gray-900">Notifications</h3>
             {unreadCount > 0 && (

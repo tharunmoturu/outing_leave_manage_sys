@@ -17,7 +17,10 @@ const connectDB = async () => {
   const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/outing_leave_system';
   
   try {
-    const conn = await mongoose.connect(mongoURI);
+    const conn = await mongoose.connect(mongoURI, {
+      maxPoolSize: 20,       // Limits each server instance to a maximum of 20 connections
+      socketTimeoutMS: 45000 // Close hanging connections after 45 seconds
+    });
     console.log(`\x1b[32m[Database] MongoDB Connected: ${conn.connection.host}\x1b[0m`);
     return true;
   } catch (error) {
