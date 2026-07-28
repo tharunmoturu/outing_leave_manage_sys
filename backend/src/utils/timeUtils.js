@@ -58,11 +58,19 @@ export const isStudentOutside = (outing, now = new Date()) => {
   if (!outing.submitted_date || !outing.leaving_time || !outing.reporting_time) return false;
 
   try {
-    const leavingDate = new Date(outing.submitted_date);
+    // Parse date string manually to avoid UTC-midnight timezone offset issues
+    const dateParts = outing.submitted_date.split('-');
+    const baseDate = new Date(
+      parseInt(dateParts[0], 10),
+      parseInt(dateParts[1], 10) - 1,
+      parseInt(dateParts[2], 10)
+    );
+
+    const leavingDate = new Date(baseDate);
     const { hours: lHours, minutes: lMinutes } = parseTime(outing.leaving_time);
     leavingDate.setHours(lHours, lMinutes, 0, 0);
 
-    const reportingDate = new Date(outing.submitted_date);
+    const reportingDate = new Date(baseDate);
     const { hours: rHours, minutes: rMinutes } = parseTime(outing.reporting_time);
     reportingDate.setHours(rHours, rMinutes, 0, 0);
 
@@ -88,7 +96,14 @@ export const isStudentOverdue = (outing, now = new Date()) => {
   if (!outing.submitted_date || !outing.reporting_time) return false;
 
   try {
-    const reportingDate = new Date(outing.submitted_date);
+    // Parse date string manually to avoid UTC-midnight timezone offset issues
+    // e.g. "2026-07-27" via new Date() gives UTC midnight, but setHours() applies local time
+    const dateParts = outing.submitted_date.split('-');
+    const reportingDate = new Date(
+      parseInt(dateParts[0], 10),
+      parseInt(dateParts[1], 10) - 1,
+      parseInt(dateParts[2], 10)
+    );
     const { hours: rHours, minutes: rMinutes } = parseTime(outing.reporting_time);
     reportingDate.setHours(rHours, rMinutes, 0, 0);
 
@@ -112,7 +127,13 @@ export const isOutingCompleted = (outing, now = new Date()) => {
   if (!outing.submitted_date || !outing.reporting_time) return false;
 
   try {
-    const reportingDate = new Date(outing.submitted_date);
+    // Parse date string manually to avoid UTC-midnight timezone offset issues
+    const dateParts = outing.submitted_date.split('-');
+    const reportingDate = new Date(
+      parseInt(dateParts[0], 10),
+      parseInt(dateParts[1], 10) - 1,
+      parseInt(dateParts[2], 10)
+    );
     const { hours: rHours, minutes: rMinutes } = parseTime(outing.reporting_time);
     reportingDate.setHours(rHours, rMinutes, 0, 0);
 
@@ -176,7 +197,7 @@ export const autoCompleteExpiredOutings = async () => {
     await checkAndResetMonthlyOutings();
 
     const now = new Date();
-    const activeOutings = await Outing.find({ status: { $in: ['Approved', 'Exited'] } });
+    const activeOutings = await Outing.find({ status: { $in: ['Approved', 'Exited'] } }).populate('student');
     
     let updatedCount = 0;
     for (const outing of activeOutings) {
@@ -185,7 +206,13 @@ export const autoCompleteExpiredOutings = async () => {
         
         // Calculate expected return time to set as actual return time
         if (outing.submitted_date && outing.reporting_time) {
-          const reportingDate = new Date(outing.submitted_date);
+          // Parse date string manually to avoid UTC-midnight timezone offset issues
+          const dateParts = outing.submitted_date.split('-');
+          const reportingDate = new Date(
+            parseInt(dateParts[0], 10),
+            parseInt(dateParts[1], 10) - 1,
+            parseInt(dateParts[2], 10)
+          );
           const { hours, minutes } = parseTime(outing.reporting_time);
           reportingDate.setHours(hours, minutes, 0, 0);
           outing.actual_return_time = reportingDate;
@@ -195,11 +222,17 @@ export const autoCompleteExpiredOutings = async () => {
         }
         
         await outing.save();
+
+        // *** FIX: Update the student's status back to 'Inside' ***
+        if (outing.student) {
+          await User.findByIdAndUpdate(outing.student._id || outing.student, { status: 'Inside' });
+        }
+
         updatedCount++;
       }
     }
     if (updatedCount > 0) {
-      console.log(`[Auto-Complete] Completed ${updatedCount} expired outings.`);
+      console.log(`[Auto-Complete] Completed ${updatedCount} expired outings and set students back to Inside.`);
     }
   } catch (error) {
     console.error('Error auto-completing expired outings:', error);

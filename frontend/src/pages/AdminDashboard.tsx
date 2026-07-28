@@ -687,7 +687,7 @@ export const AdminDashboard: React.FC = () => {
             {/* Student ID */}
             <div className="flex flex-col">
               <label className="input-label">
-                Student ID / Roll No (Unique)
+                Unique Identification ID (Unique)
               </label>
               <input
                 type="text"

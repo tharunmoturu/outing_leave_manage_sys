@@ -113,7 +113,7 @@ export const AdminUserOnboarding: React.FC = () => {
               name,
               branch: branch || 'CSE',
               year: year || 'E1',
-              hostel: hostel || 'Emerald Hall',
+              hostel: hostel || 'I-1',
               roomNo: roomNo || '101',
               phone: phone || 'N/A',
               parentPhone: parentPhone || 'N/A',
@@ -239,7 +239,7 @@ export const AdminUserOnboarding: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1">
                       <label className="input-label">
-                        Student ID / Roll No <span className="text-red-500 font-bold">*</span>
+                        Unique Identification ID <span className="text-red-500 font-bold">*</span>
                       </label>
                       <input 
                         type="text" 
@@ -505,7 +505,7 @@ export const AdminUserOnboarding: React.FC = () => {
                 <div className="space-y-3.5">
                   <div className="field">
                     <label className="block text-[11px] font-bold text-[#1E293B] mb-1.5">
-                      Student ID / Roll No <span className="text-[#7C2030]">*</span>
+                      Unique Identification ID <span className="text-[#7C2030]">*</span>
                     </label>
                     <input 
                       type="text" 

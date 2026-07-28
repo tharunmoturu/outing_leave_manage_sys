@@ -108,7 +108,7 @@ export const bulkUploadUsers = async (req, res) => {
           studentId: cleanStudentId,
           branch: u.branch ? String(u.branch).trim() : 'CSE',
           year: u.year ? String(u.year).trim() : 'E1',
-          hostel: u.hostel ? String(u.hostel).trim() : 'Emerald Hall',
+          hostel: u.hostel ? String(u.hostel).trim() : 'I-1',
           roomNo: u.roomNo || u.room ? String(u.roomNo || u.room).trim() : '101',
           phone: u.phone ? String(u.phone).trim() : '9999999999',
           parentPhone: u.parentPhone || u.parent_phone ? String(u.parentPhone || u.parent_phone).trim() : '9888888888',

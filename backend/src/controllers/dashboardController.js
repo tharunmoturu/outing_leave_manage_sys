@@ -252,7 +252,7 @@ export const getAdminCaretakerStats = async (req, res) => {
     const caretakers = await User.find({ role: { $in: ['caretaker', 'Caretaker', 'admin', 'Admin'] } }).select('-googleId -password');
     
     const stats = await Promise.all(caretakers.map(async (ct) => {
-      const ctHostel = ct.assignedHostel || ct.hostel || 'Emerald Hall';
+      const ctHostel = ct.assignedHostel || ct.hostel || 'I-1';
 
       const approvals = await Outing.countDocuments({
         approved_by: ct._id,

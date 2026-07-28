@@ -2,6 +2,7 @@ import Outing from '../models/Outing.js';
 import User from '../models/User.js';
 import { getCaretakerHostel, getHostelStudentIds, isStudentInCaretakerHostel } from '../utils/hostelUtils.js';
 import { sendOutingApprovalEmail, sendOutingRejectionEmail } from '../utils/emailService.js';
+import { autoCompleteExpiredOutings } from '../utils/timeUtils.js';
 
 const checkAndResetQuota = async (student) => {
   return student;
@@ -196,6 +197,9 @@ export const cancelOuting = async (req, res) => {
 // @access  Private (Caretaker, Admin, Security)
 export const getActiveOutings = async (req, res) => {
   try {
+    // Auto-complete any outings past their reporting time before returning the list
+    await autoCompleteExpiredOutings();
+
     const outings = await Outing.find({
       status: { $in: ['Approved', 'Exited'] },
     })

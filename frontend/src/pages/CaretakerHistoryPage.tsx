@@ -271,8 +271,13 @@ export const CaretakerHistoryPage: React.FC = () => {
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="font-['Lexend'] text-[13.5px] font-bold text-[#1E293B]">{record.student?.name || 'Student'}</div>
-                      <div className="text-[11px] text-[#6B7280] font-medium mt-0.5">{record.student?.studentId || ''}</div>
+                      <div className="font-['Lexend'] text-[13.5px] font-bold text-[#1E293B]">
+                        {record.studentName || record.student_name || record.student?.name || 'Student'}
+                      </div>
+                      <div className="text-[11px] text-[#6B7280] font-medium mt-0.5">
+                        {record.studentId || record.student_id || record.student?.studentId || ''}
+                        {(record.branch || record.year) ? ` • ${record.branch || ''} ${record.year || ''}` : ''}
+                      </div>
                     </div>
                     <span 
                       className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0"
