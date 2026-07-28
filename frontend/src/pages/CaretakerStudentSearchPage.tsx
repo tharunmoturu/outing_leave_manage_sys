@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import API from '../services/api';
-import { Search, Loader2, AlertCircle, SlidersHorizontal, X, Users, RefreshCw } from 'lucide-react';
+import { Search, Loader2, AlertCircle, SlidersHorizontal, X, Users, RefreshCw, ArrowLeft } from 'lucide-react';
 import { StudentSearchBar } from '../components/caretaker/search/StudentSearchBar';
 import { StudentCard } from '../components/caretaker/search/StudentCard';
 import type { StudentSearchResult } from '../components/caretaker/search/StudentCard';
@@ -98,12 +99,13 @@ export const CaretakerStudentSearchPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-[26px] font-bold text-gray-900 tracking-tight flex items-center gap-3">
-              <div className="w-10 h-10 bg-[var(--color-primary)] bg-opacity-10 rounded-xl flex items-center justify-center">
-                <Users className="w-5 h-5 text-[var(--color-primary)]" />
-              </div>
+              <Link to="/caretaker" className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FEF2F2] text-[#991B1B] hover:bg-[#FEE2E2] rounded-lg font-bold text-[14px] transition-colors border border-[#FCA5A5] shadow-sm">
+                <ArrowLeft size={18} strokeWidth={2.5} />
+                Back
+              </Link>
               Student Search
             </h1>
-            <p className="text-[14px] text-gray-500 font-medium mt-1 ml-[52px]">
+            <p className="text-[14px] text-gray-500 font-medium mt-1">
               Search and view student information, outing status, and recent activity.
             </p>
           </div>
@@ -190,9 +192,8 @@ export const CaretakerStudentSearchPage: React.FC = () => {
                     className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent bg-white shadow-sm"
                   >
                     <option value="All">All Hostels</option>
-                    <option value="Block A">Block A</option>
-                    <option value="Block B">Block B</option>
-                    <option value="Block C">Block C</option>
+                    <option value="I-1">I-1</option>
+                    <option value="I-2">I-2</option>
                   </select>
                 </div>
 
@@ -418,9 +419,8 @@ export const CaretakerStudentSearchPage: React.FC = () => {
                   className="w-full border border-[#E6E8EC] rounded-[8px] px-2 py-1.5 text-[12px] font-medium text-[#1E293B] outline-none bg-white"
                 >
                   <option value="All">All</option>
-                  <option value="Block A">Block A</option>
-                  <option value="Block B">Block B</option>
-                  <option value="Block C">Block C</option>
+                  <option value="I-1">I-1</option>
+                  <option value="I-2">I-2</option>
                 </select>
               </div>
               <div className="space-y-1 flex flex-col justify-end">

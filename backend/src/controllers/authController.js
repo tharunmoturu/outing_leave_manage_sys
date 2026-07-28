@@ -25,14 +25,31 @@ export const googleLogin = async (req, res) => {
   }
 
   try {
-    // Verify Google ID Token
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    
-    const payload = ticket.getPayload();
-    const { email, name, sub: googleId } = payload;
+    let email, name, googleId;
+
+    try {
+      // Verify Google ID Token
+      const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      email = payload.email;
+      name = payload.name;
+      googleId = payload.sub;
+    } catch (verifyErr) {
+      // Fallback: Fetch user info using access_token if token is an OAuth access token
+      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) {
+        throw new Error('Invalid token provided');
+      }
+      const data = await response.json();
+      email = data.email;
+      name = data.name;
+      googleId = data.sub;
+    }
 
 
 

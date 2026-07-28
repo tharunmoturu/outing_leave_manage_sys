@@ -66,7 +66,7 @@ export const AdminOperationsDashboard: React.FC = () => {
       <div className="hidden md:block space-y-8">
         <div className="section-header">
           <div>
-            <h1 className="text-title-large">Outing Summary</h1>
+            <h1 className="text-title-large">Currently Outside</h1>
           </div>
           <button onClick={fetchActiveOutings} className="btn-secondary">
             <RefreshCw size={18} strokeWidth={1.75} />
@@ -82,8 +82,8 @@ export const AdminOperationsDashboard: React.FC = () => {
                 key={y.value}
                 onClick={() => setSelectedYear(y.value)}
                 className={`px-6 py-3 text-sm font-bold rounded-lg transition-all ${selectedYear === y.value
-                    ? 'bg-[var(--color-primary)] text-white shadow-md'
-                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-gray-100)] hover:text-[var(--color-text-primary)]'
+                  ? 'bg-[var(--color-primary)] text-white shadow-md'
+                  : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-gray-100)] hover:text-[var(--color-text-primary)]'
                   }`}
               >
                 {y.label}
@@ -127,7 +127,7 @@ export const AdminOperationsDashboard: React.FC = () => {
                 <span className="empty-state-subtext">All students are currently on campus for this selection.</span>
               </div>
             ) : (
-               <table className="table-enterprise">
+              <table className="table-enterprise">
                 <thead>
                   <tr>
                     <th>Student ID</th>
@@ -168,11 +168,11 @@ export const AdminOperationsDashboard: React.FC = () => {
                         <span className="badge badge-exited">Outside</span>
                       </td>
                       <td className="text-right">
-                         <div className="flex items-center justify-end gap-2">
-                           <button onClick={() => handleOpenDrawer(req._id)} className="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all shadow-sm cursor-pointer" title="View Details">
-                             <Eye size={18} />
-                           </button>
-                         </div>
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => handleOpenDrawer(req._id)} className="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all shadow-sm cursor-pointer" title="View Details">
+                            <Eye size={18} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -190,11 +190,11 @@ export const AdminOperationsDashboard: React.FC = () => {
         {/* Header & Refresh */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <div>
-            <h1 className="font-['Lexend'] text-[20px] font-bold text-[#1E293B] tracking-[-0.3px] m-0">Outing Summary</h1>
+            <h1 className="font-['Lexend'] text-[20px] font-bold text-[#1E293B] tracking-[-0.3px] m-0">Currently Outside</h1>
             <p className="text-[11.5px] text-[#6B7280] font-medium m-0">Overview of active student outings</p>
           </div>
-          <button 
-            onClick={fetchActiveOutings} 
+          <button
+            onClick={fetchActiveOutings}
             disabled={loading}
             className="flex items-center gap-1.5 text-[11px] font-semibold text-[#7C2030] bg-white border border-[#E6E8EC] px-3 py-1.5 rounded-lg hover:bg-[#F9FAFB] transition-colors"
           >
@@ -209,11 +209,10 @@ export const AdminOperationsDashboard: React.FC = () => {
             <button
               key={y.value}
               onClick={() => setSelectedYear(y.value)}
-              className={`flex-none px-4 py-2 rounded-[9px] text-[12px] font-bold transition-all border ${
-                selectedYear === y.value
-                  ? 'bg-[#7C2030] text-white border-[#7C2030]'
-                  : 'bg-white text-[#6B7280] border-[#E6E8EC] hover:bg-[#F4F5F7]'
-              }`}
+              className={`flex-none px-4 py-2 rounded-[9px] text-[12px] font-bold transition-all border ${selectedYear === y.value
+                ? 'bg-[#7C2030] text-white border-[#7C2030]'
+                : 'bg-white text-[#6B7280] border-[#E6E8EC] hover:bg-[#F4F5F7]'
+                }`}
             >
               {y.label}
             </button>
@@ -259,7 +258,7 @@ export const AdminOperationsDashboard: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-2.5">
-                 {filteredOutings.map(req => (
+                {filteredOutings.map(req => (
                   <div key={req._id} className="border border-[#E6E8EC] rounded-[12px] p-3 bg-[#FCFCFD]">
                     <div className="flex justify-between items-start mb-2">
                       <div>
@@ -300,7 +299,7 @@ export const AdminOperationsDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       <RequestDrawer
         isOpen={isDrawerOpen}
         onClose={handleCloseDrawer}

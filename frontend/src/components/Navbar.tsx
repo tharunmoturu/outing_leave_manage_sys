@@ -94,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
         {/* Action Controls & Profile */}
         {user && (
           <div className="flex items-center gap-3 md:gap-6 flex-shrink-0">
-            
+
             {/* Academic Year Selector Removed */}
 
             <div className="hidden md:flex flex-col items-end border-r border-[var(--color-border-gray)] pr-6">

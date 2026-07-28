@@ -1,13 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Navbar } from './Navbar';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Search, 
-  ClipboardList, 
+import {
+  LayoutDashboard,
+  Users,
+  Search,
+  ClipboardList,
   AlertTriangle,
-  Activity, 
+  Activity,
   QrCode,
   History,
   User,
@@ -40,7 +40,7 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
         return [
           { path: '/admin/students', label: 'Student Mgmt', icon: <Users className="h-6 w-6" /> },
           { path: '/admin/caretakers', label: 'Caretaker Mgmt', icon: <UserCog className="h-6 w-6" /> },
-          { path: '/admin/operations', label: 'Outing Summary', icon: <FileText className="h-6 w-6" /> },
+          { path: '/admin/operations', label: 'Currently Outside', icon: <FileText className="h-6 w-6" /> },
           { path: '/admin/history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
           { path: '/admin/onboarding', label: 'User Onboarding', icon: <UserPlus className="h-6 w-6" /> },
           { path: '/admin/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
@@ -49,7 +49,7 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
         return [
           { path: '/sanction/students', label: 'Student Mgmt', icon: <Users className="h-6 w-6" /> },
           { path: '/sanction/caretakers', label: 'Caretaker Mgmt', icon: <UserCog className="h-6 w-6" /> },
-          { path: '/sanction/operations', label: 'Outing Summary', icon: <FileText className="h-6 w-6" /> },
+          { path: '/sanction/operations', label: 'Currently Outside', icon: <FileText className="h-6 w-6" /> },
           { path: '/sanction/history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
           { path: '/sanction/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
         ];
@@ -94,7 +94,7 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
             <div className="px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
               Navigation
             </div>
-            
+
             {navLinks.map((link) => (
               <NavLink
                 key={link.path}
@@ -127,19 +127,17 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
             to={link.path}
             end
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center gap-1 text-[9px] font-semibold transition-colors ${
-                isActive ? 'text-[#7C2030]' : 'text-[#6B7280]'
+              `flex-1 flex flex-col items-center gap-1 text-[9px] font-semibold transition-colors ${isActive ? 'text-[#7C2030]' : 'text-[#6B7280]'
               }`
             }
           >
             {({ isActive }) => (
               <>
                 <div
-                  className={`flex items-center justify-center transition-all ${
-                    isActive
-                      ? 'bg-[#FCE9EA] rounded-lg w-[34px] h-[26px] text-[#7C2030]'
-                      : 'w-[22px] h-[22px] text-[#6B7280]'
-                  }`}
+                  className={`flex items-center justify-center transition-all ${isActive
+                    ? 'bg-[#FCE9EA] rounded-lg w-[34px] h-[26px] text-[#7C2030]'
+                    : 'w-[22px] h-[22px] text-[#6B7280]'
+                    }`}
                 >
                   {React.cloneElement(link.icon as React.ReactElement<any>, { size: 16, strokeWidth: 2 })}
                 </div>

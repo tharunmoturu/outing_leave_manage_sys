@@ -45,9 +45,9 @@ export const StudentDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <StudentInfoCard 
-        studentData={data?.student} 
-        loadingStudent={loading} 
+      <StudentInfoCard
+        studentData={data?.student}
+        loadingStudent={loading}
       />
 
       {loading ? (
@@ -58,13 +58,13 @@ export const StudentDashboard: React.FC = () => {
       ) : (
         data && (
           <div className="space-y-6">
-            
-            {/* Monthly Outing Summary Card */}
+
+            {/* Monthly Currently Outside Card */}
             <div className="bg-white rounded-xl shadow-sm border border-[var(--color-border-gray)] p-8">
               <div className="flex flex-col md:flex-row items-center justify-between gap-12">
                 <div className="flex-1 w-full space-y-4">
                   <MonthlyQuota quota={data.quota} />
-                  
+
                   <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
                     <div>
                       <h4 className="text-sm font-bold text-red-800 uppercase tracking-wider mb-0.5">Emergency Requests</h4>
@@ -78,8 +78,8 @@ export const StudentDashboard: React.FC = () => {
             </div>
 
             {/* Current Request Status */}
-            <ActiveOutingCard 
-              activeOuting={data.activeOuting} 
+            <ActiveOutingCard
+              activeOuting={data.activeOuting}
               studentName={data.student.name}
               studentId={data.student.studentId}
               branch={data.student.branch}
