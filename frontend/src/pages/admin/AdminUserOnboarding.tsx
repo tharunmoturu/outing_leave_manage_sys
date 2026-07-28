@@ -376,8 +376,17 @@ export const AdminUserOnboarding: React.FC = () => {
                      placeholder="Search by name or ID..."
                      value={searchQuery}
                      onChange={(e) => setSearchQuery(e.target.value)}
-                     className="search-input text-sm pl-9 py-2 w-full rounded-lg bg-[var(--color-bg-main)] border border-[var(--color-border-gray)] focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-all"
+                     className="search-input pr-10 text-sm pl-9 py-2 w-full rounded-lg bg-[var(--color-bg-main)] border border-[var(--color-border-gray)] focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-all"
                    />
+                   {searchQuery && (
+                     <button
+                       type="button"
+                       onClick={() => setSearchQuery('')}
+                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1"
+                     >
+                       <X size={16} />
+                     </button>
+                   )}
                  </div>
                </div>
                
@@ -640,15 +649,24 @@ export const AdminUserOnboarding: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3 max-w-3xl mx-auto p-2">
-              <div className="flex items-center gap-1.5 bg-[#F4F5F7] border border-[#E6E8EC] rounded-[9px] px-2.5 py-1.5 mb-3 text-[11px] text-[#6B7280]">
+              <div className="relative flex items-center gap-1.5 bg-[#F4F5F7] border border-[#E6E8EC] rounded-[9px] px-2.5 py-1.5 mb-3 text-[11px] text-[#6B7280]">
                 <Search size={13} className="text-[#6B7280] shrink-0" />
                 <input
                   type="text"
                   placeholder="Search by name or ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-transparent border-none outline-none w-full text-[11px] text-[#1E293B] placeholder-[#9CA3AF]"
+                  className="bg-transparent border-none outline-none w-full text-[11px] text-[#1E293B] placeholder-[#9CA3AF] pr-6"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
               </div>
               
               {loadingUsers ? (

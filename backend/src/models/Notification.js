@@ -2,9 +2,18 @@ import mongoose from 'mongoose';
 
 const notificationSchema = new mongoose.Schema(
   {
+    recipientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+    },
+    recipientRole: {
+      type: String,
+      enum: ['student', 'caretaker', 'admin', 'sanctionAuthority'],
+      index: true,
+    },
     studentId: {
       type: String,
-      required: true,
       index: true,
     },
     outingId: {
@@ -15,7 +24,6 @@ const notificationSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ['APPROVED', 'REJECTED'],
     },
     title: {
       type: String,

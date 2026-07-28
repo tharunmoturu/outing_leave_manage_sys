@@ -4,7 +4,7 @@ import { EmergencyRequestTable } from '../components/caretaker/EmergencyRequestT
 import { RequestDrawer } from '../components/caretaker/RequestDrawer';
 import { Pagination } from '../components/caretaker/Pagination';
 import { RejectionDialog } from '../components/caretaker/RejectionDialog';
-import { Loader2, RefreshCw, AlertCircle, FileWarning, ArrowLeft } from 'lucide-react';
+import { Loader2, RefreshCw, AlertCircle, FileWarning, ArrowLeft, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { emergencyCategories } from '../components/dashboard/EmergencyCategorySelector';
 import { useAuth } from '../contexts/AuthContext';
@@ -184,13 +184,24 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
         {/* Filters */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <input
-              type="text"
-              placeholder="Search by name or ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-            />
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search by name or ID..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -271,15 +282,24 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
         </div>
 
         {/* Mobile Search */}
-        <div className="bg-white border border-[#E6E8EC] rounded-[12px] px-3 py-2.5 flex items-center gap-2">
+        <div className="relative bg-white border border-[#E6E8EC] rounded-[12px] px-3 py-2.5 flex items-center gap-2">
           <FileWarning size={15} className="text-[#9CA3AF] flex-shrink-0" />
           <input
             type="text"
             placeholder="Search student name or ID..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-            className="flex-1 text-[13px] font-medium text-[#1E293B] placeholder-[#9CA3AF] outline-none bg-transparent"
+            className="flex-1 pr-8 text-[13px] font-medium text-[#1E293B] placeholder-[#9CA3AF] outline-none bg-transparent"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => { setSearchQuery(''); setPage(1); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#4B5563] focus:outline-none transition-colors p-1"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
 
         {error && (

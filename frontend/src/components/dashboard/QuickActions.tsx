@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 
 interface QuickActionsProps {
   activeStatus?: string | null;
+  remainingOutings?: number;
 }
 
-export const QuickActions: React.FC<QuickActionsProps> = ({ activeStatus }) => {
+export const QuickActions: React.FC<QuickActionsProps> = ({ activeStatus, remainingOutings = 0 }) => {
   const navigate = useNavigate();
 
   const isDisabled = !!activeStatus;
+  const isEmergencyDisabled = isDisabled || remainingOutings > 0;
 
   return (
     <div className="w-full md:w-auto md:border-l border-[var(--color-border-gray)] md:pl-12 flex flex-col items-center justify-center space-y-4">
@@ -21,7 +23,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ activeStatus }) => {
       </button>
       <button
         onClick={() => navigate('/student/emergency-outing')}
-        disabled={isDisabled}
+        disabled={isEmergencyDisabled}
         className="w-full bg-red-600 text-white px-8 py-3 rounded-xl text-[15px] font-bold shadow-md hover:bg-red-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         <span></span> Apply Emergency Outing

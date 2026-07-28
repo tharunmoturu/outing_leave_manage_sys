@@ -429,6 +429,8 @@ export const approveOuting = async (req, res) => {
       }
 
       await Notification.create({
+        recipientId: studentUser._id,
+        recipientRole: 'student',
         studentId: studentUser.studentId,
         outingId: outing._id,
         type: 'APPROVED',
@@ -502,6 +504,8 @@ export const rejectOuting = async (req, res) => {
 
     if (studentUser) {
       await Notification.create({
+        recipientId: studentUser._id,
+        recipientRole: 'student',
         studentId: studentUser.studentId,
         outingId: outing._id,
         type: 'REJECTED',

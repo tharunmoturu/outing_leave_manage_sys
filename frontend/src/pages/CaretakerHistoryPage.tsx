@@ -5,7 +5,7 @@ import { HistoryFilters } from '../components/history/HistoryFilters';
 import { HistoryTable } from '../components/history/HistoryTable';
 import { HistoryDrawer } from '../components/history/HistoryDrawer';
 import { Pagination } from '../components/caretaker/Pagination';
-import { RefreshCw, Search, SlidersHorizontal, History, Calendar, Clock, ArrowLeft } from 'lucide-react';
+import { RefreshCw, Search, SlidersHorizontal, History, Calendar, Clock, ArrowLeft, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -186,8 +186,16 @@ export const CaretakerHistoryPage: React.FC = () => {
             placeholder="Search name, ID..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-            className="flex-1 text-[13px] font-medium text-[#1E293B] placeholder-[#9CA3AF] outline-none bg-transparent"
+            className="flex-1 text-[13px] font-medium text-[#1E293B] placeholder-[#9CA3AF] outline-none bg-transparent pr-10"
           />
+          {searchQuery && (
+            <button
+              onClick={() => { setSearchQuery(''); setPage(1); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#4B5563]"
+            >
+              <X size={16} />
+            </button>
+          )}
           <button 
             onClick={() => setShowFilters(!showFilters)}
             className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-[8px] transition-colors ${showFilters || hasActiveFilters ? 'bg-[#FCE9EA] text-[#7C2030]' : 'bg-[#F3F4F6] text-[#6B7280]'}`}

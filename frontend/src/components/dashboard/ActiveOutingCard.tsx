@@ -10,10 +10,14 @@ interface ActiveOutingCardProps {
   year?: string;
   hostel?: string;
   room?: string;
+  onCancel?: (id: string) => void;
+  isCancelling?: boolean;
 }
 
 export const ActiveOutingCard: React.FC<ActiveOutingCardProps> = ({ 
-  activeOuting
+  activeOuting,
+  onCancel,
+  isCancelling
 }) => {
   const navigate = useNavigate();
 
@@ -81,9 +85,20 @@ export const ActiveOutingCard: React.FC<ActiveOutingCardProps> = ({
                    <span>Submitted: {activeOuting.submittedDate ? new Date(activeOuting.submittedDate).toLocaleDateString() : '-'} at {activeOuting.submittedTime ? new Date(activeOuting.submittedTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '-'}</span>
                 </div>
               </div>
-              <span className="px-5 py-2 rounded-lg text-[13px] font-bold tracking-wider uppercase text-center bg-yellow-100 text-yellow-800 border border-yellow-300">
-                Pending Approval
-              </span>
+              <div className="flex flex-col items-end gap-2">
+                <span className="px-5 py-2 rounded-lg text-[13px] font-bold tracking-wider uppercase text-center bg-yellow-100 text-yellow-800 border border-yellow-300 w-full sm:w-auto">
+                  Pending Approval
+                </span>
+                {onCancel && (
+                  <button 
+                    onClick={() => onCancel(activeOuting.id)}
+                    disabled={isCancelling}
+                    className="text-[12px] font-bold text-red-600 hover:text-red-800 hover:underline px-2 py-1 transition-all disabled:opacity-50"
+                  >
+                    {isCancelling ? 'Cancelling...' : 'Cancel Request'}
+                  </button>
+                )}
+              </div>
            </div>
          )
       ) : (
