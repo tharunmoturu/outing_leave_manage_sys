@@ -1,4 +1,6 @@
 import Notification from '../models/Notification.js';
+import User from '../models/User.js';
+import { getCaretakerHostel, getHostelStudentIdStrings, isStudentInCaretakerHostel } from '../utils/hostelUtils.js';
 
 // @desc    Get notifications for the logged-in user (role-based and user-specific)
 // @route   GET /api/notifications
@@ -13,16 +15,27 @@ export const getUserNotifications = async (req, res) => {
       query = {
         $or: [
           { recipientId: userId },
+          { studentId: req.user.studentId, recipientRole: 'student' },
           { recipientRole: 'student' }
         ]
       };
     } else {
       // For Admin, Caretaker, Sanction Authority
       const normalizedRole = role === 'sanctionAuthority' ? 'sanctionAuthority' : role.toLowerCase();
+      
+      const roleQuery = { recipientRole: normalizedRole };
+      if (normalizedRole === 'caretaker') {
+        const caretakerHostel = getCaretakerHostel(req.user);
+        if (caretakerHostel) {
+          const hostelStudentIds = await getHostelStudentIdStrings(caretakerHostel);
+          roleQuery.studentId = { $in: hostelStudentIds };
+        }
+      }
+
       query = {
         $or: [
           { recipientId: userId },
-          { recipientRole: normalizedRole }
+          roleQuery
         ]
       };
     }
@@ -53,9 +66,18 @@ export const deleteNotification = async (req, res) => {
     const normalizedRole = role === 'sanctionAuthority' ? 'sanctionAuthority' : role.toLowerCase();
 
     const isRecipient = notification.recipientId && notification.recipientId.toString() === userId;
-    const isRoleRecipient = notification.recipientRole === normalizedRole;
+    let isRoleRecipient = notification.recipientRole === normalizedRole;
+    const isStudentRecipient = role.toLowerCase() === 'student' && notification.studentId === req.user.studentId;
 
-    if (!isRecipient && !isRoleRecipient) {
+    // Enforce hostel boundaries on role-based notifications for caretakers
+    if (normalizedRole === 'caretaker' && isRoleRecipient && notification.studentId) {
+      const student = await User.findOne({ studentId: notification.studentId });
+      if (student && !isStudentInCaretakerHostel(req.user, student.hostel)) {
+        isRoleRecipient = false;
+      }
+    }
+
+    if (!isRecipient && !isRoleRecipient && !isStudentRecipient) {
       return res.status(403).json({ message: 'Not authorized to delete this notification' });
     }
 
@@ -79,15 +101,26 @@ export const clearAllNotifications = async (req, res) => {
       query = {
         $or: [
           { recipientId: userId },
+          { studentId: req.user.studentId, recipientRole: 'student' },
           { recipientRole: 'student' }
         ]
       };
     } else {
       const normalizedRole = role === 'sanctionAuthority' ? 'sanctionAuthority' : role.toLowerCase();
+      
+      const roleQuery = { recipientRole: normalizedRole };
+      if (normalizedRole === 'caretaker') {
+        const caretakerHostel = getCaretakerHostel(req.user);
+        if (caretakerHostel) {
+          const hostelStudentIds = await getHostelStudentIdStrings(caretakerHostel);
+          roleQuery.studentId = { $in: hostelStudentIds };
+        }
+      }
+
       query = {
         $or: [
           { recipientId: userId },
-          { recipientRole: normalizedRole }
+          roleQuery
         ]
       };
     }

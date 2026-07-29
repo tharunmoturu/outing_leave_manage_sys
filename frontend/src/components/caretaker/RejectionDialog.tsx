@@ -27,10 +27,6 @@ export const RejectionDialog: React.FC<RejectionDialogProps> = ({
   }, [isOpen]);
 
   const handleConfirm = () => {
-    if (!reason.trim()) {
-      setError('Rejection reason is required.');
-      return;
-    }
     onConfirm(reason.trim());
   };
 
@@ -59,7 +55,7 @@ export const RejectionDialog: React.FC<RejectionDialogProps> = ({
           </p>
 
           <div className="space-y-2">
-            <label className="text-[13px] font-bold text-gray-700">Reason for Rejection <span className="text-red-500">*</span></label>
+            <label className="text-[13px] font-bold text-gray-700">Reason for Rejection (Optional)</label>
             <textarea
               value={reason}
               onChange={(e) => {

@@ -470,10 +470,7 @@ export const rejectOuting = async (req, res) => {
     const { reason } = req.body;
     const caretaker = req.user;
     const caretakerHostel = getCaretakerHostel(caretaker);
-
-    if (!reason || !reason.trim()) {
-      return res.status(400).json({ message: 'Rejection reason is required' });
-    }
+    const rejectionReason = reason && reason.trim() ? reason.trim() : 'No reason provided';
 
     const outing = await Outing.findById(outingId).populate('student');
     
@@ -497,8 +494,8 @@ export const rejectOuting = async (req, res) => {
     outing.rejected_by = caretaker._id;
     outing.rejected_by_name = caretaker.name;
     outing.rejected_at = new Date();
-    outing.rejection_reason = reason;
-    outing.remarks = reason; // fallback
+    outing.rejection_reason = rejectionReason;
+    outing.remarks = rejectionReason; // fallback
 
     await outing.save();
 
@@ -510,7 +507,7 @@ export const rejectOuting = async (req, res) => {
         outingId: outing._id,
         type: 'REJECTED',
         title: 'Outing Rejected',
-        message: `Your outing request to ${outing.destination} was rejected. Reason: ${reason}`
+        message: `Your outing request to ${outing.destination} was rejected. Reason: ${rejectionReason}`
       });
 
       // Send rejection email asynchronously
@@ -522,7 +519,7 @@ export const rejectOuting = async (req, res) => {
         outingType: outing.outingType || 'Normal',
         destination: outing.destination,
         purpose: outing.emergencyCategory ? `${outing.emergencyCategory} - ${outing.purpose}` : outing.purpose,
-        rejectionReason: reason,
+        rejectionReason: rejectionReason,
         rejectedByName: caretaker.name || 'Caretaker',
         rejectedByRole: caretaker.role || 'Caretaker',
       }).catch(err => console.error('[EmailService Error]:', err));

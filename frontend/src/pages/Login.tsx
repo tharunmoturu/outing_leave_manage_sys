@@ -4,6 +4,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import logo from '../assets/logo.png';
+import backgroundImage from '../assets/background.png';
 
 export const Login: React.FC = () => {
   const [error, setError] = useState('');
@@ -45,11 +46,14 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--color-background)] px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Subtle background decoration */}
-      <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
-      <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-[var(--color-primary)] opacity-5 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 h-80 w-80 rounded-full bg-red-900 opacity-5 blur-3xl pointer-events-none" />
+    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Blurred background image - positioned bottom to show buildings and lightly blurred */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-bottom bg-no-repeat scale-105 filter blur-[1.5px]"
+        style={{ backgroundImage: `url(${backgroundImage})` }}
+      />
+      {/* Semi-transparent overlay to ensure contrast and readability */}
+      <div className="absolute inset-0 z-0 bg-white/45" />
 
       <div className="w-full max-w-md space-y-8 relative z-10">
         {/* Header / Branding Area */}
