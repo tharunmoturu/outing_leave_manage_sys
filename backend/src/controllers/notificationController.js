@@ -13,7 +13,6 @@ export const getUserNotifications = async (req, res) => {
       query = {
         $or: [
           { recipientId: userId },
-          { studentId: req.user.studentId },
           { recipientRole: 'student' }
         ]
       };
@@ -55,9 +54,8 @@ export const deleteNotification = async (req, res) => {
 
     const isRecipient = notification.recipientId && notification.recipientId.toString() === userId;
     const isRoleRecipient = notification.recipientRole === normalizedRole;
-    const isStudentRecipient = role.toLowerCase() === 'student' && notification.studentId === req.user.studentId;
 
-    if (!isRecipient && !isRoleRecipient && !isStudentRecipient) {
+    if (!isRecipient && !isRoleRecipient) {
       return res.status(403).json({ message: 'Not authorized to delete this notification' });
     }
 
@@ -81,7 +79,6 @@ export const clearAllNotifications = async (req, res) => {
       query = {
         $or: [
           { recipientId: userId },
-          { studentId: req.user.studentId },
           { recipientRole: 'student' }
         ]
       };
