@@ -1,6 +1,6 @@
 import User from '../models/User.js';
 import Outing from '../models/Outing.js';
-import { getCaretakerHostel } from '../utils/hostelUtils.js';
+import { getCaretakerHostel, getHostelStudentIds } from '../utils/hostelUtils.js';
 import { autoCompleteExpiredOutings } from '../utils/timeUtils.js';
 
 // Helper to get date ranges
@@ -267,14 +267,11 @@ export const getAdminCaretakerStats = async (req, res) => {
       
       let pendingAssigned = 0;
       if (ctHostel && ctHostel !== 'Unassigned') {
-        const studentIdsInHostel = await User.find({
-          role: { $in: ['student', 'Student'] },
-          hostel: { $regex: new RegExp(`^${ctHostel.trim()}$`, 'i') }
-        }).select('_id');
+        const studentIdsInHostel = await getHostelStudentIds(ctHostel);
         
         pendingAssigned = await Outing.countDocuments({
           status: 'Pending',
-          student: { $in: studentIdsInHostel.map(s => s._id) }
+          student: { $in: studentIdsInHostel }
         });
       } else {
         pendingAssigned = await Outing.countDocuments({ status: 'Pending' });

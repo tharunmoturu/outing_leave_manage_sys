@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { formatTo12Hour } from '../../utils/timeFormat';
-import { QrCode } from 'lucide-react';
+import { QrCode, XCircle } from 'lucide-react';
 
 interface ActiveOutingCardProps {
   activeOuting: any;
@@ -85,21 +85,20 @@ export const ActiveOutingCard: React.FC<ActiveOutingCardProps> = ({
                 <span>Submitted: {activeOuting.submittedDate ? new Date(activeOuting.submittedDate).toLocaleDateString() : '-'} at {activeOuting.submittedTime ? new Date(activeOuting.submittedTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
               </div>
             </div>
-            <div className="flex flex-col items-end">
-              <div className="flex flex-col items-stretch gap-2 w-full sm:w-auto">
-                <span className="px-5 py-2 rounded-lg text-[13px] font-bold tracking-wider uppercase text-center bg-yellow-100 text-yellow-800 border border-yellow-300">
-                  Pending Approval
-                </span>
-                {onCancel && (
-                  <button
-                    onClick={() => onCancel(activeOuting.id)}
-                    disabled={isCancelling}
-                    className="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-[13px] font-bold hover:bg-red-50 hover:border-red-300 transition-all disabled:opacity-50 text-center shadow-sm"
-                  >
-                    {isCancelling ? 'Cancelling...' : 'CANCEL REQUEST'}
-                  </button>
-                )}
-              </div>
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+              <span className="px-5 py-2.5 rounded-lg text-[13px] font-bold tracking-wider uppercase text-center bg-yellow-100 text-yellow-800 border border-yellow-300 w-full sm:w-auto">
+                Pending Approval
+              </span>
+              {onCancel && (
+                <button
+                  onClick={() => onCancel(activeOuting.id)}
+                  disabled={isCancelling}
+                  className="flex items-center justify-center gap-2 bg-red-50 text-red-700 hover:bg-red-100 font-bold px-4 py-2.5 rounded-lg transition-all border border-red-200 text-[13px] disabled:opacity-50 shadow-sm w-full sm:w-auto"
+                >
+                  <XCircle size={15} />
+                  {isCancelling ? 'Cancelling...' : 'Cancel Request'}
+                </button>
+              )}
             </div>
           </div>
         )

@@ -1,7 +1,7 @@
 import User from '../models/User.js';
 import Outing from '../models/Outing.js';
 import Notification from '../models/Notification.js';
-import { isOutingCompleted } from '../utils/timeUtils.js';
+import { isOutingCompleted, autoCompleteExpiredOutings } from '../utils/timeUtils.js';
 
 // Lazy reset helper to check and reset quota at the start of a new month
 export const checkAndResetQuota = async (student) => {
@@ -36,6 +36,7 @@ export const getStudents = async (req, res) => {
 // @access  Private (Student)
 export const getStudentDashboard = async (req, res) => {
   try {
+    await autoCompleteExpiredOutings();
     const student = await User.findById(req.user._id);
 
     if (!student) {
@@ -322,8 +323,14 @@ export const applyEmergencyOuting = async (req, res) => {
 export const getNotifications = async (req, res) => {
   try {
     const student = await User.findById(req.user._id);
-    // Only return unread notifications so read ones disappear
-    const notifications = await Notification.find({ studentId: student.studentId, isRead: false }).sort({ createdAt: -1 }).limit(20);
+    // Only return unread notifications meant for this student
+    const notifications = await Notification.find({
+      $or: [
+        { recipientId: student._id },
+        { studentId: student.studentId, recipientRole: 'student' }
+      ],
+      isRead: false
+    }).sort({ createdAt: -1 }).limit(20);
     res.json(notifications);
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
@@ -331,14 +338,20 @@ export const getNotifications = async (req, res) => {
 export const markNotificationsRead = async (req, res) => {
   try {
     const student = await User.findById(req.user._id);
-    // Delete notifications so they are permanently gone from database
-    await Notification.deleteMany({ studentId: student.studentId });
+    // Delete notifications meant for this student
+    await Notification.deleteMany({
+      $or: [
+        { recipientId: student._id },
+        { studentId: student.studentId, recipientRole: 'student' }
+      ]
+    });
     res.json({ success: true });
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
 
 export const getGatePass = async (req, res) => {
   try {
+    await autoCompleteExpiredOutings();
     const student = await User.findById(req.user._id);
     const activeOuting = await Outing.findOne({
       student: student._id,

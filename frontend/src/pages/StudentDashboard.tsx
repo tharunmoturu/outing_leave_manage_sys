@@ -109,9 +109,9 @@ export const StudentDashboard: React.FC = () => {
 
       <ConfirmDialog
         isOpen={cancelModalOpen}
-        title="CANCEL REQUEST"
+        title="Cancel Outing Request"
         message="Are you sure you want to cancel this outing request? This action cannot be undone."
-        confirmText="Yes, CANCEL REQUEST"
+        confirmText="Yes, Cancel"
         cancelText="No, Keep It"
         confirmVariant="danger"
         onConfirm={confirmCancelOuting}
