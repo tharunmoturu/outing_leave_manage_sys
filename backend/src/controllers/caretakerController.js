@@ -661,13 +661,14 @@ export const getCaretakerHistory = async (req, res) => {
 
     if (dateFrom && dateTo) {
       const from = new Date(dateFrom);
+      from.setHours(0, 0, 0, 0);
       const to = new Date(dateTo);
       to.setHours(23, 59, 59, 999);
-      if (from > thirtyDaysAgo) {
-        query.createdAt = { $gte: from, $lte: to };
-      } else {
-        query.createdAt = { $gte: thirtyDaysAgo, $lte: to };
-      }
+      // Filter by submitted_date (the actual outing date shown in the UI)
+      // submitted_date is stored as a string like "2026-07-25"
+      query.submitted_date = { $gte: dateFrom, $lte: dateTo };
+      // Also remove the 30-day createdAt restriction so user's date range is respected fully
+      delete query.createdAt;
     }
 
     const rawHistory = await Outing.find(query).populate('student', 'name studentId branch year hostel roomNo').sort({ createdAt: sortOrder });
