@@ -23,6 +23,67 @@ export const checkAndResetQuota = async (student) => {
   return student;
 };
 
+// Helper: Dispatch personalized notifications
+const dispatchPersonalizedNotifications = async (student, newOuting, isEmergency = false) => {
+  const typeText = isEmergency ? 'Emergency' : 'Normal';
+  
+  // Find Caretakers for this student's hostel
+  const caretakers = await User.find({ role: { $regex: /^caretaker$/i } });
+  const relevantCaretakers = caretakers.filter(c => {
+    const assigned = c.assignedHostel || c.hostel;
+    return assigned === student.hostel;
+  });
+
+  // Find Admins and Sanction Authorities
+  const admins = await User.find({ role: { $regex: /^admin$/i } });
+  const sanctionAuthorities = await User.find({ role: { $regex: /^sanctionAuthority$/i } });
+
+  const notificationsToCreate = [];
+
+  // Add Caretakers (or fallback to all admins if no caretaker found for hostel)
+  const caretakerRecipients = relevantCaretakers.length > 0 ? relevantCaretakers : admins;
+  
+  for (const ct of caretakerRecipients) {
+    notificationsToCreate.push({
+      recipientId: ct._id,
+      recipientRole: 'caretaker',
+      studentId: student.studentId,
+      outingId: newOuting._id,
+      type: 'OUTING_REQUEST',
+      title: `New ${typeText} Outing Request`,
+      message: `New ${typeText} outing request from ${student.name} (${student.studentId})`
+    });
+  }
+
+  for (const admin of admins) {
+    notificationsToCreate.push({
+      recipientId: admin._id,
+      recipientRole: 'admin',
+      studentId: student.studentId,
+      outingId: newOuting._id,
+      type: 'OUTING_REQUEST',
+      title: `New ${typeText} Outing Request`,
+      message: `New ${typeText} outing request from ${student.name} (${student.studentId})`
+    });
+  }
+
+  for (const sa of sanctionAuthorities) {
+    notificationsToCreate.push({
+      recipientId: sa._id,
+      recipientRole: 'sanctionAuthority',
+      studentId: student.studentId,
+      outingId: newOuting._id,
+      type: 'OUTING_REQUEST',
+      title: `New ${typeText} Outing Request`,
+      message: `New ${typeText} outing request from ${student.name} (${student.studentId})`
+    });
+  }
+
+  if (notificationsToCreate.length > 0) {
+    await Notification.insertMany(notificationsToCreate);
+  }
+};
+
 // @desc    Get all students with filters and search query
 // @route   GET /api/students
 // @access  Private (Admin, Caretaker)
@@ -196,31 +257,8 @@ export const applyNormalOuting = async (req, res) => {
       status: 'Pending'
     });
 
-    // Create notifications for staff roles
-    await Notification.create({
-      recipientRole: 'caretaker',
-      studentId: student.studentId,
-      outingId: newOuting._id,
-      type: 'OUTING_REQUEST',
-      title: 'New Outing Request',
-      message: `New Normal outing request from ${student.name} (${student.studentId})`
-    });
-    await Notification.create({
-      recipientRole: 'admin',
-      studentId: student.studentId,
-      outingId: newOuting._id,
-      type: 'OUTING_REQUEST',
-      title: 'New Outing Request',
-      message: `New Normal outing request from ${student.name} (${student.studentId})`
-    });
-    await Notification.create({
-      recipientRole: 'sanctionAuthority',
-      studentId: student.studentId,
-      outingId: newOuting._id,
-      type: 'OUTING_REQUEST',
-      title: 'New Outing Request',
-      message: `New Normal outing request from ${student.name} (${student.studentId})`
-    });
+    // Create personalized notifications for staff roles
+    await dispatchPersonalizedNotifications(student, newOuting, false);
 
     res.status(201).json({ message: 'Outing request submitted successfully', outing: newOuting });
   } catch (error) {
@@ -288,31 +326,8 @@ export const applyEmergencyOuting = async (req, res) => {
       status: 'Pending'
     });
 
-    // Create notifications for staff roles
-    await Notification.create({
-      recipientRole: 'caretaker',
-      studentId: student.studentId,
-      outingId: newOuting._id,
-      type: 'OUTING_REQUEST',
-      title: 'New Emergency Outing Request',
-      message: `New Emergency outing request from ${student.name} (${student.studentId})`
-    });
-    await Notification.create({
-      recipientRole: 'admin',
-      studentId: student.studentId,
-      outingId: newOuting._id,
-      type: 'OUTING_REQUEST',
-      title: 'New Emergency Outing Request',
-      message: `New Emergency outing request from ${student.name} (${student.studentId})`
-    });
-    await Notification.create({
-      recipientRole: 'sanctionAuthority',
-      studentId: student.studentId,
-      outingId: newOuting._id,
-      type: 'OUTING_REQUEST',
-      title: 'New Emergency Outing Request',
-      message: `New Emergency outing request from ${student.name} (${student.studentId})`
-    });
+    // Create personalized notifications for staff roles
+    await dispatchPersonalizedNotifications(student, newOuting, true);
 
     res.status(201).json({ message: 'Emergency Outing request submitted successfully', outing: newOuting });
   } catch (error) {
