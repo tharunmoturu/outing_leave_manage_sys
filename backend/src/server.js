@@ -43,7 +43,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/caretaker', caretakerRoutes);
-app.use('/api/notifications', notificationRoutes);
+app.use('/api/notification', notificationRoutes);
 
 // Root route
 app.get('/', (req, res) => {

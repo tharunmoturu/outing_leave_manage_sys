@@ -6,6 +6,7 @@ import { MonthlyQuota } from '../components/dashboard/MonthlyQuota';
 import { QuickActions } from '../components/dashboard/QuickActions';
 import { ActiveOutingCard } from '../components/dashboard/ActiveOutingCard';
 import { RecentOutingsTable } from '../components/dashboard/RecentOutingsTable';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
 export const StudentDashboard: React.FC = () => {
   const [data, setData] = useState<any>(null);
@@ -24,16 +25,26 @@ export const StudentDashboard: React.FC = () => {
   };
 
   const [isCancelling, setIsCancelling] = useState(false);
-  const handleCancelOuting = async (id: string) => {
-    if (!window.confirm('Are you sure you want to cancel this request?')) return;
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [outingToCancel, setOutingToCancel] = useState<string | null>(null);
+
+  const handleCancelOuting = (id: string) => {
+    setOutingToCancel(id);
+    setCancelModalOpen(true);
+  };
+
+  const confirmCancelOuting = async () => {
+    if (!outingToCancel) return;
+    setCancelModalOpen(false);
     setIsCancelling(true);
     try {
-      await API.post(`/outings/${id}/cancel`);
+      await API.post(`/outings/${outingToCancel}/cancel`);
       await fetchStudentDashboard(); // Refresh data
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to cancel request');
+      alert(err.response?.data?.message || 'Failed to CANCEL REQUEST');
     } finally {
       setIsCancelling(false);
+      setOutingToCancel(null);
     }
   };
 
@@ -95,6 +106,20 @@ export const StudentDashboard: React.FC = () => {
           </div>
         )
       )}
+
+      <ConfirmDialog
+        isOpen={cancelModalOpen}
+        title="CANCEL REQUEST"
+        message="Are you sure you want to cancel this outing request? This action cannot be undone."
+        confirmText="Yes, CANCEL REQUEST"
+        cancelText="No, Keep It"
+        confirmVariant="danger"
+        onConfirm={confirmCancelOuting}
+        onCancel={() => {
+          setCancelModalOpen(false);
+          setOutingToCancel(null);
+        }}
+      />
     </div>
   );
 };

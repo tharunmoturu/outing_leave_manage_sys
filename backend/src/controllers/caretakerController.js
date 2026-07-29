@@ -888,14 +888,10 @@ export const searchStudents = async (req, res) => {
     const year = req.query.year || 'All';
     const hostel = req.query.hostel || 'All';
     const activeOutingOnly = req.query.activeOutingOnly === 'true';
-    const caretakerHostel = getCaretakerHostel(req.user);
-
     // Build the query
-    const query = { role: { $in: ['student', 'Student'] } };
+    const query = { role: { $regex: /^student$/i } };
 
-    if (caretakerHostel) {
-      query.hostel = { $regex: new RegExp(`^${caretakerHostel.trim()}$`, 'i') };
-    } else if (hostel !== 'All') {
+    if (hostel !== 'All') {
       query.hostel = hostel;
     }
 

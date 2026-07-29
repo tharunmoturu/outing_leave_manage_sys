@@ -44,7 +44,7 @@ export const CaretakerStudentSearchPage: React.FC = () => {
       if (activeOutingOnly) params.append('activeOutingOnly', 'true');
       
       params.append('page', page.toString());
-      params.append('limit', '12');
+      params.append('limit', '25');
 
       const res = await API.get(`/caretaker/student-search?${params.toString()}`);
       
@@ -158,6 +158,7 @@ export const CaretakerStudentSearchPage: React.FC = () => {
                     <option value="All">All Branches</option>
                     <option value="CSE">CSE</option>
                     <option value="ECE">ECE</option>
+                    <option value="EEE">EEE</option>
                     <option value="CE">CE</option>
                     <option value="ME">ME</option>
                     <option value="MME">MME</option>
@@ -299,7 +300,7 @@ export const CaretakerStudentSearchPage: React.FC = () => {
               ))}
             </div>
 
-            {totalPages > 1 && (
+            {(searchQuery.trim() !== '' || hasActiveFilters) && totalPages > 1 && (
               <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
             )}
           </div>
@@ -387,6 +388,7 @@ export const CaretakerStudentSearchPage: React.FC = () => {
                   <option value="All">All</option>
                   <option value="CSE">CSE</option>
                   <option value="ECE">ECE</option>
+                  <option value="EEE">EEE</option>
                   <option value="CE">CE</option>
                   <option value="ME">ME</option>
                   <option value="MME">MME</option>
@@ -508,7 +510,8 @@ export const CaretakerStudentSearchPage: React.FC = () => {
         )}
 
         {/* Mobile Pagination */}
-        {totalPages > 1 && (
+        {/* Mobile Pagination */}
+        {(searchQuery.trim() !== '' || hasActiveFilters) && totalPages > 1 && (
           <div className="flex items-center justify-center gap-3 pt-2">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}

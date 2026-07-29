@@ -18,7 +18,7 @@ export const getCaretakerHostel = (user) => {
 export const getHostelStudentIds = async (hostelName) => {
   if (!hostelName) return null;
   const students = await User.find({
-    role: { $in: ['student', 'Student'] },
+    role: { $regex: /^student$/i },
     hostel: { $regex: new RegExp(`^${hostelName.trim()}$`, 'i') }
   }).select('_id');
   return students.map(s => s._id);
