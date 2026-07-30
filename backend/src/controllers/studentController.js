@@ -454,7 +454,7 @@ export const getStudentHistory = async (req, res) => {
     res.json({
       statistics: {
         totalRequests: processedHistory.length,
-        approved: processedHistory.filter(o => o.status === 'Approved').length,
+        approved: processedHistory.filter(o => ['Approved', 'Exited', 'Returned', 'Completed'].includes(o.status)).length,
         rejected: processedHistory.filter(o => o.status === 'Rejected').length,
         completed: processedHistory.filter(o => o.status === 'Completed').length
       },
