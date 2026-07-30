@@ -234,6 +234,45 @@ export const autoCompleteExpiredOutings = async () => {
     if (updatedCount > 0) {
       console.log(`[Auto-Complete] Completed ${updatedCount} expired outings and set students back to Inside.`);
     }
+
+    // Auto-reject pending outings that are past 6:00 PM (18:00) on their scheduled date, or scheduled for a past date
+    const pendingOutings = await Outing.find({ status: 'Pending' });
+    let expiredPendingCount = 0;
+    for (const outing of pendingOutings) {
+      let shouldExpire = false;
+      if (outing.submitted_date) {
+        const dateParts = outing.submitted_date.split('-');
+        const scheduledDate = new Date(
+          parseInt(dateParts[0], 10),
+          parseInt(dateParts[1], 10) - 1,
+          parseInt(dateParts[2], 10)
+        );
+        const expiryTime = new Date(scheduledDate);
+        expiryTime.setHours(18, 0, 0, 0); // 6:00 PM on the scheduled date
+
+        if (now >= expiryTime) {
+          shouldExpire = true;
+        }
+      } else {
+        // Fallback check: if no submitted_date, check if it was created more than 24 hours ago
+        if (now - new Date(outing.createdAt) > 24 * 60 * 60 * 1000) {
+          shouldExpire = true;
+        }
+      }
+
+      if (shouldExpire) {
+        outing.status = 'Rejected';
+        outing.rejection_reason = 'Request expired - not reviewed by 6:00 PM of the scheduled date';
+        outing.remarks = 'System Auto-Expired';
+        outing.rejected_at = now;
+        await outing.save();
+        expiredPendingCount++;
+      }
+    }
+
+    if (expiredPendingCount > 0) {
+      console.log(`[Auto-Complete] Auto-expired ${expiredPendingCount} pending outings.`);
+    }
   } catch (error) {
     console.error('Error auto-completing expired outings:', error);
   }

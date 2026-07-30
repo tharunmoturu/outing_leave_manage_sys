@@ -15,6 +15,7 @@ export const StudentProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
+    name: '',
     branch: '',
     year: '',
     hostel: '',
@@ -32,6 +33,7 @@ export const StudentProfile: React.FC = () => {
       try {
         const profile = await userService.getProfile();
         setFormData({
+          name: profile.name || '',
           branch: profile.branch || '',
           year: profile.year || '',
           hostel: profile.hostel || '',
@@ -191,6 +193,21 @@ export const StudentProfile: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              
+              <div className="sm:col-span-2 flex flex-col gap-2">
+                <label className="text-[13px] font-bold text-[var(--color-text-primary)] uppercase tracking-wide">
+                  Full Name {isEditing && <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type="text"
+                  required
+                  disabled={!isEditing}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Enter your full name"
+                  className="w-full rounded-xl border border-[var(--color-border-gray)] px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-[var(--color-primary)] bg-white disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+                />
+              </div>
               
               <div className="flex flex-col gap-2">
                 <label className="text-[13px] font-bold text-[var(--color-text-primary)] uppercase tracking-wide">

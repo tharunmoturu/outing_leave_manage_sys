@@ -47,9 +47,10 @@ export const updateProfile = async (req, res) => {
       if (isCaretaker) user.hostel = hostel.trim();
       if (studentId) user.studentId = studentId.trim();
     } else {
-      if (!year || !hostel || !roomNo || !phone || !parentPhone || !address) {
+      if (!name || !year || !hostel || !roomNo || !phone || !parentPhone || !address) {
         return res.status(400).json({ message: 'Please fill in all required fields.' });
       }
+      user.name = name.trim();
       user.branch = branch ? branch.trim() : 'N/A';
       user.year = year.trim();
       user.hostel = hostel.trim();

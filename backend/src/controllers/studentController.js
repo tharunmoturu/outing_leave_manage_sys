@@ -198,6 +198,25 @@ export const applyNormalOuting = async (req, res) => {
     if (!student) return res.status(404).json({ message: 'Student not found' });
     if (!student.profileCompleted) return res.status(400).json({ message: 'Please complete your profile first' });
 
+    // Check daily rejection limit
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const rejectionsToday = await Outing.countDocuments({
+      student: student._id,
+      status: 'Rejected',
+      $or: [
+        { rejected_at: { $gte: todayStart, $lte: todayEnd } },
+        { updatedAt: { $gte: todayStart, $lte: todayEnd } }
+      ]
+    });
+
+    if (rejectionsToday >= 3) {
+      return res.status(400).json({ message: 'You have reached the maximum limit of 3 rejections for today. Please try again tomorrow.' });
+    }
+
     const { reason, destination, outingDate, leavingTime, reportingTime } = req.body;
 
     if (!reason || !destination || !outingDate || !leavingTime || !reportingTime) {
@@ -274,6 +293,25 @@ export const applyEmergencyOuting = async (req, res) => {
     const student = await User.findById(req.user._id);
     if (!student) return res.status(404).json({ message: 'Student not found' });
     if (!student.profileCompleted) return res.status(400).json({ message: 'Please complete your profile first' });
+
+    // Check daily rejection limit
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const rejectionsToday = await Outing.countDocuments({
+      student: student._id,
+      status: 'Rejected',
+      $or: [
+        { rejected_at: { $gte: todayStart, $lte: todayEnd } },
+        { updatedAt: { $gte: todayStart, $lte: todayEnd } }
+      ]
+    });
+
+    if (rejectionsToday >= 3) {
+      return res.status(400).json({ message: 'You have reached the maximum limit of 3 rejections for today. Please try again tomorrow.' });
+    }
 
     // Restrict emergency outings if normal outings are still available
     if ((student.remaining_outings || 0) > 0) {

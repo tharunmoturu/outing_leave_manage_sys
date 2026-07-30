@@ -478,6 +478,8 @@ export const rejectOuting = async (req, res) => {
     outing.status = 'Rejected';
     outing.approved_by = req.user._id;
     outing.approved_by_name = req.user.name;
+    outing.rejected_at = new Date();
+    outing.rejection_reason = remarks || 'Rejected';
     outing.remarks = remarks || 'Rejected';
     await outing.save();
 
