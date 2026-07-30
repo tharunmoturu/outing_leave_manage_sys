@@ -34,6 +34,14 @@ export const TimelineComponent: React.FC<TimelineProps> = ({ outing }) => {
       icon: XCircle,
       color: 'text-red-500'
     });
+  } else if (outing.status === 'Cancelled') {
+    steps.push({
+      title: 'Cancelled',
+      description: 'Outing request was cancelled',
+      status: 'rejected',
+      icon: XCircle,
+      color: 'text-gray-500'
+    });
   } else {
     // Approved, Exited, Returned, Completed
     steps.push({
