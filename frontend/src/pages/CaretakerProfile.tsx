@@ -26,6 +26,7 @@ export const CaretakerProfile: React.FC = () => {
     const fetchProfile = async () => {
       try {
         const profile = await userService.getProfile();
+        updateUser(profile);
         setFormData({
           name: profile.name || '',
           studentId: profile.studentId || '',
@@ -45,7 +46,7 @@ export const CaretakerProfile: React.FC = () => {
       }
     };
     fetchProfile();
-  }, [user]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

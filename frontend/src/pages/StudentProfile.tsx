@@ -32,6 +32,10 @@ export const StudentProfile: React.FC = () => {
     const fetchProfile = async () => {
       try {
         const profile = await userService.getProfile();
+        
+        // Sync context with the latest fetched profile
+        updateUser(profile);
+
         setFormData({
           name: profile.name || '',
           branch: profile.branch || '',
@@ -54,7 +58,7 @@ export const StudentProfile: React.FC = () => {
       }
     };
     fetchProfile();
-  }, [user]);
+  }, []);
 
   // Effect to handle PUC branch reset
   useEffect(() => {
