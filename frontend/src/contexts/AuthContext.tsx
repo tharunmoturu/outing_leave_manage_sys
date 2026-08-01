@@ -44,6 +44,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(parsedUser);
           // Set global API auth header
           API.defaults.headers.common['Authorization'] = `Bearer ${parsedUser.token}`;
+          // Fetch latest user profile to ensure state is up-to-date
+          try {
+            const response = await API.get('/users/profile');
+            const latestUser = response.data;
+            const updatedUser = { ...parsedUser, ...latestUser };
+            setUser(updatedUser);
+            localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+          } catch (err) {
+            console.error('Failed to fetch latest user info', err);
+            // If unauthorized, we might want to logout, but for now just log it
+          }
         } catch (error) {
           console.error('Error parsing stored user data', error);
           localStorage.removeItem('userInfo');
