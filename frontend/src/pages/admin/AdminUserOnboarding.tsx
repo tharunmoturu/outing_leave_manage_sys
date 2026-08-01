@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import API from '../../services/api';
-import { Upload, Plus, FileSpreadsheet, AlertCircle, Edit, Trash2, X, Users as UsersIcon, Search } from 'lucide-react';
+import { Upload, Plus, FileSpreadsheet, AlertCircle, Edit, Trash2, X, Users as UsersIcon, Search, Eye, User as UserIcon } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export const AdminUserOnboarding: React.FC = () => {
@@ -25,6 +25,7 @@ export const AdminUserOnboarding: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [viewingUser, setViewingUser] = useState<any>(null);
   const [editFormStatus, setEditFormStatus] = useState({ error: '', success: '', submitting: false });
   const [userToDelete, setUserToDelete] = useState<any>(null);
   const [deleteStatus, setDeleteStatus] = useState({ error: '', deleting: false });
@@ -399,7 +400,7 @@ export const AdminUserOnboarding: React.FC = () => {
                        <tr>
                          <th className="px-4 py-3 font-medium">User Details</th>
                          <th className="px-4 py-3 font-medium">Role & Status</th>
-                         <th className="px-4 py-3 font-medium">Location</th>
+                         <th className="px-4 py-3 font-medium">Details</th>
                          <th className="px-4 py-3 font-medium text-right">Actions</th>
                        </tr>
                      </thead>
@@ -420,9 +421,16 @@ export const AdminUserOnboarding: React.FC = () => {
                              <span className="px-2 py-1 rounded bg-[var(--color-primary-light)] text-[var(--color-primary)] text-xs font-semibold mr-2">{user.role}</span>
                              {user.isActive ? <span className="text-[var(--color-success)] text-xs font-medium">Active</span> : <span className="text-[var(--color-danger)] text-xs font-medium">Inactive</span>}
                            </td>
-                           <td className="px-4 py-3 text-[var(--color-text-secondary)]">
-                             {user.role === 'Student' ? `${user.hostel} | ${user.roomNo}` : (user.assignedHostel || 'N/A')}
-                           </td>
+                           <td className="px-4 py-3">
+                              <button
+                                type="button"
+                                onClick={() => setViewingUser(user)}
+                                className="px-3 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md text-xs font-semibold border border-blue-200 transition-colors flex items-center gap-1"
+                              >
+                                <Eye size={13} />
+                                View
+                              </button>
+                            </td>
                            <td className="px-4 py-3 text-right">
                              <div className="flex justify-end gap-2">
                                <button onClick={() => setEditingUser(user)} className="p-1.5 text-[var(--color-primary)] hover:bg-[var(--color-primary-light)] rounded"><Edit size={16}/></button>
@@ -789,6 +797,37 @@ export const AdminUserOnboarding: React.FC = () => {
                 <button onClick={confirmDeleteUser} disabled={deleteStatus.deleting} className="btn-primary !bg-red-600 hover:!bg-red-700 flex-1">
                   {deleteStatus.deleting ? 'Deleting...' : 'Delete'}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Student Profile Details Modal */}
+      {viewingUser && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-gray-100 relative">
+            <button 
+              onClick={() => setViewingUser(null)}
+              className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X size={18} />
+            </button>
+            <div className="p-6">
+              <h3 className="text-[12px] font-black text-gray-400 uppercase tracking-wider mb-4">STUDENT PROFILE</h3>
+              <div className="bg-[#f8fafc] rounded-2xl p-5 border border-slate-100 flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600">
+                  <UserIcon size={24} />
+                </div>
+                <div>
+                  <h4 className="text-[17px] font-bold text-gray-900 uppercase tracking-tight">{viewingUser.name || 'N/A'}</h4>
+                  <p className="text-[13px] font-semibold text-gray-500 uppercase tracking-wide mt-0.5">
+                    {viewingUser.studentId || viewingUser.email || 'N/A'} {viewingUser.branch ? `• ${viewingUser.branch}` : ''} {viewingUser.year ? `${viewingUser.year}` : ''}
+                  </p>
+                  <p className="text-[13px] text-gray-600 font-medium mt-1">
+                    {viewingUser.hostel ? `Hostel ${viewingUser.hostel}` : 'Hostel N/A'}{viewingUser.roomNo ? `, Room ${viewingUser.roomNo}` : ''}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
