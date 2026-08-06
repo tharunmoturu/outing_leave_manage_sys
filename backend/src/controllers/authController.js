@@ -81,13 +81,16 @@ export const googleLogin = async (req, res) => {
       needsSave = true;
     }
 
+    user.lastLogin = new Date();
+    needsSave = true;
+
     if (needsSave) {
       try {
         await user.save();
       } catch (validationErr) {
         console.warn('Mongoose validation failed on save, falling back to updateOne:', validationErr.message);
         // Fallback to updateOne to bypass full document validation if they have other missing fields
-        await User.updateOne({ _id: user._id }, { $set: { googleId, name: user.name } });
+        await User.updateOne({ _id: user._id }, { $set: { googleId, name: user.name, lastLogin: user.lastLogin } });
       }
     }
 

@@ -14,6 +14,7 @@ import userRoutes from './routes/userRoutes.js';
 import caretakerRoutes from './routes/caretakerRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import { autoCompleteExpiredOutings } from './utils/timeUtils.js';
+import { startCleanupJobs } from './jobs/cleanupJobs.js';
 
 dotenv.config();
 
@@ -50,7 +51,7 @@ app.use('/api/notifications', notificationRoutes);
 app.get('/', (req, res) => {
   res.json({
     status: 'Running',
-    service: 'Student Outing Management System API',
+    service: 'Student Outing Management System For Boys API',
     timestamp: new Date(),
   });
 });
@@ -75,7 +76,7 @@ const PORT = process.env.PORT || 5000;
 // Connect to Database and start server listener
 const startServer = async () => {
   const isConnected = await connectDB();
-  
+
   if (isConnected) {
     // Run Database Seeder to insert demo records if empty
     // await seedData();
@@ -100,6 +101,7 @@ if (process.env.VERCEL === '1') {
     // This handles: monthly quota reset, auto-complete expired outings, auto-expire pending requests
     autoCompleteExpiredOutings();
     setInterval(autoCompleteExpiredOutings, 60 * 60 * 1000); // Every 1 hour
+    startCleanupJobs();
     console.log('\x1b[36m[Scheduler] Monthly quota reset + auto-maintenance scheduled every hour.\x1b[0m');
   });
 }

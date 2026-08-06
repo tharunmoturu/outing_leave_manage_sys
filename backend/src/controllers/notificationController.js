@@ -15,15 +15,15 @@ export const getUserNotifications = async (req, res) => {
       query = {
         $or: [
           { recipientId: userId },
-          { studentId: req.user.studentId, recipientRole: 'student' },
-          { recipientRole: 'student' }
+          // Fallback for old notifications without recipientId
+          { recipientId: { $exists: false }, studentId: req.user.studentId, recipientRole: 'student' }
         ]
       };
     } else {
       // For Admin, Caretaker, Sanction Authority
       const normalizedRole = role === 'sanctionAuthority' ? 'sanctionAuthority' : role.toLowerCase();
       
-      const roleQuery = { recipientRole: normalizedRole };
+      const roleQuery = { recipientRole: normalizedRole, recipientId: { $exists: false } };
       if (normalizedRole === 'caretaker') {
         const caretakerHostel = getCaretakerHostel(req.user);
         if (caretakerHostel) {
@@ -101,14 +101,14 @@ export const clearAllNotifications = async (req, res) => {
       query = {
         $or: [
           { recipientId: userId },
-          { studentId: req.user.studentId, recipientRole: 'student' },
-          { recipientRole: 'student' }
+          // Fallback for old notifications without recipientId
+          { recipientId: { $exists: false }, studentId: req.user.studentId, recipientRole: 'student' }
         ]
       };
     } else {
       const normalizedRole = role === 'sanctionAuthority' ? 'sanctionAuthority' : role.toLowerCase();
       
-      const roleQuery = { recipientRole: normalizedRole };
+      const roleQuery = { recipientRole: normalizedRole, recipientId: { $exists: false } };
       if (normalizedRole === 'caretaker') {
         const caretakerHostel = getCaretakerHostel(req.user);
         if (caretakerHostel) {

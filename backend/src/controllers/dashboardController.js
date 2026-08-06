@@ -249,7 +249,7 @@ export const getAdminCaretakerStats = async (req, res) => {
   try {
     const { start: todayStart, end: todayEnd } = getTodayRange();
     
-    const caretakers = await User.find({ role: { $in: ['caretaker', 'Caretaker', 'admin', 'Admin'] } }).select('-googleId -password');
+    const caretakers = await User.find({ role: { $regex: /^(caretaker|admin|sanctionauthority)$/i } }).select('-googleId -password');
     
     const stats = await Promise.all(caretakers.map(async (ct) => {
       const ctHostel = ct.assignedHostel || ct.hostel || 'I-1';
@@ -277,7 +277,10 @@ export const getAdminCaretakerStats = async (req, res) => {
         pendingAssigned = await Outing.countDocuments({ status: 'Pending' });
       }
 
-      const isActiveToday = approvals > 0 || rejections > 0 || ct.role.toLowerCase() === 'caretaker';
+      // Check if user has logged in today
+      console.log(`[DEBUG] Staff: ${ct.name}, lastLogin: ${ct.lastLogin}`);
+      const hasLoggedInToday = ct.lastLogin && new Date(ct.lastLogin) >= todayStart;
+      const isActiveToday = hasLoggedInToday || approvals > 0 || rejections > 0;
       
       return {
         _id: ct._id,
@@ -286,7 +289,7 @@ export const getAdminCaretakerStats = async (req, res) => {
         role: ct.role,
         assignedHostel: ctHostel,
         status: isActiveToday ? 'Active Shift' : 'Off Shift',
-        loginTime: isActiveToday ? todayStart : null,
+        loginTime: ct.lastLogin || null,
         handled: approvals + rejections,
         approvals,
         rejections,

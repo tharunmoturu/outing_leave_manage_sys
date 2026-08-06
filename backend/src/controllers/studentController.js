@@ -39,38 +39,31 @@ const dispatchPersonalizedNotifications = async (student, newOuting, isEmergency
   const sanctionAuthorities = await User.find({ role: { $regex: /^sanctionAuthority$/i } });
 
   const notificationsToCreate = [];
+  const uniqueRecipients = new Map();
 
   // Add Caretakers (or fallback to all admins if no caretaker found for hostel)
   const caretakerRecipients = relevantCaretakers.length > 0 ? relevantCaretakers : admins;
   
   for (const ct of caretakerRecipients) {
-    notificationsToCreate.push({
-      recipientId: ct._id,
-      recipientRole: 'caretaker',
-      studentId: student.studentId,
-      outingId: newOuting._id,
-      type: 'OUTING_REQUEST',
-      title: `New ${typeText} Outing Request`,
-      message: `New ${typeText} outing request from ${student.name} (${student.studentId})`
-    });
+    uniqueRecipients.set(ct._id.toString(), { user: ct, role: 'caretaker' });
   }
 
   for (const admin of admins) {
-    notificationsToCreate.push({
-      recipientId: admin._id,
-      recipientRole: 'admin',
-      studentId: student.studentId,
-      outingId: newOuting._id,
-      type: 'OUTING_REQUEST',
-      title: `New ${typeText} Outing Request`,
-      message: `New ${typeText} outing request from ${student.name} (${student.studentId})`
-    });
+    if (!uniqueRecipients.has(admin._id.toString())) {
+      uniqueRecipients.set(admin._id.toString(), { user: admin, role: 'admin' });
+    }
   }
 
   for (const sa of sanctionAuthorities) {
+    if (!uniqueRecipients.has(sa._id.toString())) {
+      uniqueRecipients.set(sa._id.toString(), { user: sa, role: 'sanctionAuthority' });
+    }
+  }
+
+  for (const [id, data] of uniqueRecipients.entries()) {
     notificationsToCreate.push({
-      recipientId: sa._id,
-      recipientRole: 'sanctionAuthority',
+      recipientId: data.user._id,
+      recipientRole: data.role,
       studentId: student.studentId,
       outingId: newOuting._id,
       type: 'OUTING_REQUEST',

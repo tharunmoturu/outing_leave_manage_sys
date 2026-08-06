@@ -16,6 +16,8 @@ import {
   Clock,
   Hash,
   Award,
+  Phone,
+  User,
 } from 'lucide-react';
 
 interface CaretakerStat {
@@ -30,6 +32,7 @@ interface CaretakerStat {
   approvals: number;
   rejections: number;
   pendingAssigned: number;
+  phone?: string;
 }
 
 // ─── Caretaker Detail Drawer ───────────────────────────────────────────────────
@@ -51,9 +54,22 @@ const CaretakerDetailDrawer: React.FC<{ ct: CaretakerStat | null; isOpen: boolea
 
   const isOnline = ct.status === 'Active Shift' || ct.status === 'Online';
   const displayName = ct.name ? ct.name.replace(/\s*\([^)]*\)/g, '').trim() : 'Staff Member';
-  const loginDisplay = ct.loginTime
-    ? new Date(ct.loginTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-    : 'Not logged in today';
+  let loginDisplay = 'Not logged in today';
+  if (ct.loginTime) {
+    const loginDate = new Date(ct.loginTime);
+    const today = new Date();
+    const isToday = loginDate.getDate() === today.getDate() && 
+                    loginDate.getMonth() === today.getMonth() && 
+                    loginDate.getFullYear() === today.getFullYear();
+    
+    if (isToday) {
+      loginDisplay = `Today at ${loginDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+    } else {
+      loginDisplay = `${loginDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} at ${loginDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+    }
+  } else if (isOnline) {
+    loginDisplay = 'Active (Login unrecorded)';
+  }
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -114,9 +130,19 @@ const CaretakerDetailDrawer: React.FC<{ ct: CaretakerStat | null; isOpen: boolea
                   <span className="font-mono font-semibold text-gray-800 truncate">{ct._id}</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs text-gray-600 font-medium">
+                  <User size={15} className="text-[#8B1E24] shrink-0" />
+                  <span className="text-gray-400 font-bold uppercase text-[10px] tracking-wider shrink-0">Full Name:</span>
+                  <span className="font-semibold text-gray-800 truncate">{ct.name || 'Not provided'}</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs text-gray-600 font-medium">
                   <Mail size={15} className="text-[#8B1E24] shrink-0" />
                   <span className="text-gray-400 font-bold uppercase text-[10px] tracking-wider shrink-0">Email:</span>
                   <span className="font-semibold text-gray-800 truncate">{ct.email || 'Not provided'}</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs text-gray-600 font-medium">
+                  <Phone size={15} className="text-[#8B1E24] shrink-0" />
+                  <span className="text-gray-400 font-bold uppercase text-[10px] tracking-wider shrink-0">Phone:</span>
+                  <span className="font-semibold text-gray-800 truncate">{ct.phone || 'Not provided'}</span>
                 </div>
                 <div className="flex items-center gap-2.5 text-xs text-gray-600 font-medium">
                   <Building2 size={15} className="text-[#8B1E24] shrink-0" />

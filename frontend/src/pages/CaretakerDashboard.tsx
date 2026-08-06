@@ -7,6 +7,9 @@ import { PendingNormalPreview } from '../components/caretaker/PendingNormalPrevi
 import { EmergencyPreview } from '../components/caretaker/EmergencyPreview';
 import { StudentsOutsidePreview } from '../components/caretaker/StudentsOutsidePreview';
 import { PendingNormalPage } from './PendingNormalPage';
+import { CaretakerFilters } from '../components/caretaker/CaretakerFilters';
+import { CaretakerPendingEmergencyPage } from './CaretakerPendingEmergencyPage';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 
 export const CaretakerDashboard: React.FC = () => {
   const { view } = useParams<{ view?: string }>();
@@ -47,14 +50,10 @@ export const CaretakerDashboard: React.FC = () => {
   useEffect(() => {
     // Initial Fetch
     fetchDashboardData();
-
-    // Auto-refresh every 60 seconds
-    const interval = setInterval(() => {
-      fetchDashboardData();
-    }, 60000);
-
-    return () => clearInterval(interval);
   }, [fetchDashboardData]);
+
+  // Auto-refresh every 30 seconds
+  useAutoRefresh(fetchDashboardData, 30000);
 
   // If on pending-requests sub-view, render PendingNormalPage
   if (activeView === 'pending-requests') {

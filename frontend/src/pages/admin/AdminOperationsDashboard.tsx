@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import API from '../../services/api';
 import { Search, RefreshCw, Eye, X } from 'lucide-react';
 import { RequestDrawer } from '../../components/caretaker/RequestDrawer';
+import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 
 export const AdminOperationsDashboard: React.FC = () => {
   const [outings, setOutings] = useState<any[]>([]);
@@ -48,6 +49,8 @@ export const AdminOperationsDashboard: React.FC = () => {
   useEffect(() => {
     fetchActiveOutings();
   }, []);
+
+  useAutoRefresh(fetchActiveOutings, 30000);
 
   const filteredOutings = outings.filter((o) => {
     const matchesYear = selectedYear === 'All' ||

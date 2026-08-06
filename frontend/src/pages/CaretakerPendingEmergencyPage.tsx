@@ -8,6 +8,7 @@ import { Loader2, RefreshCw, AlertCircle, FileWarning, ArrowLeft, X } from 'luci
 import { Link } from 'react-router-dom';
 import { emergencyCategories } from '../components/dashboard/EmergencyCategorySelector';
 import { useAuth } from '../contexts/AuthContext';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { AlertDialog } from '../components/ui/AlertDialog';
 
 export const CaretakerPendingEmergencyPage: React.FC = () => {
@@ -81,6 +82,8 @@ export const CaretakerPendingEmergencyPage: React.FC = () => {
   useEffect(() => {
     fetchEmergencyRequests();
   }, [fetchEmergencyRequests]);
+
+  useAutoRefresh(fetchEmergencyRequests, 30000);
 
 
   const handleOpenDrawer = (outingId: string) => {

@@ -9,6 +9,7 @@ import { AlertDialog } from '../components/ui/AlertDialog';
 import { Inbox, RefreshCw, ArrowLeft, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 
 export const PendingNormalPage: React.FC = () => {
   const { user } = useAuth();
@@ -77,6 +78,8 @@ export const PendingNormalPage: React.FC = () => {
   useEffect(() => {
     fetchPendingRequests();
   }, [fetchPendingRequests]);
+
+  useAutoRefresh(fetchPendingRequests, 30000);
 
   const handleClearFilters = () => {
     setSearchQuery('');
