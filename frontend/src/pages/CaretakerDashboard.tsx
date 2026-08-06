@@ -7,8 +7,6 @@ import { PendingNormalPreview } from '../components/caretaker/PendingNormalPrevi
 import { EmergencyPreview } from '../components/caretaker/EmergencyPreview';
 import { StudentsOutsidePreview } from '../components/caretaker/StudentsOutsidePreview';
 import { PendingNormalPage } from './PendingNormalPage';
-import { CaretakerFilters } from '../components/caretaker/CaretakerFilters';
-import { CaretakerPendingEmergencyPage } from './CaretakerPendingEmergencyPage';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 
 export const CaretakerDashboard: React.FC = () => {
