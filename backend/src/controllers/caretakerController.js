@@ -636,6 +636,7 @@ export const getCaretakerHistory = async (req, res) => {
     const sortOrder = req.query.sort === 'Oldest First' ? 1 : -1;
     const dateFrom = req.query.dateFrom;
     const dateTo = req.query.dateTo;
+    const caretakerFilter = req.query.caretaker || '';
     const caretakerHostel = getCaretakerHostel(req.user);
 
     // Base query: last 30 days
@@ -646,6 +647,10 @@ export const getCaretakerHistory = async (req, res) => {
     const query = {
       createdAt: { $gte: thirtyDaysAgo }
     };
+
+    if (caretakerFilter && caretakerFilter.trim() !== '') {
+      query.approved_by_name = { $regex: caretakerFilter.trim(), $options: 'i' };
+    }
 
     if (caretakerHostel) {
       const hostelStudentIds = await getHostelStudentIds(caretakerHostel);

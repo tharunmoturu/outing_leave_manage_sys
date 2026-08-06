@@ -13,6 +13,7 @@ import reportRoutes from './routes/reportRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import caretakerRoutes from './routes/caretakerRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import { autoCompleteExpiredOutings } from './utils/timeUtils.js';
 
 dotenv.config();
 
@@ -94,7 +95,13 @@ if (process.env.VERCEL === '1') {
   connectDB();
 } else {
   // Locally or on other standard environments, start the listener
-  startServer();
+  startServer().then(() => {
+    // Run auto-maintenance tasks at startup and every hour
+    // This handles: monthly quota reset, auto-complete expired outings, auto-expire pending requests
+    autoCompleteExpiredOutings();
+    setInterval(autoCompleteExpiredOutings, 60 * 60 * 1000); // Every 1 hour
+    console.log('\x1b[36m[Scheduler] Monthly quota reset + auto-maintenance scheduled every hour.\x1b[0m');
+  });
 }
 
 export default app;

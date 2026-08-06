@@ -28,6 +28,7 @@ export const CaretakerHistoryPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState('Newest First');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [caretakerFilter, setCaretakerFilter] = useState('');
 
   // Drawer
   const [selectedOuting, setSelectedOuting] = useState<any>(null);
@@ -49,7 +50,8 @@ export const CaretakerHistoryPage: React.FC = () => {
           type: typeFilter,
           sort: sortOrder,
           dateFrom,
-          dateTo
+          dateTo,
+          caretaker: caretakerFilter
         }
       });
       setData(res.data);
@@ -59,7 +61,7 @@ export const CaretakerHistoryPage: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [page, searchQuery, statusFilter, typeFilter, sortOrder, dateFrom, dateTo]);
+  }, [page, searchQuery, statusFilter, typeFilter, sortOrder, dateFrom, dateTo, caretakerFilter]);
 
   useEffect(() => {
     fetchHistory();
@@ -72,6 +74,7 @@ export const CaretakerHistoryPage: React.FC = () => {
     setSortOrder('Newest First');
     setDateFrom('');
     setDateTo('');
+    setCaretakerFilter('');
     setPage(1);
   };
 
@@ -135,6 +138,8 @@ export const CaretakerHistoryPage: React.FC = () => {
           setDateTo={setDateTo}
           onClear={handleClearFilters}
           isCaretaker={true}
+          caretakerFilter={caretakerFilter}
+          setCaretakerFilter={setCaretakerFilter}
         />
 
         {/* Table */}

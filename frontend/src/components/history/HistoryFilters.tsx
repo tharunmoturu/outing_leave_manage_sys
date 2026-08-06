@@ -16,6 +16,8 @@ interface HistoryFiltersProps {
   setDateTo?: (val: string) => void;
   onClear: () => void;
   isCaretaker?: boolean;
+  caretakerFilter?: string;
+  setCaretakerFilter?: (val: string) => void;
 }
 
 export const HistoryFilters: React.FC<HistoryFiltersProps> = ({
@@ -26,7 +28,8 @@ export const HistoryFilters: React.FC<HistoryFiltersProps> = ({
   dateFrom, setDateFrom,
   dateTo, setDateTo,
   onClear,
-  isCaretaker = false
+  isCaretaker = false,
+  caretakerFilter, setCaretakerFilter
 }) => {
   return (
     <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 space-y-4">
@@ -85,6 +88,20 @@ export const HistoryFilters: React.FC<HistoryFiltersProps> = ({
             <option value="Oldest First">Oldest First</option>
           </select>
         </div>
+
+        {/* Caretaker Name Filter */}
+        {setCaretakerFilter && (
+          <div className="flex-1 min-w-[150px]">
+            <label className="block text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-1">Caretaker Name</label>
+            <input
+              type="text"
+              placeholder="Search caretaker..."
+              value={caretakerFilter || ''}
+              onChange={(e) => setCaretakerFilter(e.target.value)}
+              className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]"
+            />
+          </div>
+        )}
 
         {/* Date Range (Caretaker Only) */}
         {isCaretaker && setDateFrom && setDateTo && (

@@ -50,6 +50,9 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({
               {isCaretaker && (
                 <th className="px-5 py-4 text-[11px] font-black text-gray-500 uppercase tracking-wider">Student</th>
               )}
+              {isCaretaker && (
+                <th className="px-5 py-4 text-[11px] font-black text-gray-500 uppercase tracking-wider">Approved By</th>
+              )}
               <th className="px-5 py-4 text-[11px] font-black text-gray-500 uppercase tracking-wider">Type</th>
               <th className="px-5 py-4 text-[11px] font-black text-gray-500 uppercase tracking-wider min-w-[200px]">Destination & Reason</th>
               <th className="px-5 py-4 text-[11px] font-black text-gray-500 uppercase tracking-wider">Status</th>
@@ -74,6 +77,19 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({
                   <td className="px-5 py-4">
                     <p className="text-[14px] font-bold text-gray-900">{record.studentName}</p>
                     <p className="text-[12px] text-gray-500 font-medium">{record.studentId}</p>
+                  </td>
+                )}
+
+                {isCaretaker && (
+                  <td className="px-5 py-4">
+                    <p className="text-[13px] font-bold text-gray-900">{record.approvedBy || 'N/A'}</p>
+                    {record.approvedAt && record.approvedAt !== 'N/A' ? (
+                      <p className="text-[11px] text-gray-500 font-medium">
+                        {new Date(record.approvedAt).toLocaleString()}
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-gray-400 font-medium">No timestamp</p>
+                    )}
                   </td>
                 )}
 

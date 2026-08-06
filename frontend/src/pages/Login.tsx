@@ -60,10 +60,10 @@ export const Login: React.FC = () => {
         <div className="flex flex-col items-center">
           <img src={logo} alt="Logo" className="h-14 w-14 rounded-full object-cover shadow-sm" />
           <h2 className="mt-6 text-center text-[22px] font-bold tracking-tight text-[var(--color-text-primary)]">
-            RGUKT Nuzvid Outing Management System
+            Boys outing management system
           </h2>
           <p className="mt-2 text-center text-[12px] font-semibold tracking-wide text-[var(--color-text-secondary)] uppercase">
-            Student Outing Management
+            RGUKT nuzvid
           </p>
         </div>
 

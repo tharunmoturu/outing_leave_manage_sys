@@ -83,10 +83,10 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
           <img src={logo} alt="Logo" className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover flex-shrink-0" />
           <div className="flex flex-col min-w-0">
             <span className="text-[13px] sm:text-[16px] md:text-[18px] font-semibold tracking-tight text-[var(--color-text-primary)] truncate">
-              RGUKT Nuzvid Outing Management System
+              Boys outing management system
             </span>
             <span className="hidden sm:inline text-[10px] md:text-[12px] font-medium text-[var(--color-text-secondary)]">
-              Student Outing Management System
+              RGUKT nuzvid
             </span>
           </div>
         </div>
@@ -102,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                 {user.hostel || ''}
               </span>
               <span className="text-[12px] text-[var(--color-text-secondary)] font-medium">
-                Warden Office
+                Hostel Administration
               </span>
             </div>
 
