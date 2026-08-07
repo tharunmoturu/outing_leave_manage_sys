@@ -81,6 +81,23 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
 
   const navLinks = getNavLinks();
 
+  const getMobileNavLinks = () => {
+    switch (user.role?.toLowerCase()) {
+      case 'caretaker':
+        return [
+          { path: '/caretaker', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
+          { path: '/caretaker/pending-requests', label: 'Pending Requests', icon: <ClipboardList className="h-6 w-6" /> },
+          { path: '/caretaker/emergency-requests', label: 'Emergency Requests', icon: <AlertTriangle className="h-6 w-6" /> },
+          { path: '/caretaker/history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
+          { path: '/caretaker/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
+        ];
+      default:
+        return navLinks.slice(0, 5);
+    }
+  };
+
+  const mobileNavLinks = getMobileNavLinks();
+
   return (
     <div className="flex min-h-screen flex-col text-[var(--color-text-primary)] pb-16 lg:pb-0">
       {/* Top Navbar */}
@@ -121,7 +138,7 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
 
       {/* Mobile Bottom Navigation Bar (Matches Mockup Pixel-for-Pixel) */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#E6E8EC] flex items-center justify-around py-2 px-1 md:hidden">
-        {navLinks.slice(0, 5).map((link) => (
+        {mobileNavLinks.map((link) => (
           <NavLink
             key={link.path}
             to={link.path}

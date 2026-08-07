@@ -300,7 +300,7 @@ export const CaretakerStudentSearchPage: React.FC = () => {
               ))}
             </div>
 
-            {(searchQuery.trim() !== '' || hasActiveFilters) && totalPages > 1 && (
+            {totalPages > 1 && (
               <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
             )}
           </div>
@@ -349,28 +349,18 @@ export const CaretakerStudentSearchPage: React.FC = () => {
         </div>
 
         {/* Mobile Search */}
-        <div className="bg-white border border-[#E6E8EC] rounded-[12px] px-3 py-2.5 flex items-center gap-2">
-          <Search size={15} className="text-[#9CA3AF] flex-shrink-0" />
-          <input
-            type="text"
-            placeholder="Search student name or ID..."
-            value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-            className="flex-1 text-[13px] font-medium text-[#1E293B] placeholder-[#9CA3AF] outline-none bg-transparent pr-10"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => { setSearchQuery(''); setPage(1); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#4B5563]"
-            >
-              <X size={16} />
-            </button>
-          )}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <StudentSearchBar
+              onSearch={handleSearch}
+              placeholder="Search student name or ID..."
+            />
+          </div>
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-[8px] transition-colors ${showFilters || hasActiveFilters ? 'bg-[#FCE9EA] text-[#7C2030]' : 'bg-[#F3F4F6] text-[#6B7280]'}`}
+            className={`flex-shrink-0 flex items-center justify-center w-[46px] h-[46px] rounded-xl transition-colors ${showFilters || hasActiveFilters ? 'bg-[#FCE9EA] text-[#7C2030] border border-[#FCA5A5]' : 'bg-white border border-[#E6E8EC] text-[#6B7280]'}`}
           >
-            <SlidersHorizontal size={14} />
+            <SlidersHorizontal size={18} />
           </button>
         </div>
 
@@ -510,8 +500,7 @@ export const CaretakerStudentSearchPage: React.FC = () => {
         )}
 
         {/* Mobile Pagination */}
-        {/* Mobile Pagination */}
-        {(searchQuery.trim() !== '' || hasActiveFilters) && totalPages > 1 && (
+        {totalPages > 1 && (
           <div className="flex items-center justify-center gap-3 pt-2">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
