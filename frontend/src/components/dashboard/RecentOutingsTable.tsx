@@ -31,7 +31,7 @@ export const RecentOutingsTable: React.FC<RecentOutingsTableProps> = ({ outings 
               <th className="py-4 px-5 font-bold">Reason</th>
               <th className="py-4 px-5 font-bold">Destination</th>
               <th className="py-4 px-5 font-bold">Status</th>
-              <th className="py-4 px-5 font-bold">Approved By</th>
+              <th className="py-4 px-5 font-bold">Approved/Rejected By</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-border-gray)] bg-white">
@@ -55,11 +55,11 @@ export const RecentOutingsTable: React.FC<RecentOutingsTableProps> = ({ outings 
                       outing.status === 'Pending' ? 'bg-yellow-50 text-yellow-700' :
                       'bg-gray-100 text-gray-700'
                     }`}>
-                      {outing.status}
+                      {outing.status === 'Returned' || outing.status === 'Exited' ? 'Approved' : outing.status}
                     </span>
                   </td>
                   <td className="py-4 px-5 text-[var(--color-text-muted)] font-medium">
-                    {outing.approvedBy || '-'}
+                    {outing.status === 'Rejected' ? (outing.rejectedBy || '-') : (outing.approvedBy || '-')}
                   </td>
                 </tr>
               ))

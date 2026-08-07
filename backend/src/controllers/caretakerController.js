@@ -645,7 +645,9 @@ export const getCaretakerHistory = async (req, res) => {
     thirtyDaysAgo.setHours(0, 0, 0, 0);
 
     const query = {
-      createdAt: { $gte: thirtyDaysAgo }
+      createdAt: { $gte: thirtyDaysAgo },
+      // History only shows outings that were actually approved
+      status: { $in: ['Approved', 'Exited', 'Returned', 'Completed'] }
     };
 
     if (caretakerFilter && caretakerFilter.trim() !== '') {
@@ -719,7 +721,7 @@ export const getCaretakerHistory = async (req, res) => {
       );
     }
 
-    // Apply Status Filter
+    // Apply Status Filter within approved statuses only
     if (statusFilter !== 'All') {
       filteredHistory = filteredHistory.filter(o => o.status === statusFilter);
     }

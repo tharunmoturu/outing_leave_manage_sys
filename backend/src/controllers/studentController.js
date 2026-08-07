@@ -174,7 +174,8 @@ export const getStudentDashboard = async (req, res) => {
         reason: o.purpose,
         destination: o.destination,
         status: o.status,
-        approvedBy: o.approved_by_name || (o.approved_by ? o.approved_by.name : null)
+        approvedBy: o.approved_by_name || (o.approved_by ? o.approved_by.name : null),
+        rejectedBy: o.rejected_by_name || null
       }))
     });
   } catch (error) {

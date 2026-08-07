@@ -82,13 +82,15 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({
 
                 {isCaretaker && (
                   <td className="px-5 py-4">
-                    <p className="text-[13px] font-bold text-gray-900">{record.approvedBy || 'N/A'}</p>
-                    {record.approvedAt && record.approvedAt !== 'N/A' ? (
-                      <p className="text-[11px] text-gray-500 font-medium">
-                        {new Date(record.approvedAt).toLocaleString()}
-                      </p>
-                    ) : (
-                      <p className="text-[11px] text-gray-400 font-medium">No timestamp</p>
+                    {record.approvedBy && record.approvedBy !== 'N/A' && (
+                      <>
+                        <p className="text-[13px] font-bold text-gray-900">{record.approvedBy}</p>
+                        {record.approvedAt && record.approvedAt !== 'N/A' && (
+                          <p className="text-[11px] text-gray-500 font-medium">
+                            {new Date(record.approvedAt).toLocaleString()}
+                          </p>
+                        )}
+                      </>
                     )}
                   </td>
                 )}

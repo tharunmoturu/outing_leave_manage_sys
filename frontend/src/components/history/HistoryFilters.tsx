@@ -54,11 +54,10 @@ export const HistoryFilters: React.FC<HistoryFiltersProps> = ({
             onChange={(e) => setStatusFilter(e.target.value)}
             className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]"
           >
-            <option value="All">All Statuses</option>
-            <option value="Pending">Pending</option>
+            <option value="All">All Approved</option>
             <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
             <option value="Completed">Completed</option>
+            <option value="Returned">Returned</option>
           </select>
         </div>
 

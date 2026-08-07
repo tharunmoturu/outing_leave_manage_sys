@@ -220,12 +220,10 @@ export const CaretakerHistoryPage: React.FC = () => {
                   onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                   className="w-full border border-[#E6E8EC] rounded-[8px] px-2 py-1.5 text-[12px] font-medium text-[#1E293B] outline-none bg-white"
                 >
-                  <option value="All">All</option>
-                  <option value="Pending">Pending</option>
+                  <option value="All">All Approved</option>
                   <option value="Approved">Approved</option>
-                  <option value="Rejected">Rejected</option>
                   <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
+                  <option value="Returned">Returned</option>
                 </select>
               </div>
               <div className="space-y-1">
