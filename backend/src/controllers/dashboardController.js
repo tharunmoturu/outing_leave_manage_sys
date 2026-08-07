@@ -277,15 +277,20 @@ export const getAdminCaretakerStats = async (req, res) => {
         pendingAssigned = await Outing.countDocuments({ status: 'Pending' });
       }
 
-      // Check if user has logged in today
-      console.log(`[DEBUG] Staff: ${ct.name}, lastLogin: ${ct.lastLogin}`);
-      const hasLoggedInToday = ct.lastLogin && new Date(ct.lastLogin) >= todayStart;
-      const isActiveToday = hasLoggedInToday || approvals > 0 || rejections > 0;
+      // Check if user has an active shift:
+      // - Logged in today (after midnight), OR
+      // - Logged in within the last 24 hours (handles overnight/cross-day sessions where
+      //   the JWT is still valid and user hasn't re-authenticated), OR
+      // - Has made approvals/rejections today
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const hasActiveSession = ct.lastLogin && new Date(ct.lastLogin) >= twentyFourHoursAgo;
+      const isActiveToday = hasActiveSession || approvals > 0 || rejections > 0;
       
       return {
         _id: ct._id,
         name: ct.name || ct.email?.split('@')[0] || 'Staff Member',
         email: ct.email,
+        phone: ct.phone || null,
         role: ct.role,
         assignedHostel: ctHostel,
         status: isActiveToday ? 'Active Shift' : 'Off Shift',

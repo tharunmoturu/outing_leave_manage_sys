@@ -5,6 +5,7 @@ import { Users, DoorOpen, AlertCircle, RefreshCw, Search, Check, X, Eye } from '
 import { AlertDialog } from '../../components/ui/AlertDialog';
 import { RequestDrawer } from '../../components/caretaker/RequestDrawer';
 import { RejectionDialog } from '../../components/caretaker/RejectionDialog';
+import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 
 export const AdminStudentManagement: React.FC = () => {
   const [metrics, setMetrics] = useState<any>(null);
@@ -60,6 +61,8 @@ export const AdminStudentManagement: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const { countdown } = useAutoRefresh(fetchData, 30000);
 
   const handleOpenDrawer = (outingId: string) => {
     setSelectedOutingId(outingId);
@@ -131,6 +134,7 @@ export const AdminStudentManagement: React.FC = () => {
           <button onClick={fetchData} className="btn-secondary">
             <RefreshCw size={18} strokeWidth={1.75} />
             <span>Refresh</span>
+            <span className="ml-1 text-xs font-bold bg-slate-200 text-slate-600 rounded-md px-1.5 py-0.5 tabular-nums">{countdown}s</span>
           </button>
         </div>
 

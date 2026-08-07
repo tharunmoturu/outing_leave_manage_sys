@@ -50,7 +50,7 @@ export const AdminOperationsDashboard: React.FC = () => {
     fetchActiveOutings();
   }, []);
 
-  useAutoRefresh(fetchActiveOutings, 30000);
+  const { countdown } = useAutoRefresh(fetchActiveOutings, 30000);
 
   const filteredOutings = outings.filter((o) => {
     const matchesYear = selectedYear === 'All' ||
@@ -74,6 +74,7 @@ export const AdminOperationsDashboard: React.FC = () => {
           <button onClick={fetchActiveOutings} className="btn-secondary">
             <RefreshCw size={18} strokeWidth={1.75} />
             <span>Refresh</span>
+            <span className="ml-1 text-xs font-bold bg-slate-200 text-slate-600 rounded-md px-1.5 py-0.5 tabular-nums">{countdown}s</span>
           </button>
         </div>
 

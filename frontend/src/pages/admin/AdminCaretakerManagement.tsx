@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import API from '../../services/api';
+import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 import {
   UserCheck,
   CheckCircle2,
@@ -14,7 +15,6 @@ import {
   X,
   Mail,
   Clock,
-  Hash,
   Award,
   Phone,
   User,
@@ -125,11 +125,6 @@ const CaretakerDetailDrawer: React.FC<{ ct: CaretakerStat | null; isOpen: boolea
 
               <div className="pt-3 border-t border-gray-200/80 space-y-2.5">
                 <div className="flex items-center gap-2.5 text-xs text-gray-600 font-medium">
-                  <Hash size={15} className="text-[#8B1E24] shrink-0" />
-                  <span className="text-gray-400 font-bold uppercase text-[10px] tracking-wider shrink-0">Staff ID:</span>
-                  <span className="font-mono font-semibold text-gray-800 truncate">{ct._id}</span>
-                </div>
-                <div className="flex items-center gap-2.5 text-xs text-gray-600 font-medium">
                   <User size={15} className="text-[#8B1E24] shrink-0" />
                   <span className="text-gray-400 font-bold uppercase text-[10px] tracking-wider shrink-0">Full Name:</span>
                   <span className="font-semibold text-gray-800 truncate">{ct.name || 'Not provided'}</span>
@@ -221,6 +216,8 @@ export const AdminCaretakerManagement: React.FC = () => {
     fetchData();
   }, []);
 
+  const { countdown } = useAutoRefresh(fetchData, 30000);
+
   const totalCaretakers = caretakers.length;
   const activeShifts = caretakers.filter(c => c.status === 'Active Shift' || c.status === 'Online').length;
   const totalHandled = caretakers.reduce((acc, c) => acc + (c.handled || 0), 0);
@@ -259,6 +256,7 @@ export const AdminCaretakerManagement: React.FC = () => {
           >
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             <span>Refresh Data</span>
+            <span className="ml-1 text-xs font-bold bg-white/20 rounded-md px-1.5 py-0.5 tabular-nums">{countdown}s</span>
           </button>
         </div>
 
@@ -341,13 +339,9 @@ export const AdminCaretakerManagement: React.FC = () => {
                         <td className="py-4 px-6">
                           <div className="flex flex-col">
                             <span className="font-semibold text-[#1F2937] text-base">{displayName}</span>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-[#9CA3AF] font-mono">ID: {ct._id.substring(0, 8)}</span>
-                              <span className="inline-block w-1 h-1 rounded-full bg-slate-300" />
-                              <span className="text-[11px] font-medium text-[#8B1E24] bg-[#F8ECEC] px-2 py-0.5 rounded-md uppercase tracking-wider">
-                                {ct.role || 'Caretaker'}
-                              </span>
-                            </div>
+                            <span className="text-[11px] font-medium text-[#8B1E24] bg-[#F8ECEC] px-2 py-0.5 rounded-md uppercase tracking-wider self-start mt-0.5">
+                              {ct.role || 'Caretaker'}
+                            </span>
                           </div>
                         </td>
                         <td className="py-4 px-6">
@@ -422,6 +416,7 @@ export const AdminCaretakerManagement: React.FC = () => {
           >
             <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
             <span>Refresh Data</span>
+            <span className="ml-1 text-[11px] font-bold bg-white/20 rounded-md px-1.5 py-0.5 tabular-nums">{countdown}s</span>
           </button>
         </div>
 
@@ -506,7 +501,6 @@ export const AdminCaretakerManagement: React.FC = () => {
                           </div>
                           <div>
                             <div className="font-['Lexend'] text-[12.5px] font-bold text-[#1E293B]">{displayName}</div>
-                            <div className="text-[9.5px] text-[#6B7280]">ID: {ct._id.substring(0, 8)}</div>
                           </div>
                         </div>
                         <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded-md ${
