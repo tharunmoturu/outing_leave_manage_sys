@@ -8,24 +8,51 @@ import type { StudentSearchResult } from '../components/caretaker/search/Student
 import { StudentProfileDrawer } from '../components/caretaker/search/StudentProfileDrawer';
 import { Pagination } from '../components/caretaker/Pagination';
 
+const SESSION_KEY = 'caretaker_student_search_state';
+
+const loadSavedState = () => {
+  try {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch (e) {
+    console.error('Failed to load saved search state:', e);
+  }
+  return null;
+};
+
 export const CaretakerStudentSearchPage: React.FC = () => {
+  const savedState = loadSavedState();
+
   const [students, setStudents] = useState<StudentSearchResult[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
   // Pagination
-  const [page, setPage] = useState<number>(1);
+  const [page, setPage] = useState<number>(savedState?.page || 1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalCount, setTotalCount] = useState<number>(0);
 
   // Filters
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [branchFilter, setBranchFilter] = useState<string>('All');
-  const [yearFilter, setYearFilter] = useState<string>('All');
-  const [hostelFilter, setHostelFilter] = useState<string>('All');
-  const [activeOutingOnly, setActiveOutingOnly] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>(savedState?.searchQuery || '');
+  const [branchFilter, setBranchFilter] = useState<string>(savedState?.branchFilter || 'All');
+  const [yearFilter, setYearFilter] = useState<string>(savedState?.yearFilter || 'All');
+  const [hostelFilter, setHostelFilter] = useState<string>(savedState?.hostelFilter || 'All');
+  const [activeOutingOnly, setActiveOutingOnly] = useState<boolean>(savedState?.activeOutingOnly || false);
   
   const [showFilters, setShowFilters] = useState<boolean>(false);
+
+  // Save active search/filter state to sessionStorage whenever it changes
+  useEffect(() => {
+    const stateToSave = {
+      searchQuery,
+      branchFilter,
+      yearFilter,
+      hostelFilter,
+      activeOutingOnly,
+      page
+    };
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(stateToSave));
+  }, [searchQuery, branchFilter, yearFilter, hostelFilter, activeOutingOnly, page]);
 
   // Drawer
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -69,11 +96,13 @@ export const CaretakerStudentSearchPage: React.FC = () => {
   };
 
   const handleClearFilters = () => {
+    setSearchQuery('');
     setBranchFilter('All');
     setYearFilter('All');
     setHostelFilter('All');
     setActiveOutingOnly(false);
     setPage(1);
+    sessionStorage.removeItem(SESSION_KEY);
   };
 
   const openProfile = (id: string) => {
@@ -86,6 +115,7 @@ export const CaretakerStudentSearchPage: React.FC = () => {
     setSelectedStudentId(null);
   };
 
+  const hasSearchOrFilter = searchQuery.trim() !== '' || branchFilter !== 'All' || yearFilter !== 'All' || hostelFilter !== 'All' || activeOutingOnly;
   const hasActiveFilters = branchFilter !== 'All' || yearFilter !== 'All' || hostelFilter !== 'All' || activeOutingOnly;
   const activeFilterCount = [branchFilter !== 'All', yearFilter !== 'All', hostelFilter !== 'All', activeOutingOnly].filter(Boolean).length;
 
@@ -123,7 +153,7 @@ export const CaretakerStudentSearchPage: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-5 flex flex-col md:flex-row gap-4 items-start md:items-center">
             <div className="flex-1 min-w-0">
-              <StudentSearchBar onSearch={handleSearch} />
+              <StudentSearchBar onSearch={handleSearch} initialValue={searchQuery} />
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -253,11 +283,17 @@ export const CaretakerStudentSearchPage: React.FC = () => {
             {/* Results count + active chip display */}
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-[14px] font-bold text-gray-500">
-                Found{' '}
-                <span className="text-gray-900 text-[16px]">{totalCount.toLocaleString()}</span>{' '}
-                student{totalCount !== 1 ? 's' : ''}
-                {searchQuery && (
-                  <> for "<span className="text-[var(--color-primary)]">{searchQuery}</span>"</>
+                {hasSearchOrFilter ? (
+                  <>
+                    Found{' '}
+                    <span className="text-gray-900 text-[16px]">{totalCount.toLocaleString()}</span>{' '}
+                    student{totalCount !== 1 ? 's' : ''}
+                    {searchQuery && (
+                      <> for "<span className="text-[var(--color-primary)]">{searchQuery}</span>"</>
+                    )}
+                  </>
+                ) : (
+                  <>Showing 25 students</>
                 )}
               </span>
               {hasActiveFilters && (
@@ -300,7 +336,7 @@ export const CaretakerStudentSearchPage: React.FC = () => {
               ))}
             </div>
 
-            {totalPages > 1 && (
+            {hasSearchOrFilter && totalPages > 1 && (
               <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
             )}
           </div>
@@ -334,8 +370,14 @@ export const CaretakerStudentSearchPage: React.FC = () => {
           <div>
             <h1 className="font-['Lexend'] text-[20px] font-bold text-[#1E293B] tracking-[-0.3px] m-0">Student Search</h1>
             <p className="text-[11.5px] text-[#6B7280] font-medium m-0">
-              <span className="inline-block bg-[#F3F4F6] text-[#4B5563] text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-[#E5E7EB] mr-1">{totalCount}</span>
-              records found
+              {hasSearchOrFilter ? (
+                <>
+                  <span className="inline-block bg-[#F3F4F6] text-[#4B5563] text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-[#E5E7EB] mr-1">{totalCount}</span>
+                  records found
+                </>
+              ) : (
+                <>Showing 25 students</>
+              )}
             </p>
           </div>
           <button
@@ -354,6 +396,7 @@ export const CaretakerStudentSearchPage: React.FC = () => {
             <StudentSearchBar
               onSearch={handleSearch}
               placeholder="Search student name or ID..."
+              initialValue={searchQuery}
             />
           </div>
           <button 
@@ -500,7 +543,7 @@ export const CaretakerStudentSearchPage: React.FC = () => {
         )}
 
         {/* Mobile Pagination */}
-        {totalPages > 1 && (
+        {hasSearchOrFilter && totalPages > 1 && (
           <div className="flex items-center justify-center gap-3 pt-2">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}

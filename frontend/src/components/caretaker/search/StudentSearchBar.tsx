@@ -5,14 +5,20 @@ interface Props {
   onSearch: (query: string) => void;
   placeholder?: string;
   debounceMs?: number;
+  initialValue?: string;
 }
 
 export const StudentSearchBar: React.FC<Props> = ({ 
   onSearch, 
   placeholder = 'Search by Student ID, Name or Email...', 
-  debounceMs = 400 
+  debounceMs = 400,
+  initialValue = ''
 }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialValue);
+
+  useEffect(() => {
+    setQuery(initialValue);
+  }, [initialValue]);
 
   useEffect(() => {
     const handler = setTimeout(() => {

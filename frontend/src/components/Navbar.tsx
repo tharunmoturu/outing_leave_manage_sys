@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { LogOut, User, Bell, ChevronDown, X, Trash2 } from 'lucide-react';
 import { NotificationDropdown } from './dashboard/NotificationDropdown';
 import logo from '../assets/logo.png';
@@ -19,6 +20,22 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
 
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  const getProfilePath = () => {
+    if (!user || !user.role) return '/admin/profile';
+    switch (user.role.toLowerCase()) {
+      case 'admin':
+        return '/admin/profile';
+      case 'sanctionauthority':
+        return '/sanction/profile';
+      case 'caretaker':
+        return '/caretaker/profile';
+      case 'student':
+        return '/student/profile';
+      default:
+        return '/admin/profile';
+    }
+  };
 
   const fetchNotifications = async () => {
     if (!user || user.role === 'student') return;
@@ -83,10 +100,10 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
           <img src={logo} alt="Logo" className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover flex-shrink-0" />
           <div className="flex flex-col min-w-0">
             <span className="text-[13px] sm:text-[16px] md:text-[18px] font-semibold tracking-tight text-[var(--color-text-primary)] truncate">
-              Boys outing management system
+              Boys Outing Management System
             </span>
             <span className="hidden sm:inline text-[10px] md:text-[12px] font-medium text-[var(--color-text-secondary)]">
-              RGUKT nuzvid
+              RGUKT Nuzvid
             </span>
           </div>
         </div>
@@ -194,6 +211,15 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                   <div className="px-4 py-3 border-b border-[var(--color-border-gray)] text-[12px] text-[var(--color-text-secondary)]">
                     Signed in as <strong className="text-[var(--color-text-primary)] block truncate font-medium mt-0.5">{user.email}</strong>
                   </div>
+
+                  <Link
+                    to={getProfilePath()}
+                    onClick={() => setShowProfileMenu(false)}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-[14px] font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-gray-50)] transition-colors border-b border-[var(--color-border-gray)]"
+                  >
+                    <User size={16} strokeWidth={1.75} />
+                    Profile
+                  </Link>
 
                   <button
                     onClick={onLogout}

@@ -29,6 +29,9 @@ export const CaretakerHistoryPage: React.FC = () => {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [caretakerFilter, setCaretakerFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState('All');
+
+  const yearOptions = ['All', 'P1', 'P2', 'E1', 'E2', 'E3', 'E4'];
 
   // Drawer
   const [selectedOuting, setSelectedOuting] = useState<any>(null);
@@ -51,7 +54,8 @@ export const CaretakerHistoryPage: React.FC = () => {
           sort: sortOrder,
           dateFrom,
           dateTo,
-          caretaker: caretakerFilter
+          caretaker: caretakerFilter,
+          year: yearFilter
         }
       });
       setData(res.data);
@@ -61,7 +65,7 @@ export const CaretakerHistoryPage: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [page, searchQuery, statusFilter, typeFilter, sortOrder, dateFrom, dateTo, caretakerFilter]);
+  }, [page, searchQuery, statusFilter, typeFilter, sortOrder, dateFrom, dateTo, caretakerFilter, yearFilter]);
 
   useEffect(() => {
     fetchHistory();
@@ -75,10 +79,11 @@ export const CaretakerHistoryPage: React.FC = () => {
     setDateFrom('');
     setDateTo('');
     setCaretakerFilter('');
+    setYearFilter('All');
     setPage(1);
   };
 
-  const hasActiveFilters = statusFilter !== 'All' || typeFilter !== 'All' || dateFrom !== '' || dateTo !== '';
+  const hasActiveFilters = statusFilter !== 'All' || typeFilter !== 'All' || dateFrom !== '' || dateTo !== '' || caretakerFilter !== '' || yearFilter !== 'All' || searchQuery !== '';
 
   return (
     <div className="animate-fadeIn">
@@ -99,11 +104,11 @@ export const CaretakerHistoryPage: React.FC = () => {
                 Outing History
               </h1>
               <span className="px-2.5 py-1 bg-purple-100 text-purple-800 text-[11px] font-black uppercase tracking-wider rounded-full">
-                Last 30 Days
+                Last 90 Days
               </span>
             </div>
             <p className="text-[14px] font-medium text-[#6B7280]">
-              View student outing requests from the previous 30 days.
+              View student outing requests from the previous 90 days.
             </p>
           </div>
           <button
@@ -121,6 +126,25 @@ export const CaretakerHistoryPage: React.FC = () => {
           statistics={data?.statistics || { totalRequests: 0, approved: 0, rejected: 0, completed: 0 }} 
           isLoading={loading && !data} 
         />
+
+        {/* Year Filter Chips (Desktop) */}
+        <div className="bg-white border border-[#E5E7EB] rounded-2xl p-2.5 shadow-xs">
+          <div className="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar">
+            {yearOptions.map((y) => (
+              <button
+                key={y}
+                onClick={() => { setYearFilter(y); setPage(1); }}
+                className={`px-5 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+                  yearFilter === y
+                    ? 'bg-[#7C2030] text-white shadow-sm'
+                    : 'bg-white text-[#6B7280] border border-[#E5E7EB] hover:bg-[#F9FAFB] hover:text-[#111827]'
+                }`}
+              >
+                {y}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Filters */}
         <HistoryFilters
@@ -183,35 +207,53 @@ export const CaretakerHistoryPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Mobile Search & Filter */}
-        <div className="bg-white border border-[#E6E8EC] rounded-[12px] px-3 py-2.5 flex items-center gap-2">
+        {/* Mobile Year Filter Chips (Matches Currently Outside) */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 mb-1 no-scrollbar">
+          {yearOptions.map((y) => (
+            <button
+              key={y}
+              onClick={() => { setYearFilter(y); setPage(1); }}
+              className={`flex-none px-4 py-2 rounded-[9px] text-[12px] font-bold transition-all border ${
+                yearFilter === y
+                  ? 'bg-[#7C2030] text-white border-[#7C2030]'
+                  : 'bg-white text-[#6B7280] border-[#E6E8EC] hover:bg-[#F4F5F7]'
+              }`}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+
+        {/* Mobile Search & Filter Button */}
+        <div className="bg-white border border-[#E6E8EC] rounded-[12px] px-3 py-2.5 flex items-center gap-2 relative">
           <Search size={15} className="text-[#9CA3AF] flex-shrink-0" />
           <input
             type="text"
             placeholder="Search name, ID..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-            className="flex-1 text-[13px] font-medium text-[#1E293B] placeholder-[#9CA3AF] outline-none bg-transparent pr-10"
+            className="flex-1 text-[13px] font-medium text-[#1E293B] placeholder-[#9CA3AF] outline-none bg-transparent pr-8"
           />
           {searchQuery && (
             <button
               onClick={() => { setSearchQuery(''); setPage(1); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#4B5563]"
+              className="text-[#9CA3AF] hover:text-[#4B5563] p-1"
             >
               <X size={16} />
             </button>
           )}
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-[8px] transition-colors ${showFilters || hasActiveFilters ? 'bg-[#FCE9EA] text-[#7C2030]' : 'bg-[#F3F4F6] text-[#6B7280]'}`}
+            className={`flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-[8px] transition-colors ${showFilters || hasActiveFilters ? 'bg-[#FCE9EA] text-[#7C2030]' : 'bg-[#F3F4F6] text-[#6B7280]'}`}
+            title="Toggle Filters"
           >
-            <SlidersHorizontal size={14} />
+            <SlidersHorizontal size={15} />
           </button>
         </div>
 
-        {/* Mobile Filter Panel */}
+        {/* Mobile Filter Panel (All Filter Controls Accessible) */}
         {showFilters && (
-          <div className="bg-white border border-[#E6E8EC] rounded-[14px] p-3 space-y-3 shadow-sm">
+          <div className="bg-white border border-[#E6E8EC] rounded-[14px] p-3.5 space-y-3 shadow-sm animate-fadeIn">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">Status</label>
@@ -233,21 +275,64 @@ export const CaretakerHistoryPage: React.FC = () => {
                   onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
                   className="w-full border border-[#E6E8EC] rounded-[8px] px-2 py-1.5 text-[12px] font-medium text-[#1E293B] outline-none bg-white"
                 >
-                  <option value="All">All</option>
+                  <option value="All">All Types</option>
                   <option value="Normal">Normal</option>
                   <option value="Emergency">Emergency</option>
                 </select>
               </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">Sort By</label>
+                <select
+                  value={sortOrder}
+                  onChange={(e) => { setSortOrder(e.target.value); setPage(1); }}
+                  className="w-full border border-[#E6E8EC] rounded-[8px] px-2 py-1.5 text-[12px] font-medium text-[#1E293B] outline-none bg-white"
+                >
+                  <option value="Newest First">Newest First</option>
+                  <option value="Oldest First">Oldest First</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">Caretaker Name</label>
+                <input
+                  type="text"
+                  placeholder="Filter caretaker..."
+                  value={caretakerFilter}
+                  onChange={(e) => { setCaretakerFilter(e.target.value); setPage(1); }}
+                  className="w-full border border-[#E6E8EC] rounded-[8px] px-2 py-1.5 text-[12px] font-medium text-[#1E293B] outline-none bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">From Date</label>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+                  className="w-full border border-[#E6E8EC] rounded-[8px] px-2 py-1.5 text-[12px] font-medium text-[#1E293B] outline-none bg-white"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">To Date</label>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+                  className="w-full border border-[#E6E8EC] rounded-[8px] px-2 py-1.5 text-[12px] font-medium text-[#1E293B] outline-none bg-white"
+                />
+              </div>
+            </div>
             
-            {hasActiveFilters && (
-              <button
-                onClick={handleClearFilters}
-                className="w-full py-2 bg-[#F3F4F6] text-[#4B5563] text-[11px] font-bold rounded-[8px] mt-2"
-              >
-                Clear Filters
-              </button>
-            )}
+            <button
+              onClick={handleClearFilters}
+              className="w-full py-2 bg-[#F3F4F6] hover:bg-[#E5E7EB] text-[#4B5563] text-[11px] font-bold rounded-[8px] transition-colors mt-1"
+            >
+              Clear All Filters
+            </button>
           </div>
         )}
 

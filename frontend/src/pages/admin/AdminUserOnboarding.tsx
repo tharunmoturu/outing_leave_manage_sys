@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import API from '../../services/api';
-import { Upload, Plus, FileSpreadsheet, AlertCircle, Edit, Trash2, X, Users as UsersIcon, Search, Eye, User as UserIcon } from 'lucide-react';
+import { Upload, Plus, FileSpreadsheet, AlertCircle, Edit, Trash2, X, Users as UsersIcon, Search, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export const AdminUserOnboarding: React.FC = () => {
@@ -691,7 +691,11 @@ export const AdminUserOnboarding: React.FC = () => {
                       const initial = (user.name || 'U').charAt(0).toUpperCase();
 
                       return (
-                        <div key={user._id} className="border border-[#E6E8EC] rounded-[12px] p-3 bg-[#FCFCFD] flex items-center gap-2.5">
+                        <div 
+                          key={user._id} 
+                          onClick={() => setViewingUser(user)}
+                          className="border border-[#E6E8EC] rounded-[12px] p-3 bg-[#FCFCFD] flex items-center gap-2.5 cursor-pointer hover:bg-[#F8FAFC] active:scale-[0.99] transition-all"
+                        >
                           <div className="w-9 h-9 rounded-full bg-[#EFEFF3] text-[#7C2030] flex items-center justify-center font-bold text-xs shrink-0">
                             {initial}
                           </div>
@@ -709,7 +713,15 @@ export const AdminUserOnboarding: React.FC = () => {
                             </div>
                           </div>
 
-                          <div className="flex gap-1.5 shrink-0">
+                          <div className="flex gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <button 
+                              type="button"
+                              onClick={() => setViewingUser(user)} 
+                              className="w-7 h-7 rounded-[8px] bg-blue-50 text-blue-600 flex items-center justify-center"
+                              title="View user details"
+                            >
+                              <Eye size={13} />
+                            </button>
                             <button 
                               type="button"
                               onClick={() => setEditingUser(user)} 
@@ -803,30 +815,42 @@ export const AdminUserOnboarding: React.FC = () => {
         </div>
       )}
 
-      {/* Student Profile Details Modal */}
+      {/* User Profile Details Modal */}
       {viewingUser && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-gray-100 relative">
             <button 
               onClick={() => setViewingUser(null)}
-              className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+              className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
             >
               <X size={18} />
             </button>
             <div className="p-6">
-              <h3 className="text-[12px] font-black text-gray-400 uppercase tracking-wider mb-4">STUDENT PROFILE</h3>
+              <h3 className="text-[12px] font-black text-gray-400 uppercase tracking-wider mb-4">
+                {viewingUser.role ? `${viewingUser.role.toUpperCase()} PROFILE` : 'USER PROFILE'}
+              </h3>
               <div className="bg-[#f8fafc] rounded-2xl p-5 border border-slate-100 flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600">
-                  <UserIcon size={24} />
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600 font-bold text-lg">
+                  {(viewingUser.name || 'U').charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <h4 className="text-[17px] font-bold text-gray-900 uppercase tracking-tight">{viewingUser.name || 'N/A'}</h4>
-                  <p className="text-[13px] font-semibold text-gray-500 uppercase tracking-wide mt-0.5">
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-[17px] font-bold text-gray-900 uppercase tracking-tight truncate">{viewingUser.name || 'N/A'}</h4>
+                  <p className="text-[13px] font-semibold text-gray-500 uppercase tracking-wide mt-0.5 truncate">
                     {viewingUser.studentId || viewingUser.email || 'N/A'} {viewingUser.branch ? `• ${viewingUser.branch}` : ''} {viewingUser.year ? `${viewingUser.year}` : ''}
                   </p>
                   <p className="text-[13px] text-gray-600 font-medium mt-1">
-                    {viewingUser.hostel ? `Hostel ${viewingUser.hostel}` : 'Hostel N/A'}{viewingUser.roomNo ? `, Room ${viewingUser.roomNo}` : ''}
+                    {viewingUser.hostel ? `Hostel ${viewingUser.hostel}` : (viewingUser.assignedHostel ? `Assigned Hostel: ${viewingUser.assignedHostel}` : 'Hostel N/A')}{viewingUser.roomNo ? `, Room ${viewingUser.roomNo}` : ''}
                   </p>
+                  {viewingUser.email && (
+                    <p className="text-[12px] text-indigo-600 font-mono mt-1 truncate">
+                      {viewingUser.email}
+                    </p>
+                  )}
+                  {viewingUser.phone && (
+                    <p className="text-[12px] text-gray-500 font-medium mt-1">
+                      Phone: {viewingUser.phone}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

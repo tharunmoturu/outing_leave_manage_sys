@@ -5,7 +5,6 @@ import { Users, DoorOpen, AlertCircle, RefreshCw, Search, Check, X, Eye } from '
 import { AlertDialog } from '../../components/ui/AlertDialog';
 import { RequestDrawer } from '../../components/caretaker/RequestDrawer';
 import { RejectionDialog } from '../../components/caretaker/RejectionDialog';
-import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 
 export const AdminStudentManagement: React.FC = () => {
   const [metrics, setMetrics] = useState<any>(null);
@@ -35,9 +34,11 @@ export const AdminStudentManagement: React.FC = () => {
     setAlertConfig({ isOpen: true, type, title, message });
   };
 
-  const fetchData = async () => {
-    setLoadingStats(true);
-    setLoadingOutings(true);
+  const fetchData = async (isSilent = false) => {
+    if (!isSilent) {
+      setLoadingStats(true);
+      setLoadingOutings(true);
+    }
     try {
       const [statsRes, pendingRes] = await Promise.all([
         API.get('/dashboard/admin/student-management'),
@@ -62,8 +63,6 @@ export const AdminStudentManagement: React.FC = () => {
     fetchData();
   }, []);
 
-  const { countdown } = useAutoRefresh(fetchData, 30000);
-
   const handleOpenDrawer = (outingId: string) => {
     setSelectedOutingId(outingId);
     setIsDrawerOpen(true);
@@ -79,7 +78,7 @@ export const AdminStudentManagement: React.FC = () => {
     try {
       await API.put(`/caretaker/outings/${req.id}/approve`);
       setIsDrawerOpen(false);
-      fetchData();
+      fetchData(true);
       showAlert('success', 'Approved', 'Outing approved successfully');
     } catch (err: any) {
       console.error(`Failed to approve outing`, err);
@@ -97,7 +96,7 @@ export const AdminStudentManagement: React.FC = () => {
       setIsRejectionOpen(false);
       setRejectionDialogData(null);
       setIsDrawerOpen(false);
-      fetchData();
+      fetchData(true);
       showAlert('success', 'Rejected', 'Outing rejected successfully');
     } catch (err: any) {
       console.error(`Failed to reject outing`, err);
@@ -131,10 +130,9 @@ export const AdminStudentManagement: React.FC = () => {
           <div>
             <h1 className="text-title-large">Student Management</h1>
           </div>
-          <button onClick={fetchData} className="btn-secondary">
+          <button onClick={() => fetchData(false)} className="btn-secondary">
             <RefreshCw size={18} strokeWidth={1.75} />
             <span>Refresh</span>
-            <span className="ml-1 text-xs font-bold bg-slate-200 text-slate-600 rounded-md px-1.5 py-0.5 tabular-nums">{countdown}s</span>
           </button>
         </div>
 
@@ -282,7 +280,7 @@ export const AdminStudentManagement: React.FC = () => {
             <p className="text-[11.5px] text-[#6B7280] font-medium m-0">Overview of students & outings</p>
           </div>
           <button 
-            onClick={fetchData} 
+            onClick={() => fetchData(false)} 
             className="flex items-center gap-1.5 text-[11px] font-semibold text-[#7C2030] bg-white border border-[#E6E8EC] px-3 py-1.5 rounded-lg hover:bg-[#F9FAFB] transition-colors"
           >
             <RefreshCw size={13} strokeWidth={2} />

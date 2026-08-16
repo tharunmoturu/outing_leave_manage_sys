@@ -637,15 +637,16 @@ export const getCaretakerHistory = async (req, res) => {
     const dateFrom = req.query.dateFrom;
     const dateTo = req.query.dateTo;
     const caretakerFilter = req.query.caretaker || '';
+    const yearFilter = req.query.year || 'All';
     const caretakerHostel = getCaretakerHostel(req.user);
 
-    // Base query: last 30 days
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    thirtyDaysAgo.setHours(0, 0, 0, 0);
+    // Base query: last 90 days
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    ninetyDaysAgo.setHours(0, 0, 0, 0);
 
     const query = {
-      createdAt: { $gte: thirtyDaysAgo },
+      createdAt: { $gte: ninetyDaysAgo },
       // History only shows outings that were actually approved
       status: { $in: ['Approved', 'Exited', 'Returned', 'Completed'] }
     };
@@ -724,6 +725,13 @@ export const getCaretakerHistory = async (req, res) => {
     // Apply Status Filter within approved statuses only
     if (statusFilter !== 'All') {
       filteredHistory = filteredHistory.filter(o => o.status === statusFilter);
+    }
+
+    // Apply Year Filter
+    if (yearFilter && yearFilter !== 'All') {
+      filteredHistory = filteredHistory.filter(o => 
+        (o.year && o.year.toString().toUpperCase() === yearFilter.toUpperCase())
+      );
     }
 
     // Calculate Statistics

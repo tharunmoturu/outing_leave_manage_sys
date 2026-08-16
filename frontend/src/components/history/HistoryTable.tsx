@@ -34,7 +34,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({
         <AlertTriangle className="mx-auto h-12 w-12 text-gray-300 mb-3" />
         <h3 className="text-[18px] font-bold text-gray-900">No History Found</h3>
         <p className="text-[14px] text-gray-500 mt-1">
-          No outing history matches your current filters for the last 30 days.
+          No outing history matches your current filters for the last 90 days.
         </p>
       </div>
     );

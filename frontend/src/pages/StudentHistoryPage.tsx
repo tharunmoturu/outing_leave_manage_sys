@@ -74,11 +74,11 @@ export const StudentHistoryPage: React.FC = () => {
               My Outing History
             </h1>
             <span className="px-2.5 py-1 bg-purple-100 text-purple-800 text-[11px] font-black uppercase tracking-wider rounded-full">
-              Last 30 Days
+              Last 90 Days
             </span>
           </div>
           <p className="text-[14px] font-medium text-[#6B7280]">
-            View your outing requests from the previous 30 days.
+            View your outing requests from the previous 90 days.
           </p>
         </div>
         <button

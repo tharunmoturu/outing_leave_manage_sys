@@ -86,10 +86,10 @@ export const Layout: React.FC<LayoutProps> = ({ user, onLogout, isDark, onToggle
       case 'caretaker':
         return [
           { path: '/caretaker', label: 'Dashboard', icon: <LayoutDashboard className="h-6 w-6" /> },
-          { path: '/caretaker/pending-requests', label: 'Pending Requests', icon: <ClipboardList className="h-6 w-6" /> },
-          { path: '/caretaker/emergency-requests', label: 'Emergency Requests', icon: <AlertTriangle className="h-6 w-6" /> },
+          { path: '/caretaker/pending-requests', label: 'Pending Req.', icon: <ClipboardList className="h-6 w-6" /> },
+          { path: '/caretaker/emergency-requests', label: 'Emergency Req.', icon: <AlertTriangle className="h-6 w-6" /> },
+          { path: '/caretaker/student-search', label: 'Student Search', icon: <Search className="h-6 w-6" /> },
           { path: '/caretaker/history', label: 'Outing History', icon: <History className="h-6 w-6" /> },
-          { path: '/caretaker/profile', label: 'Profile', icon: <User className="h-6 w-6" /> },
         ];
       default:
         return navLinks.slice(0, 5);
